@@ -278,18 +278,19 @@ ${formData.notes || "无"}`
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack flex flex-col p-4 sm:p-8 transition-colors">
       <div className="max-w-xl w-full mx-auto bg-white dark:bg-[rgba(255,255,255,0.02)] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-[rgba(255,255,255,0.08)] p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-4">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-30 -mt-6 -mx-6 sm:-mt-8 sm:-mx-8 px-6 sm:px-8 py-3 mb-6 bg-white/90 dark:bg-marketingBlack/90 backdrop-blur-md border-b border-gray-100 dark:border-[rgba(255,255,255,0.08)] flex flex-row items-center justify-between rounded-t-2xl">
+          <div className="flex items-center space-x-2">
             <button 
               onClick={() => router.back()} 
-              className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+              className="p-1.5 -ml-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors flex items-center justify-center"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-textPrimary">编辑记录</h1>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-textPrimary tracking-tight">编辑属性</h1>
           </div>
           
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 items-center">
             <button 
               type="button"
               onClick={() => setFormData(prev => ({...prev, favorite: !prev.favorite}))}
@@ -478,8 +479,13 @@ ${formData.notes || "无"}`
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
+                onInput={(e) => {
+                  e.currentTarget.style.height = 'auto';
+                  e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                }}
                 rows={3}
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:bg-white dark:focus:bg-[rgba(255,255,255,0.03)] text-gray-900 dark:text-textPrimary transition-all"
+                style={{ minHeight: '80px' }}
+                className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:bg-white dark:focus:bg-[rgba(255,255,255,0.03)] text-gray-900 dark:text-textPrimary transition-all resize-none overflow-hidden"
                 placeholder="请输入备注信息... 支持 Markdown 语法"
               />
             )}
