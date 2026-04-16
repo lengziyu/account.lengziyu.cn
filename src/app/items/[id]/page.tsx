@@ -321,91 +321,6 @@ ${formData.notes || "无"}`
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-2">标签 (Tags)</label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {availableTags.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                    selectedTags.includes(tag)
-                      ? "bg-brandIndigo border-brandIndigo text-white"
-                      : "bg-transparent border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-2 p-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg text-sm transition-all focus-within:ring-2 focus-within:ring-brandIndigo focus-within:bg-white dark:focus-within:bg-[rgba(255,255,255,0.03)]">
-              {selectedTags.map(t => (
-                <span key={t} className="flex items-center px-2 py-1 bg-brandIndigo/10 dark:bg-brandIndigo/20 text-brandIndigo dark:text-accentHover rounded">
-                  {t}
-                  <button type="button" onClick={() => toggleTag(t)} className="ml-1 hover:text-brandIndigo/60">
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-              <input
-                type="text"
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                className="flex-1 min-w-[120px] bg-transparent outline-none text-gray-900 dark:text-white dark:placeholder-gray-500"
-                placeholder="回车即可创建新标签..."
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">账号 *</label>
-              <input
-                type="text"
-                name="title"
-                required
-                value={formData.title}
-                onChange={handleTitleChange}
-                onKeyDown={handleTitleKeyDown}
-                onBlur={() => setTimeout(() => setShowEmailSuggestions(false), 200)}
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:bg-white dark:focus:bg-[rgba(255,255,255,0.03)] text-gray-900 dark:text-textPrimary transition-all"
-                placeholder="yours@example.com / 账号名"
-                autoComplete="off"
-              />
-              {showEmailSuggestions && (
-                <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-marketingBlack border border-gray-200 dark:border-[rgba(255,255,255,0.15)] rounded-lg shadow-lg overflow-hidden">
-                  {emailSuggestions.map((suggestion, index) => (
-                    <li
-                      key={suggestion}
-                      onMouseDown={(e) => { e.preventDefault(); selectEmailSuggestion(suggestion); }}
-                      className={`px-4 py-2 cursor-pointer text-sm transition-colors ${
-                        index === activeSuggestionIndex 
-                          ? "bg-brandIndigo text-white" 
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)]"
-                      }`}
-                    >
-                      {suggestion}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">密码</label>
-              <input
-                type="text"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:bg-white dark:focus:bg-[rgba(255,255,255,0.03)] text-gray-900 dark:text-textPrimary transition-all"
-                placeholder="输入密码"
-              />
-            </div>
-          </div>
-
-          <div>
             <div className="flex justify-between items-center mb-1">
               <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary">分类</label>
               <button 
@@ -443,6 +358,95 @@ ${formData.notes || "无"}`
                 ))}
               </select>
             )}
+          </div>
+
+          <div className={`grid grid-cols-1 ${formData.category === '笔记' ? '' : 'sm:grid-cols-2'} gap-4`}>
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">
+                {formData.category === '笔记' ? '标题 *' : '账号 *'}
+              </label>
+              <input
+                type="text"
+                name="title"
+                required
+                value={formData.title}
+                onChange={handleTitleChange}
+                onKeyDown={handleTitleKeyDown}
+                onBlur={() => setTimeout(() => setShowEmailSuggestions(false), 200)}
+                className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:bg-white dark:focus:bg-[rgba(255,255,255,0.03)] text-gray-900 dark:text-textPrimary transition-all"
+                placeholder={formData.category === '笔记' ? "标题" : "yours@example.com / 账号名"}
+                autoComplete="off"
+              />
+              {showEmailSuggestions && (
+                <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-marketingBlack border border-gray-200 dark:border-[rgba(255,255,255,0.15)] rounded-lg shadow-lg overflow-hidden">
+                  {emailSuggestions.map((suggestion, index) => (
+                    <li
+                      key={suggestion}
+                      onMouseDown={(e) => { e.preventDefault(); selectEmailSuggestion(suggestion); }}
+                      className={`px-4 py-2 cursor-pointer text-sm transition-colors ${
+                        index === activeSuggestionIndex 
+                          ? "bg-brandIndigo text-white" 
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)]"
+                      }`}
+                    >
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {formData.category !== '笔记' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">密码</label>
+                <input
+                  type="text"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:bg-white dark:focus:bg-[rgba(255,255,255,0.03)] text-gray-900 dark:text-textPrimary transition-all"
+                  placeholder="输入密码"
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-2">标签 (Tags)</label>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {availableTags.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                    selectedTags.includes(tag)
+                      ? "bg-brandIndigo border-brandIndigo text-white"
+                      : "bg-transparent border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-2 p-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg text-sm transition-all focus-within:ring-2 focus-within:ring-brandIndigo focus-within:bg-white dark:focus-within:bg-[rgba(255,255,255,0.03)]">
+              {selectedTags.map(t => (
+                <span key={t} className="flex items-center px-2 py-1 bg-brandIndigo/10 dark:bg-brandIndigo/20 text-brandIndigo dark:text-accentHover rounded">
+                  {t}
+                  <button type="button" onClick={() => toggleTag(t)} className="ml-1 hover:text-brandIndigo/60">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              <input
+                type="text"
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                className="flex-1 min-w-[120px] bg-transparent outline-none text-gray-900 dark:text-white dark:placeholder-gray-500"
+                placeholder="回车即可创建新标签..."
+              />
+            </div>
           </div>
 
           <div>
