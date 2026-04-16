@@ -11,8 +11,16 @@ interface VaultItem {
   title: string;
   password?: string;
   favorite: boolean;
+  createdAt?: string;
+  updatedAt?: string;
   tags?: { id: string, tag: string }[];
 }
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return '';
+  const d = new Date(dateString);
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}号 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+};
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -89,40 +97,48 @@ export default function DashboardPage() {
         </div>
       </div>
       
-      <div className="flex flex-wrap gap-1">
-        {item.tags && item.tags.length > 0 ? (
-          item.tags.map((t: any) => (
-            <span key={t.id} className="px-2 py-0.5 text-xs bg-brandIndigo/10 dark:bg-brandIndigo/20 text-brandIndigo dark:text-accentHover rounded">
-              {t.tag}
-            </span>
-          ))
-        ) : (
-          <span className="text-[13px] text-gray-500 dark:text-textTertiary">无标签</span>
-        )}
+      <div className="flex justify-between items-end mt-2">
+        <div className="flex flex-wrap gap-1 flex-1">
+          {item.tags && item.tags.length > 0 ? (
+            item.tags.map((t: any) => (
+              <span key={t.id} className="px-2 py-0.5 text-xs bg-brandIndigo/10 dark:bg-brandIndigo/20 text-brandIndigo dark:text-accentHover rounded">
+                {t.tag}
+              </span>
+            ))
+          ) : (
+            <span className="text-[13px] text-gray-500 dark:text-textTertiary">无标签</span>
+          )}
+        </div>
+        <div className="text-[11px] text-gray-400 dark:text-textTertiary shrink-0 ml-2">
+          {(() => {
+            const isUpdated = item.updatedAt && item.createdAt && new Date(item.updatedAt).getTime() - new Date(item.createdAt).getTime() > 1000;
+            return isUpdated ? formatDate(item.updatedAt) : formatDate(item.createdAt);
+          })()}
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="w-full flex flex-col items-center pt-8 md:pt-12 px-4 transition-colors">
+    <div className="w-full flex flex-col items-center pt-5 md:pt-6 px-4 transition-colors">
       <div className="w-full max-w-[800px]">
-        <div className="flex justify-between items-center mb-8 md:mb-12">
+        <div className="flex justify-between items-center mb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brandIndigo to-accentHover flex items-center justify-center shadow-md shadow-brandIndigo/20">
-              <Fingerprint className="w-6 h-6 text-white" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brandIndigo to-accentHover flex items-center justify-center shadow-md shadow-brandIndigo/20">
+              <Fingerprint className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-[28px] font-bold text-gray-900 dark:text-textPrimary drop-shadow-sm tracking-tight">我的保险库</h1>
+            <h1 className="text-[22px] font-bold text-gray-900 dark:text-textPrimary drop-shadow-sm tracking-tight">我的保险库</h1>
           </div>
           <ThemeToggle />
         </div>
 
-        <div className="mb-8">
+        <div className="mb-6">
           <input 
             type="text" 
             placeholder="搜索账号名、标签或备注..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-[12px] px-5 py-4 text-[15px] font-[400] text-gray-900 dark:text-textPrimary placeholder-gray-400 dark:placeholder:text-textTertiary focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:border-transparent transition-all shadow-sm dark:shadow-none"
+            className="w-full bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-[12px] px-4 py-3 text-[14px] font-[400] text-gray-900 dark:text-textPrimary placeholder-gray-400 dark:placeholder:text-textTertiary focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:border-transparent transition-all shadow-sm dark:shadow-none"
           />
         </div>
 

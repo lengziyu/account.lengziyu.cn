@@ -3,7 +3,7 @@
 import { useState, useEffect, KeyboardEvent } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
-import { ArrowLeft, Plus, X, CopyMinus, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, X, CopyMinus, Trash2, ChevronDown } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
@@ -13,6 +13,7 @@ export default function NewItemPage() {
   const [error, setError] = useState("")
 
   const [mode, setMode] = useState<"single" | "batch">("single")
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
 
   const [categories, setCategories] = useState<{id: string, name: string}[]>([])
   const [isAddingCategory, setIsAddingCategory] = useState(false)
@@ -309,19 +310,43 @@ export default function NewItemPage() {
                 <Button type="button" onClick={() => setIsAddingCategory(false)} variant="outline" className="rounded-xl border-gray-200">取消</Button>
               </div>
             ) : (
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-xl focus:outline-none focus:ring-2 focus:ring-brandIndigo text-gray-900 dark:text-textPrimary transition-all appearance-none cursor-pointer text-sm"
-                style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
-              >
-                {allCategories.map(cat => (
-                  <option key={cat.value} value={cat.value} className="text-gray-900 dark:bg-marketingBlack">
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative z-20">
+                <button
+                  type="button"
+                  onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-xl focus:outline-none focus:ring-2 focus:ring-brandIndigo text-gray-900 dark:text-textPrimary transition-all text-sm flex justify-between items-center"
+                >
+                  <span className="truncate">{allCategories.find(c => c.value === formData.category)?.label || formData.category}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Backdrop to close when clicked outside (optional simple implementation) */}
+                {categoryDropdownOpen && (
+                  <div className="fixed inset-0 z-10" onClick={() => setCategoryDropdownOpen(false)}></div>
+                )}
+                
+                {/* Dropdown Menu */}
+                {categoryDropdownOpen && (
+                  <div className="absolute z-20 w-full mt-2 bg-white dark:bg-[#1a1b1e] border border-gray-100 dark:border-[rgba(255,255,255,0.1)] rounded-xl shadow-xl overflow-hidden py-1.5 max-h-64 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
+                    {allCategories.map(cat => (
+                      <div
+                        key={cat.value}
+                        onClick={() => {
+                          handleChange({ target: { name: 'category', value: cat.value } } as any);
+                          setCategoryDropdownOpen(false);
+                        }}
+                        className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
+                          formData.category === cat.value 
+                            ? "bg-brandIndigo/10 text-brandIndigo font-[510]" 
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[rgba(255,255,255,0.05)]"
+                        }`}
+                      >
+                        {cat.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

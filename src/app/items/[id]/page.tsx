@@ -12,6 +12,12 @@ export default function ItemDetailPage() {
   const params = useParams()
   const id = params.id as string
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}号 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  }
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -28,6 +34,8 @@ export default function ItemDetailPage() {
 
   // Copy state
   const [copyStatus, setCopyStatus] = useState<string | null>(null)
+
+  const [timestamps, setTimestamps] = useState({ createdAt: '', updatedAt: '' })
 
   const [formData, setFormData] = useState({
     title: "", // Account
@@ -74,6 +82,10 @@ export default function ItemDetailPage() {
           category: data.category || "other",
           notes: data.notes || "",
           favorite: data.favorite || false
+        })
+        setTimestamps({
+          createdAt: data.createdAt || '',
+          updatedAt: data.updatedAt || ''
         })
         const itemTags = data.tags ? data.tags.map((t: any) => t.tag) : []
         setSelectedTags(itemTags)
@@ -473,7 +485,7 @@ ${formData.notes || "无"}`
             )}
           </div>
 
-          <div className="pt-4 flex justify-between items-center border-t border-gray-100 dark:border-[rgba(255,255,255,0.08)]">
+          <div className="pt-4 flex justify-between items-center border-t border-gray-100 dark:border-[rgba(255,255,255,0.08)] mt-2">
             <button
               type="button"
               onClick={handleDelete}
@@ -490,6 +502,14 @@ ${formData.notes || "无"}`
                 {saving ? "保存中..." : "保存修改"}
               </Button>
             </div>
+          </div>
+          <div className="text-center pt-2">
+            <p className="text-[11px] text-gray-400 dark:text-textTertiary">
+              创建于: {formatDate(timestamps.createdAt)}
+              {timestamps.updatedAt && timestamps.createdAt && new Date(timestamps.updatedAt).getTime() - new Date(timestamps.createdAt).getTime() > 1000 && (
+                <span className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-700">更新于: {formatDate(timestamps.updatedAt)}</span>
+              )}
+            </p>
           </div>
         </form>
       </div>
