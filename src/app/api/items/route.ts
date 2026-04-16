@@ -16,12 +16,12 @@ export async function GET(req: Request) {
       where: {
         userId: user.id as string,
         OR: search ? [
-          { title: { contains: search, mode: 'insensitive' } },
-          { platform: { contains: search, mode: 'insensitive' } },
-          { username: { contains: search, mode: 'insensitive' } },
-          { notes: { contains: search, mode: 'insensitive' } },
+          { title: { contains: search } },
+          { notes: { contains: search } },
+          { tags: { some: { tag: { contains: search } } } }
         ] : undefined
       },
+      include: { tags: true },
       orderBy: { updatedAt: 'desc' }
     });
 
@@ -39,24 +39,25 @@ export async function POST(req: Request) {
     }
 
     const json = await req.json();
-    const { title, platform, url, username, password, category, notes, favorite } = json;
+    const { title, password, category, notes, favorite, tags } = json;
 
     if (!title) {
-      return new NextResponse("Title is required", { status: 400 });
+      return new NextResponse("Account/Title is required", { status: 400 });
     }
 
     const item = await prisma.vaultItem.create({
       data: {
         userId: user.id as string,
         title,
-        platform,
-        url,
-        username,
         password,
         category,
         notes,
         favorite: favorite || false,
-      }
+        tags: {
+          create: Array.isArray(tags) ? tags.map((t: string) => ({ tag: t })) : []
+        }
+      },
+      include: { tags: true }
     });
 
     return NextResponse.json(item);

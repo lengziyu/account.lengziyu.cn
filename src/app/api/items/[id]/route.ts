@@ -16,7 +16,8 @@ export async function GET(
       where: {
         id: params.id,
         userId: user.id as string
-      }
+      },
+      include: { tags: true }
     });
 
     if (!item) {
@@ -40,13 +41,26 @@ export async function PATCH(
     }
 
     const json = await req.json();
+    const { title, password, category, notes, favorite, tags } = json;
+
+    if (tags && Array.isArray(tags)) {
+      await prisma.tag.deleteMany({ where: { itemId: params.id } });
+    }
 
     const item = await prisma.vaultItem.update({
       where: {
         id: params.id,
         userId: user.id as string
       },
-      data: json
+      data: {
+        title, password, category, notes, favorite,
+        ...(tags && Array.isArray(tags) ? {
+          tags: {
+            create: tags.map((t: string) => ({ tag: t }))
+          }
+        } : {})
+      },
+      include: { tags: true }
     });
 
     return NextResponse.json(item);

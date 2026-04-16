@@ -17,9 +17,9 @@ const config: Config = {
         textSecondary: "#d0d6e0",
         textTertiary: "#8a8f98",
         textQuaternary: "#62666d",
-        brandIndigo: "#5e6ad2",
-        accentViolet: "#7170ff",
-        accentHover: "#828fff",
+        brandIndigo: "#a855f7", // Changed to purple-500
+        accentViolet: "#c084fc", // Changed to purple-400
+        accentHover: "#d8b4fe", // Changed to purple-300
         borderPrimary: "#23252a",
         borderSecondary: "#34343a",
         statusGreen: "#10b981",
@@ -35,6 +35,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/typography")],
+  darkMode: "class",
 };
 export default config;

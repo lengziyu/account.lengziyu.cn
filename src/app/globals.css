@@ -20,4 +20,29 @@
   .linear-shadow-focus {
     box-shadow: rgba(0,0,0,0.1) 0px 4px 12px;
   }
+
+  .bg-animated-glow {
+    background-image: 
+      radial-gradient(circle at 15% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 35%),
+      radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 35%);
+    animation: bgPulse 12s ease-in-out infinite alternate;
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+}
+
+.dark .bg-animated-glow {
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.12) 0%, transparent 40%);
+}
+
+@keyframes bgPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.05); opacity: 1; }
 }
