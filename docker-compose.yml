@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        PRISMA_ENGINES_MIRROR: ${PRISMA_ENGINES_MIRROR:-https://registry.npmmirror.com/-/binary/prisma}
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-file:./dev.db}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-super-secret-vault-key-change-me}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      PRISMA_ENGINES_MIRROR: ${PRISMA_ENGINES_MIRROR:-https://registry.npmmirror.com/-/binary/prisma}
+    volumes:
+      - ./prisma:/app/prisma
