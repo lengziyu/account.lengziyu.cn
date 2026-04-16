@@ -18,7 +18,9 @@ export async function GET() {
       select: { tag: true }
     });
 
-    const uniqueTags = Array.from(new Set(tags.map(t => t.tag))).sort();
+    const defaultTags = ["QQ", "微信", "Google", "Github", "X", "AI Key", "ChatGPT"];
+    const userTags = tags.map(t => t.tag).filter(t => !defaultTags.includes(t)).sort();
+    const uniqueTags = [...defaultTags, ...Array.from(new Set(userTags))];
 
     return NextResponse.json(uniqueTags);
   } catch (error) {
