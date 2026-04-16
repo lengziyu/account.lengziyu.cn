@@ -3,13 +3,13 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
-  const hash = await bcrypt.hash('len136214', 10);
+  const hash = await bcrypt.hash('admin123', 10);
   const user = await prisma.user.upsert({
-    where: { email: 'len' },
+    where: { email: 'admin' },
     update: { passwordHash: hash },
-    create: { email: 'len', passwordHash: hash, name: 'Len' }
+    create: { email: 'admin', passwordHash: hash, name: 'Admin' }
   });
-  console.log('User created/updated: len / len136214');
+  console.log('User created/updated: admin / admin123');
 }
 
 main()
