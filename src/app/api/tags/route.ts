@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
-import { DEFAULT_TAGS, dedupeTags, normalizeTag } from "@/lib/tags"
+import { dedupeTags, normalizeTag } from "@/lib/tags"
 
 type UpsertTagBody = {
   id?: string
@@ -15,33 +15,11 @@ export async function GET() {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    let existingPresets = await prisma.tagPreset.findMany({
+    const existingPresets = await prisma.tagPreset.findMany({
       where: { userId: user.id },
       orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
       select: { id: true, name: true },
     })
-
-    const existingNameSet = new Set(existingPresets.map((item) => item.name.toLowerCase()))
-    const missingDefaults = DEFAULT_TAGS.filter(
-      (name) => !existingNameSet.has(name.toLowerCase())
-    )
-
-    if (missingDefaults.length > 0) {
-      for (const name of missingDefaults) {
-        try {
-          await prisma.tagPreset.create({
-            data: { userId: user.id, name },
-          })
-        } catch {
-          // Ignore duplicates caused by concurrent requests.
-        }
-      }
-      existingPresets = await prisma.tagPreset.findMany({
-        where: { userId: user.id },
-        orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
-        select: { id: true, name: true },
-      })
-    }
 
     const usedTags = await prisma.tag.findMany({
       where: {

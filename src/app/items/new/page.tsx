@@ -9,6 +9,19 @@ type Category = { id: string; name: string }
 type Identity = { id: string; name: string; identifier: string; notes?: string | null }
 type TagResponse = { sections: { label: string; tags: string[] }[] }
 
+const HOT_PLATFORM_TAGS = [
+  "微信",
+  "QQ",
+  "支付宝",
+  "淘宝",
+  "京东",
+  "抖音",
+  "ChatGPT",
+  "Github",
+  "Google",
+  "Apple",
+]
+
 export default function NewItemPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -19,6 +32,7 @@ export default function NewItemPage() {
   const [identities, setIdentities] = useState<Identity[]>([])
   const [siteTags, setSiteTags] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [showAllPlatformTags, setShowAllPlatformTags] = useState(false)
 
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
@@ -247,6 +261,18 @@ export default function NewItemPage() {
       .map((item) => ({ value: item.name, label: item.name })),
   ]
 
+  const displayedSiteTags = (() => {
+    if (showAllPlatformTags || siteTags.length <= 10) return siteTags
+
+    const selectedInSiteTags = selectedTags.filter((tag) => siteTags.includes(tag))
+    const hotTags = HOT_PLATFORM_TAGS.filter((tag) => siteTags.includes(tag))
+    const fallbackTags = siteTags.filter(
+      (tag) => !selectedInSiteTags.includes(tag) && !hotTags.includes(tag)
+    )
+
+    return Array.from(new Set([...selectedInSiteTags, ...hotTags, ...fallbackTags])).slice(0, 10)
+  })()
+
   return (
     <div className="h-[100dvh] bg-gray-50 dark:bg-marketingBlack flex flex-col overflow-hidden transition-colors">
       <div className="w-full border-b border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
@@ -399,7 +425,7 @@ export default function NewItemPage() {
           <section className="space-y-3">
             <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary">常用平台（可多选）</label>
             <div className="flex flex-wrap gap-2">
-              {siteTags.map((tag) => (
+              {displayedSiteTags.map((tag) => (
                 <button
                   key={tag}
                   type="button"
@@ -410,6 +436,15 @@ export default function NewItemPage() {
                 </button>
               ))}
             </div>
+            {siteTags.length > 10 ? (
+              <button
+                type="button"
+                onClick={() => setShowAllPlatformTags((prev) => !prev)}
+                className="text-xs text-brandIndigo hover:text-brandIndigo/80 transition-colors"
+              >
+                {showAllPlatformTags ? "收起平台列表" : `展开全部平台（${siteTags.length}）`}
+              </button>
+            ) : null}
             <div className="flex flex-wrap gap-2">
               <input
                 type="text"
