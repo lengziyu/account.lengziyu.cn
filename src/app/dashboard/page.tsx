@@ -186,7 +186,7 @@ export default function DashboardPage() {
         <div className="mb-6">
           <input
             type="text"
-            placeholder="搜索主账号、子账号、标签或备注..."
+            placeholder="搜索主账号、账号、标签或备注..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-[12px] px-4 py-3 text-[14px] font-[400] text-gray-900 dark:text-textPrimary placeholder-gray-400 dark:placeholder:text-textTertiary focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:border-transparent transition-all shadow-sm dark:shadow-none"

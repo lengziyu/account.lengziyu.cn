@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
-import { ArrowLeft, Plus, Trash2, CheckCircle2, Copy } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, CheckCircle2, Copy, Pencil } from "lucide-react"
 
 type Category = { id: string; name: string }
 type Identity = { id: string; name: string; identifier: string }
@@ -49,8 +49,11 @@ export default function ItemDetailPage() {
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
   const [isAddingIdentity, setIsAddingIdentity] = useState(false)
+  const [isEditingIdentity, setIsEditingIdentity] = useState(false)
   const [newIdentityValue, setNewIdentityValue] = useState("")
   const [newIdentityName, setNewIdentityName] = useState("")
+  const [editIdentityValue, setEditIdentityValue] = useState("")
+  const [editIdentityName, setEditIdentityName] = useState("")
 
   const [timestamps, setTimestamps] = useState({ createdAt: "", updatedAt: "" })
   const [formData, setFormData] = useState({
@@ -114,6 +117,16 @@ export default function ItemDetailPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleIdentitySelect = (identityId: string) => {
+    const selected = identities.find((item) => item.id === identityId)
+    setFormData((prev) => ({
+      ...prev,
+      identityId,
+      title: selected ? selected.identifier : prev.title,
+    }))
+    setIsEditingIdentity(false)
+  }
+
   const toggleTag = (value: string) => {
     setSelectedTags((prev) =>
       prev.includes(value) ? prev.filter((tag) => tag !== value) : [...prev, value]
@@ -159,10 +172,59 @@ export default function ItemDetailPage() {
     }
     const created = await res.json()
     setIdentities((prev) => [created, ...prev.filter((item) => item.id !== created.id)])
-    setFormData((prev) => ({ ...prev, identityId: created.id }))
+    setFormData((prev) => ({ ...prev, identityId: created.id, title: created.identifier }))
     setNewIdentityName("")
     setNewIdentityValue("")
     setIsAddingIdentity(false)
+  }
+
+  const toggleEditIdentity = () => {
+    if (!formData.identityId) {
+      setError("请先选择主账号")
+      return
+    }
+
+    const selected = identities.find((item) => item.id === formData.identityId)
+    if (!selected) {
+      setError("当前主账号不存在")
+      return
+    }
+
+    setError("")
+    setIsAddingIdentity(false)
+    setEditIdentityValue(selected.identifier)
+    setEditIdentityName(selected.name)
+    setIsEditingIdentity((prev) => !prev)
+  }
+
+  const handleUpdateIdentity = async () => {
+    if (!formData.identityId) return
+    const identifier = editIdentityValue.trim()
+    if (!identifier) {
+      setError("主标识不能为空")
+      return
+    }
+
+    const res = await fetch(`/api/identities/${formData.identityId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identifier,
+        name: editIdentityName.trim() || identifier,
+        kind: identifier.includes("@") ? "email" : "username",
+      }),
+    })
+
+    if (!res.ok) {
+      setError(await res.text())
+      return
+    }
+
+    const updated = await res.json()
+    setIdentities((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
+    setFormData((prev) => ({ ...prev, identityId: updated.id, title: updated.identifier }))
+    setIsEditingIdentity(false)
+    setError("")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -242,7 +304,7 @@ export default function ItemDetailPage() {
             <button onClick={() => router.back()} className="p-1.5 -ml-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors">
               <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-textPrimary">编辑子账号</h1>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-textPrimary">编辑账号</h1>
           </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => copyToClipboard(formData.title, "account")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
@@ -263,10 +325,28 @@ export default function ItemDetailPage() {
           <section className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-sm font-medium text-gray-700 dark:text-textSecondary">主账号（可选）</label>
-              <button type="button" onClick={() => setIsAddingIdentity((prev) => !prev)} className="text-xs text-brandIndigo inline-flex items-center">
-                <Plus className="w-3 h-3 mr-1" />
-                新主账号
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingIdentity(false)
+                    setIsAddingIdentity((prev) => !prev)
+                  }}
+                  className="text-xs text-brandIndigo inline-flex items-center"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  新主账号
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleEditIdentity}
+                  className={`text-xs inline-flex items-center ${formData.identityId ? "text-brandIndigo" : "text-gray-400 cursor-not-allowed"}`}
+                  disabled={!formData.identityId}
+                >
+                  <Pencil className="w-3 h-3 mr-1" />
+                  编辑主账号
+                </button>
+              </div>
             </div>
             {isAddingIdentity ? (
               <div className="grid sm:grid-cols-2 gap-2">
@@ -277,7 +357,28 @@ export default function ItemDetailPage() {
                 </div>
               </div>
             ) : null}
-            <select value={formData.identityId} onChange={(e) => handleChange("identityId", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
+            {isEditingIdentity ? (
+              <div className="grid sm:grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={editIdentityValue}
+                  onChange={(e) => setEditIdentityValue(e.target.value)}
+                  placeholder="主标识，如 1058@qq.com"
+                  className="px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editIdentityName}
+                    onChange={(e) => setEditIdentityName(e.target.value)}
+                    placeholder="显示名(可选)"
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+                  />
+                  <Button type="button" variant="brand" onClick={handleUpdateIdentity}>更新</Button>
+                </div>
+              </div>
+            ) : null}
+            <select value={formData.identityId} onChange={(e) => handleIdentitySelect(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
               <option value="">不绑定主账号</option>
               {identities.map((identity) => (
                 <option key={identity.id} value={identity.id}>{identity.name} · {identity.identifier}</option>
@@ -311,7 +412,7 @@ export default function ItemDetailPage() {
 
           <section className="grid sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">子账号/邮箱 *</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">账号 *</label>
               <input required value={formData.title} onChange={(e) => handleChange("title", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
             </div>
             <div>
