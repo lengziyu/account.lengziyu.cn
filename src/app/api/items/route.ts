@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
 import { SITE_TAGS, sanitizeSiteTags } from "@/lib/tags"
+import { MAIN_IDENTITY_KIND, buildMainIdentityProvider } from "@/lib/mainIdentity"
 
 type ItemPayload = {
   title?: string
@@ -11,6 +12,7 @@ type ItemPayload = {
   favorite?: boolean
   tags?: string[]
   identityId?: string | null
+  setAsMain?: boolean
 }
 
 async function ensureIdentityOwner(userId: string, identityId?: string | null) {
@@ -31,6 +33,46 @@ async function ensureIdentityOwner(userId: string, identityId?: string | null) {
 function buildTagRecords(payload: ItemPayload) {
   const tags = sanitizeSiteTags(Array.isArray(payload.tags) ? payload.tags : [])
   return tags.map((tag) => ({ tag, type: "custom" as const }))
+}
+
+async function syncMainIdentity(
+  userId: string,
+  itemId: string,
+  title: string,
+  setAsMain: boolean
+) {
+  const provider = buildMainIdentityProvider(itemId)
+  const existing = await prisma.identity.findFirst({
+    where: { userId, kind: MAIN_IDENTITY_KIND, provider },
+    select: { id: true },
+  })
+
+  if (!setAsMain) {
+    if (existing) {
+      await prisma.identity.delete({ where: { id: existing.id } })
+    }
+    return
+  }
+
+  if (existing) {
+    await prisma.identity.update({
+      where: { id: existing.id },
+      data: {
+        name: title,
+      },
+    })
+    return
+  }
+
+  await prisma.identity.create({
+    data: {
+      userId,
+      name: title,
+      identifier: provider,
+      kind: MAIN_IDENTITY_KIND,
+      provider,
+    },
+  })
 }
 
 export async function GET(req: Request) {
@@ -102,7 +144,11 @@ export async function POST(req: Request) {
       return new NextResponse("Account/Title is required", { status: 400 })
     }
 
-    const identityId = await ensureIdentityOwner(user.id, payload.identityId)
+    const setAsMain = !!payload.setAsMain
+    const identityId = await ensureIdentityOwner(
+      user.id,
+      setAsMain ? null : payload.identityId
+    )
 
     const item = await prisma.vaultItem.create({
       data: {
@@ -123,7 +169,9 @@ export async function POST(req: Request) {
       },
     })
 
-    return NextResponse.json(item)
+    await syncMainIdentity(user.id, item.id, title, setAsMain)
+
+    return NextResponse.json({ ...item, setAsMain })
   } catch (error: any) {
     if (error?.message === "Identity not found") {
       return new NextResponse("Identity not found", { status: 400 })

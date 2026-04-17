@@ -23,6 +23,7 @@ export default function NewItemPage() {
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
   const [bindIdentity, setBindIdentity] = useState(false)
+  const [setAsMain, setSetAsMain] = useState(false)
 
   const [batchText, setBatchText] = useState("")
   const [parsedItems, setParsedItems] = useState<{ id: string; title: string; password: string }[]>([])
@@ -67,7 +68,7 @@ export default function NewItemPage() {
     setFormData((prev) => ({
       ...prev,
       identityId,
-      title: selected ? selected.identifier : prev.title,
+      title: selected ? selected.name : prev.title,
     }))
     setError("")
   }
@@ -75,6 +76,15 @@ export default function NewItemPage() {
   const handleBindIdentityChange = (checked: boolean) => {
     setBindIdentity(checked)
     if (!checked) {
+      setFormData((prev) => ({ ...prev, identityId: "" }))
+      setError("")
+    }
+  }
+
+  const handleSetAsMainChange = (checked: boolean) => {
+    setSetAsMain(checked)
+    if (checked) {
+      setBindIdentity(false)
       setFormData((prev) => ({ ...prev, identityId: "" }))
       setError("")
     }
@@ -147,15 +157,16 @@ export default function NewItemPage() {
     const isNotes = formData.category === "笔记" || formData.category === "note"
 
     try {
-      if (bindIdentity && !formData.identityId) {
+      if (!setAsMain && bindIdentity && !formData.identityId) {
         throw new Error("已勾选绑定主账号，请先选择主账号")
       }
 
       const basePayload = {
-        identityId: bindIdentity ? formData.identityId || null : null,
+        identityId: !setAsMain && bindIdentity ? formData.identityId || null : null,
         category: formData.category,
         notes: formData.notes,
         tags: selectedTags,
+        setAsMain,
       }
 
       if (mode === "single") {
@@ -241,6 +252,25 @@ export default function NewItemPage() {
           <section className="space-y-3">
             <button
               type="button"
+              onClick={() => handleSetAsMainChange(!setAsMain)}
+              className="inline-flex items-center gap-3 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.12)] px-3 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] hover:border-brandIndigo/60 transition-colors"
+              aria-pressed={setAsMain}
+            >
+              <span
+                className={`h-6 w-6 rounded-md border flex items-center justify-center transition-colors ${
+                  setAsMain
+                    ? "bg-brandIndigo border-brandIndigo text-white"
+                    : "bg-white dark:bg-transparent border-gray-300 dark:border-[rgba(255,255,255,0.25)] text-transparent"
+                }`}
+              >
+                <Check className="w-4 h-4" />
+              </span>
+              <span className="text-sm font-medium text-gray-800 dark:text-textPrimary">设为主账号</span>
+            </button>
+
+            {!setAsMain ? (
+            <button
+              type="button"
               onClick={() => handleBindIdentityChange(!bindIdentity)}
               className="inline-flex items-center gap-3 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.12)] px-3 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] hover:border-brandIndigo/60 transition-colors"
               aria-pressed={bindIdentity}
@@ -256,12 +286,13 @@ export default function NewItemPage() {
               </span>
               <span className="text-sm font-medium text-gray-800 dark:text-textPrimary">绑定主账号</span>
             </button>
-            {bindIdentity ? (
+            ) : null}
+            {!setAsMain && bindIdentity ? (
               <>
                 <select value={formData.identityId} onChange={(e) => handleIdentitySelect(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
                   <option value="">请选择主账号</option>
                   {identities.map((identity) => (
-                    <option key={identity.id} value={identity.id}>{identity.name} · {identity.identifier}</option>
+                    <option key={identity.id} value={identity.id}>{identity.name}</option>
                   ))}
                 </select>
                 {identities.length === 0 ? (

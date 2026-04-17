@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
 import { SITE_TAGS, sanitizeSiteTags } from "@/lib/tags"
+import { MAIN_IDENTITY_KIND, buildMainIdentityProvider } from "@/lib/mainIdentity"
 
 type ItemPayload = {
   title?: string
@@ -11,6 +12,7 @@ type ItemPayload = {
   favorite?: boolean
   tags?: string[]
   identityId?: string | null
+  setAsMain?: boolean
 }
 
 async function ensureIdentityOwner(userId: string, identityId?: string | null) {
@@ -31,6 +33,52 @@ async function ensureIdentityOwner(userId: string, identityId?: string | null) {
 function buildTagRecords(payload: ItemPayload) {
   const tags = sanitizeSiteTags(Array.isArray(payload.tags) ? payload.tags : [])
   return tags.map((tag) => ({ tag, type: "custom" as const }))
+}
+
+async function getMainIdentity(userId: string, itemId: string) {
+  return prisma.identity.findFirst({
+    where: {
+      userId,
+      kind: MAIN_IDENTITY_KIND,
+      provider: buildMainIdentityProvider(itemId),
+    },
+    select: { id: true },
+  })
+}
+
+async function syncMainIdentity(
+  userId: string,
+  itemId: string,
+  title: string,
+  setAsMain: boolean
+) {
+  const existing = await getMainIdentity(userId, itemId)
+
+  if (!setAsMain) {
+    if (existing) {
+      await prisma.identity.delete({ where: { id: existing.id } })
+    }
+    return
+  }
+
+  if (existing) {
+    await prisma.identity.update({
+      where: { id: existing.id },
+      data: { name: title },
+    })
+    return
+  }
+
+  const provider = buildMainIdentityProvider(itemId)
+  await prisma.identity.create({
+    data: {
+      userId,
+      name: title,
+      identifier: provider,
+      kind: MAIN_IDENTITY_KIND,
+      provider,
+    },
+  })
 }
 
 export async function GET(
@@ -64,7 +112,12 @@ export async function GET(
       return new NextResponse("Not Found", { status: 404 })
     }
 
-    return NextResponse.json(item)
+    const mainIdentity = await getMainIdentity(user.id, params.id)
+
+    return NextResponse.json({
+      ...item,
+      setAsMain: !!mainIdentity,
+    })
   } catch {
     return new NextResponse("Internal Error", { status: 500 })
   }
@@ -95,7 +148,11 @@ export async function PATCH(
       return new NextResponse("Account/Title is required", { status: 400 })
     }
 
-    const identityId = await ensureIdentityOwner(user.id, payload.identityId)
+    const setAsMain = !!payload.setAsMain
+    const identityId = await ensureIdentityOwner(
+      user.id,
+      setAsMain ? null : payload.identityId
+    )
 
     await prisma.tag.deleteMany({ where: { itemId: params.id } })
 
@@ -118,7 +175,9 @@ export async function PATCH(
       },
     })
 
-    return NextResponse.json(item)
+    await syncMainIdentity(user.id, params.id, title, setAsMain)
+
+    return NextResponse.json({ ...item, setAsMain })
   } catch (error: any) {
     if (error?.message === "Identity not found") {
       return new NextResponse("Identity not found", { status: 400 })
@@ -135,6 +194,11 @@ export async function DELETE(
     const user = await getCurrentUser()
     if (!user) {
       return new NextResponse("Unauthorized", { status: 401 })
+    }
+
+    const mainIdentity = await getMainIdentity(user.id, params.id)
+    if (mainIdentity) {
+      await prisma.identity.delete({ where: { id: mainIdentity.id } })
     }
 
     await prisma.vaultItem.deleteMany({

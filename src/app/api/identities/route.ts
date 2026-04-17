@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
+import { MAIN_IDENTITY_KIND } from "@/lib/mainIdentity"
 
 type CreateIdentityBody = {
   name?: string
@@ -18,7 +19,7 @@ export async function GET() {
     }
 
     const identities = await prisma.identity.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, kind: MAIN_IDENTITY_KIND },
       include: {
         _count: {
           select: { vaultItems: true },
