@@ -276,7 +276,11 @@ export default function NewItemPage() {
         <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-4">
           {error ? <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm border border-red-100 dark:border-transparent">{error}</div> : null}
 
-          <form id="new-item-form" onSubmit={handleSubmit} className="space-y-5 pb-6">
+          <form
+            id="new-item-form"
+            onSubmit={handleSubmit}
+            className="space-y-5 pb-6 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.02)] dark:shadow-none"
+          >
           <section className="space-y-3">
             <button
               type="button"
@@ -339,7 +343,7 @@ export default function NewItemPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">分类</label>
               {isAddingCategory ? (
                 <div className="flex gap-2">
-                  <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="输入分类名" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+                  <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="请输入分类名" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
                   <Button type="button" variant="brand" onClick={handleAddCategory}>添加</Button>
                 </div>
               ) : (
@@ -362,28 +366,28 @@ export default function NewItemPage() {
             <section className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">账号 *</label>
-                <input type="text" required value={formData.title} onChange={(e) => handleChange("title", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+                <input type="text" required value={formData.title} onChange={(e) => handleChange("title", e.target.value)} placeholder="请输入账号" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">密码</label>
-                <input type="text" value={formData.password} onChange={(e) => handleChange("password", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+                <input type="text" value={formData.password} onChange={(e) => handleChange("password", e.target.value)} placeholder="请输入密码" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">标题</label>
-                <input type="text" value={formData.displayTitle} onChange={(e) => handleChange("displayTitle", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+                <input type="text" value={formData.displayTitle} onChange={(e) => handleChange("displayTitle", e.target.value)} placeholder="请输入标题" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
               </div>
             </section>
           ) : (
             <section className="space-y-3">
               <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary">批量文本</label>
-              <textarea rows={4} value={batchText} onChange={(e) => setBatchText(e.target.value)} placeholder="账号：test@qq.com 密码：123456" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+              <textarea rows={4} value={batchText} onChange={(e) => setBatchText(e.target.value)} placeholder="请输入批量文本，例如：账号：test@qq.com 密码：123456" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
               <Button type="button" variant="outline" onClick={handleParseBatch}>解析文本</Button>
               {parsedItems.length > 0 ? (
                 <div className="space-y-2">
                   {parsedItems.map((item) => (
                     <div key={item.id} className="flex gap-2">
-                      <input value={item.title} onChange={(e) => updateParsedItem(item.id, "title", e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
-                      <input value={item.password} onChange={(e) => updateParsedItem(item.id, "password", e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
+                      <input value={item.title} onChange={(e) => updateParsedItem(item.id, "title", e.target.value)} placeholder="请输入账号" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
+                      <input value={item.password} onChange={(e) => updateParsedItem(item.id, "password", e.target.value)} placeholder="请输入密码" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
                       <button type="button" onClick={() => removeParsedItem(item.id)} className="px-3 text-red-500"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}
@@ -411,7 +415,7 @@ export default function NewItemPage() {
                 type="text"
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
-                placeholder="新增平台标签"
+                placeholder="请输入平台名称"
                 className="flex-1 min-w-[160px] px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]"
               />
               <Button type="button" variant="outline" onClick={handleCreateTagPreset}>新增</Button>
@@ -420,7 +424,7 @@ export default function NewItemPage() {
 
           <section>
             <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">备注</label>
-            <textarea rows={4} value={formData.notes} onChange={(e) => handleChange("notes", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+            <textarea rows={4} value={formData.notes} onChange={(e) => handleChange("notes", e.target.value)} placeholder="请输入备注" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
           </section>
         </form>
         </div>

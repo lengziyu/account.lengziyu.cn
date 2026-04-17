@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Pencil, Tags, Trash2, X } from "lucide-react";
+import { ArrowLeft, CircleAlert, Tags, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 
@@ -20,8 +20,9 @@ export default function PlatformSettingsPage() {
   const router = useRouter();
   const [tagPresets, setTagPresets] = useState<TagPreset[]>([]);
   const [newTagName, setNewTagName] = useState("");
-  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [editingTag, setEditingTag] = useState<{ id: string; name: string } | null>(null);
   const [editingTagName, setEditingTagName] = useState("");
+  const [deletingTag, setDeletingTag] = useState<{ id: string; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -86,19 +87,18 @@ export default function PlatformSettingsPage() {
   };
 
   const startEdit = (id: string, name: string) => {
-    setEditingTagId(id);
+    setEditingTag({ id, name });
     setEditingTagName(name);
     clearMessages();
   };
 
   const cancelEdit = () => {
-    setEditingTagId(null);
+    setEditingTag(null);
     setEditingTagName("");
-    clearMessages();
   };
 
   const handleUpdate = async () => {
-    if (!editingTagId || submitting) return;
+    if (!editingTag || submitting) return;
     const name = editingTagName.trim();
     if (!name) return;
     setSubmitting(true);
@@ -107,13 +107,13 @@ export default function PlatformSettingsPage() {
       const res = await fetch("/api/tags", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editingTagId, name }),
+        body: JSON.stringify({ id: editingTag.id, name }),
       });
       if (!res.ok) {
         setError(await getErrorMessage(res, "修改失败"));
         return;
       }
-      setEditingTagId(null);
+      setEditingTag(null);
       setEditingTagName("");
       setSuccess("修改成功");
       await fetchTags();
@@ -124,14 +124,12 @@ export default function PlatformSettingsPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (submitting) return;
-    if (!confirm(`确定删除平台「${name}」吗？`)) return;
-
+  const handleDelete = async () => {
+    if (submitting || !deletingTag) return;
     setSubmitting(true);
     clearMessages();
     try {
-      const res = await fetch(`/api/tags?id=${encodeURIComponent(id)}`, {
+      const res = await fetch(`/api/tags?id=${encodeURIComponent(deletingTag.id)}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -139,10 +137,11 @@ export default function PlatformSettingsPage() {
         return;
       }
 
-      if (editingTagId === id) {
-        setEditingTagId(null);
+      if (editingTag?.id === deletingTag.id) {
+        setEditingTag(null);
         setEditingTagName("");
       }
+      setDeletingTag(null);
       setSuccess("删除成功");
       await fetchTags();
     } catch {
@@ -206,7 +205,7 @@ export default function PlatformSettingsPage() {
               type="text"
               value={newTagName}
               onChange={(e) => setNewTagName(e.target.value)}
-              placeholder="新增平台标签"
+              placeholder="请输入平台名称"
               className="flex-1 min-w-[180px] px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]"
             />
             <Button type="button" variant="outline" onClick={handleCreate} disabled={submitting}>
@@ -228,70 +227,118 @@ export default function PlatformSettingsPage() {
               还没有平台，先新增一个吧。
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="flex flex-wrap gap-3">
               {tagPresets.map((preset) => (
                 <div
                   key={preset.id}
-                  className="flex items-center gap-2 text-sm rounded-lg border border-gray-100 dark:border-[rgba(255,255,255,0.08)] px-3 py-2"
+                  className="relative"
                 >
-                  {editingTagId === preset.id ? (
-                    <>
-                      <input
-                        type="text"
-                        value={editingTagName}
-                        onChange={(e) => setEditingTagName(e.target.value)}
-                        className="flex-1 px-2 py-1 rounded border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleUpdate}
-                        className="inline-flex items-center text-brandIndigo"
-                        disabled={submitting}
-                      >
-                        <Check className="w-4 h-4 mr-1" />
-                        保存
-                      </button>
-                      <button
-                        type="button"
-                        onClick={cancelEdit}
-                        className="inline-flex items-center text-gray-500"
-                        disabled={submitting}
-                      >
-                        <X className="w-4 h-4 mr-1" />
-                        取消
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex-1 text-gray-700 dark:text-textPrimary">
-                        {preset.name}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => startEdit(preset.id, preset.name)}
-                        className="inline-flex items-center text-brandIndigo"
-                        disabled={submitting}
-                      >
-                        <Pencil className="w-4 h-4 mr-1" />
-                        修改
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(preset.id, preset.name)}
-                        className="inline-flex items-center text-red-500"
-                        disabled={submitting}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        删除
-                      </button>
-                    </>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => startEdit(preset.id, preset.name)}
+                    disabled={submitting}
+                    className="px-4 py-2 pr-8 text-sm rounded-full border border-gray-200 dark:border-[rgba(255,255,255,0.12)] bg-gray-50 dark:bg-[rgba(255,255,255,0.03)] text-gray-700 dark:text-textPrimary hover:border-brandIndigo/60 hover:text-brandIndigo transition-colors disabled:opacity-60"
+                  >
+                    {preset.name}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`删除 ${preset.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeletingTag({ id: preset.id, name: preset.name });
+                      clearMessages();
+                    }}
+                    disabled={submitting}
+                    className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-red-200 bg-white text-red-500 shadow-sm hover:bg-red-50 dark:border-red-400/40 dark:bg-[#1f1f24] dark:text-red-300 dark:hover:bg-red-500/10 disabled:opacity-60"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {editingTag ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/45 backdrop-blur-[1px]"
+            onClick={submitting ? undefined : cancelEdit}
+            aria-label="关闭修改弹窗"
+          />
+          <div className="relative w-full max-w-xl rounded-3xl border border-gray-200 bg-white p-7 shadow-2xl dark:border-[rgba(255,255,255,0.15)] dark:bg-[#1b1c21]">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-textPrimary">修改平台</h2>
+                <p className="mt-2 text-sm text-gray-500 dark:text-textTertiary">点击保存后，相关记录会同步更新为新名称。</p>
+              </div>
+              <button
+                type="button"
+                onClick={cancelEdit}
+                disabled={submitting}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-[rgba(255,255,255,0.15)] dark:text-textSecondary dark:hover:bg-[rgba(255,255,255,0.05)]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-textSecondary">平台名称</label>
+            <input
+              type="text"
+              value={editingTagName}
+              onChange={(e) => setEditingTagName(e.target.value)}
+              placeholder="请输入平台名称"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base text-gray-900 outline-none transition-colors focus:border-brandIndigo dark:border-[rgba(255,255,255,0.15)] dark:bg-[rgba(255,255,255,0.04)] dark:text-textPrimary"
+              autoFocus
+            />
+            <div className="mt-6 flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={cancelEdit} disabled={submitting}>
+                取消
+              </Button>
+              <Button type="button" variant="brand" onClick={handleUpdate} disabled={submitting}>
+                {submitting ? "保存中..." : "保存修改"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {deletingTag ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/55 backdrop-blur-[1px]"
+            onClick={submitting ? undefined : () => setDeletingTag(null)}
+            aria-label="关闭删除确认弹窗"
+          />
+          <div className="relative w-full max-w-lg rounded-3xl border border-red-100 bg-white p-7 shadow-2xl dark:border-red-400/30 dark:bg-[#1b1c21]">
+            <div className="mb-4 flex items-center gap-3 text-red-600 dark:text-red-300">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/15">
+                <CircleAlert className="h-5 w-5" />
+              </span>
+              <h2 className="text-2xl font-semibold">删除平台</h2>
+            </div>
+            <p className="text-sm leading-6 text-gray-600 dark:text-textSecondary">
+              确定删除平台「{deletingTag.name}」吗？删除后，使用该平台标签的记录会同步清理该标签。
+            </p>
+            <div className="mt-7 flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setDeletingTag(null)} disabled={submitting}>
+                取消
+              </Button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={submitting}
+                className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-[14px] font-[510] text-white transition-colors hover:bg-red-500 disabled:pointer-events-none disabled:opacity-50"
+              >
+                {submitting ? "删除中..." : "确认删除"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
