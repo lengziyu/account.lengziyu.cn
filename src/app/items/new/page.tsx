@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
-import { ArrowLeft, Plus, CopyMinus, Trash2, Pencil } from "lucide-react"
+import { ArrowLeft, Plus, CopyMinus, Trash2 } from "lucide-react"
 
 type Category = { id: string; name: string }
 type Identity = { id: string; name: string; identifier: string }
@@ -22,12 +22,7 @@ export default function NewItemPage() {
 
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
-  const [isAddingIdentity, setIsAddingIdentity] = useState(false)
-  const [isEditingIdentity, setIsEditingIdentity] = useState(false)
-  const [newIdentityValue, setNewIdentityValue] = useState("")
-  const [newIdentityName, setNewIdentityName] = useState("")
-  const [editIdentityValue, setEditIdentityValue] = useState("")
-  const [editIdentityName, setEditIdentityName] = useState("")
+  const [bindIdentity, setBindIdentity] = useState(false)
 
   const [batchText, setBatchText] = useState("")
   const [parsedItems, setParsedItems] = useState<{ id: string; title: string; password: string }[]>([])
@@ -74,7 +69,15 @@ export default function NewItemPage() {
       identityId,
       title: selected ? selected.identifier : prev.title,
     }))
-    setIsEditingIdentity(false)
+    setError("")
+  }
+
+  const handleBindIdentityChange = (checked: boolean) => {
+    setBindIdentity(checked)
+    if (!checked) {
+      setFormData((prev) => ({ ...prev, identityId: "" }))
+      setError("")
+    }
   }
 
   const toggleTag = (value: string) => {
@@ -103,82 +106,6 @@ export default function NewItemPage() {
     setFormData((prev) => ({ ...prev, category: created.name }))
     setNewCategoryName("")
     setIsAddingCategory(false)
-  }
-
-  const handleAddIdentity = async () => {
-    const identifier = newIdentityValue.trim()
-    if (!identifier) return
-
-    const res = await fetch("/api/identities", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        identifier,
-        name: newIdentityName.trim() || identifier,
-        kind: identifier.includes("@") ? "email" : "username",
-      }),
-    })
-
-    if (!res.ok) {
-      setError(await res.text())
-      return
-    }
-
-    const created = await res.json()
-    setIdentities((prev) => [created, ...prev.filter((item) => item.id !== created.id)])
-    setFormData((prev) => ({ ...prev, identityId: created.id, title: created.identifier }))
-    setNewIdentityName("")
-    setNewIdentityValue("")
-    setIsAddingIdentity(false)
-  }
-
-  const toggleEditIdentity = () => {
-    if (!formData.identityId) {
-      setError("请先选择主账号")
-      return
-    }
-
-    const selected = identities.find((item) => item.id === formData.identityId)
-    if (!selected) {
-      setError("当前主账号不存在")
-      return
-    }
-
-    setError("")
-    setIsAddingIdentity(false)
-    setEditIdentityValue(selected.identifier)
-    setEditIdentityName(selected.name)
-    setIsEditingIdentity((prev) => !prev)
-  }
-
-  const handleUpdateIdentity = async () => {
-    if (!formData.identityId) return
-    const identifier = editIdentityValue.trim()
-    if (!identifier) {
-      setError("主标识不能为空")
-      return
-    }
-
-    const res = await fetch(`/api/identities/${formData.identityId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        identifier,
-        name: editIdentityName.trim() || identifier,
-        kind: identifier.includes("@") ? "email" : "username",
-      }),
-    })
-
-    if (!res.ok) {
-      setError(await res.text())
-      return
-    }
-
-    const updated = await res.json()
-    setIdentities((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
-    setFormData((prev) => ({ ...prev, identityId: updated.id, title: updated.identifier }))
-    setIsEditingIdentity(false)
-    setError("")
   }
 
   const handleParseBatch = () => {
@@ -220,8 +147,12 @@ export default function NewItemPage() {
     const isNotes = formData.category === "笔记" || formData.category === "note"
 
     try {
+      if (bindIdentity && !formData.identityId) {
+        throw new Error("已勾选绑定主账号，请先选择主账号")
+      }
+
       const basePayload = {
-        identityId: formData.identityId || null,
+        identityId: bindIdentity ? formData.identityId || null : null,
         category: formData.category,
         notes: formData.notes,
         tags: selectedTags,
@@ -308,67 +239,29 @@ export default function NewItemPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <section className="space-y-3">
-            <div className="flex justify-between items-center">
-              <label className="text-sm font-medium text-gray-700 dark:text-textSecondary">主账号（可选）</label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditingIdentity(false)
-                    setIsAddingIdentity((prev) => !prev)
-                  }}
-                  className="text-xs text-brandIndigo inline-flex items-center"
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  新主账号
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleEditIdentity}
-                  className={`text-xs inline-flex items-center ${formData.identityId ? "text-brandIndigo" : "text-gray-400 cursor-not-allowed"}`}
-                  disabled={!formData.identityId}
-                >
-                  <Pencil className="w-3 h-3 mr-1" />
-                  编辑主账号
-                </button>
-              </div>
-            </div>
-            {isAddingIdentity ? (
-              <div className="grid sm:grid-cols-2 gap-2">
-                <input type="text" value={newIdentityValue} onChange={(e) => setNewIdentityValue(e.target.value)} placeholder="主标识，如 1058@qq.com" className="px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
-                <div className="flex gap-2">
-                  <input type="text" value={newIdentityName} onChange={(e) => setNewIdentityName(e.target.value)} placeholder="显示名(可选)" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
-                  <Button type="button" variant="brand" onClick={handleAddIdentity}>保存</Button>
-                </div>
-              </div>
+            <label className="text-sm font-medium text-gray-700 dark:text-textSecondary">主账号绑定</label>
+            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-textSecondary">
+              <input
+                type="checkbox"
+                checked={bindIdentity}
+                onChange={(e) => handleBindIdentityChange(e.target.checked)}
+                className="h-4 w-4 accent-brandIndigo"
+              />
+              是否绑定主账号
+            </label>
+            {bindIdentity ? (
+              <>
+                <select value={formData.identityId} onChange={(e) => handleIdentitySelect(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
+                  <option value="">请选择主账号</option>
+                  {identities.map((identity) => (
+                    <option key={identity.id} value={identity.id}>{identity.name} · {identity.identifier}</option>
+                  ))}
+                </select>
+                {identities.length === 0 ? (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">暂无可选主账号，请先在系统中准备主账号数据。</p>
+                ) : null}
+              </>
             ) : null}
-            {isEditingIdentity ? (
-              <div className="grid sm:grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  value={editIdentityValue}
-                  onChange={(e) => setEditIdentityValue(e.target.value)}
-                  placeholder="主标识，如 1058@qq.com"
-                  className="px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-                />
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={editIdentityName}
-                    onChange={(e) => setEditIdentityName(e.target.value)}
-                    placeholder="显示名(可选)"
-                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-                  />
-                  <Button type="button" variant="brand" onClick={handleUpdateIdentity}>更新</Button>
-                </div>
-              </div>
-            ) : null}
-            <select value={formData.identityId} onChange={(e) => handleIdentitySelect(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
-              <option value="">不绑定主账号</option>
-              {identities.map((identity) => (
-                <option key={identity.id} value={identity.id}>{identity.name} · {identity.identifier}</option>
-              ))}
-            </select>
           </section>
 
           <section className="grid sm:grid-cols-2 gap-3">
