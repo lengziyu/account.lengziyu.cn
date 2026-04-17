@@ -7,11 +7,23 @@ import { BottomNav } from "@/components/BottomNav";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "个人账号库 - 专属安全管理",
+  title: {
+    default: "冷子雨账号库",
+    template: "%s | 冷子雨账号库",
+  },
   description: "您的专属本地私密账号保护工具",
+  applicationName: "冷子雨账号库",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "冷子雨账号库",
+    statusBarStyle: "default",
+  },
   icons: {
-    icon: "/icon.svg"
-  }
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: ["/icon.svg"],
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({

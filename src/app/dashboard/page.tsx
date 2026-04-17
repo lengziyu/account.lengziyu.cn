@@ -21,6 +21,7 @@ type ItemTag = {
 type VaultItem = {
   id: string
   title: string
+  displayTitle?: string | null
   password?: string | null
   favorite: boolean
   createdAt?: string
@@ -103,7 +104,7 @@ export default function DashboardPage() {
       >
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <div className="text-[15px] font-[510] text-gray-900 dark:text-textPrimary truncate">{item.title}</div>
+            <div className="text-[15px] font-[510] text-gray-900 dark:text-textPrimary truncate">{item.displayTitle || item.title}</div>
             <div className="flex flex-wrap gap-1 mt-1">
               {tags.length > 0 ? (
                 tags.map((tag) => (

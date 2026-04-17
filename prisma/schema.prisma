@@ -17,6 +17,7 @@ model User {
   vaultItems   VaultItem[]
   categories   Category[]
   identities   Identity[]
+  tagPresets   TagPreset[]
 }
 
 model Category {
@@ -37,6 +38,7 @@ model VaultItem {
   identityId  String?
   identity    Identity? @relation(fields: [identityId], references: [id], onDelete: SetNull)
   title       String
+  displayTitle String?
   platform    String?
   url         String?
   username    String?
@@ -49,6 +51,18 @@ model VaultItem {
   tags        Tag[]
 
   @@index([userId, identityId])
+  @@index([userId, updatedAt])
+}
+
+model TagPreset {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
   @@index([userId, updatedAt])
 }
 

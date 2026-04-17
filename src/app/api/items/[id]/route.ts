@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
-import { SITE_TAGS, sanitizeSiteTags } from "@/lib/tags"
+import { sanitizeItemTags } from "@/lib/tags"
 import { MAIN_IDENTITY_KIND, buildMainIdentityProvider } from "@/lib/mainIdentity"
 
 type ItemPayload = {
   title?: string
+  displayTitle?: string
   password?: string
   category?: string
   notes?: string
@@ -31,7 +32,7 @@ async function ensureIdentityOwner(userId: string, identityId?: string | null) {
 }
 
 function buildTagRecords(payload: ItemPayload) {
-  const tags = sanitizeSiteTags(Array.isArray(payload.tags) ? payload.tags : [])
+  const tags = sanitizeItemTags(Array.isArray(payload.tags) ? payload.tags : [])
   return tags.map((tag) => ({ tag, type: "custom" as const }))
 }
 
@@ -49,7 +50,8 @@ async function getMainIdentity(userId: string, itemId: string) {
 async function syncMainIdentity(
   userId: string,
   itemId: string,
-  title: string,
+  displayName: string,
+  account: string,
   setAsMain: boolean
 ) {
   const existing = await getMainIdentity(userId, itemId)
@@ -64,7 +66,10 @@ async function syncMainIdentity(
   if (existing) {
     await prisma.identity.update({
       where: { id: existing.id },
-      data: { name: title },
+      data: {
+        name: displayName,
+        notes: account,
+      },
     })
     return
   }
@@ -73,10 +78,11 @@ async function syncMainIdentity(
   await prisma.identity.create({
     data: {
       userId,
-      name: title,
+      name: displayName,
       identifier: provider,
       kind: MAIN_IDENTITY_KIND,
       provider,
+      notes: account,
     },
   })
 }
@@ -99,10 +105,7 @@ export async function GET(
       include: {
         identity: true,
         tags: {
-          where: {
-            type: "custom",
-            tag: { in: [...SITE_TAGS] },
-          },
+          where: { type: "custom" },
           orderBy: [{ type: "asc" }, { tag: "asc" }],
         },
       },
@@ -147,6 +150,7 @@ export async function PATCH(
     if (!title) {
       return new NextResponse("Account/Title is required", { status: 400 })
     }
+    const displayTitle = payload.displayTitle?.trim() || null
 
     const setAsMain = !!payload.setAsMain
     const identityId = await ensureIdentityOwner(
@@ -160,6 +164,7 @@ export async function PATCH(
       where: { id: params.id },
       data: {
         title,
+        displayTitle,
         password: payload.password?.trim() || null,
         category: payload.category?.trim() || null,
         notes: payload.notes?.trim() || null,
@@ -175,7 +180,13 @@ export async function PATCH(
       },
     })
 
-    await syncMainIdentity(user.id, params.id, title, setAsMain)
+    await syncMainIdentity(
+      user.id,
+      params.id,
+      displayTitle || title,
+      title,
+      setAsMain
+    )
 
     return NextResponse.json({ ...item, setAsMain })
   } catch (error: any) {
