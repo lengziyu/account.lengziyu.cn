@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { LogOut, LayoutGrid, Star, Tags, Layers, User } from "lucide-react";
+import { LogOut, LayoutGrid, Star, Tags, Layers, User, ChevronRight } from "lucide-react";
 
 interface StatsData {
   totalItems: number;
@@ -101,7 +101,7 @@ export default function SettingsPage() {
               <Tags className="w-5 h-5 mr-2 text-brandIndigo" />
               常用平台管理
             </span>
-            <span className="text-xs text-gray-500 dark:text-textTertiary">新增 / 修改 / 删除</span>
+            <ChevronRight className="w-4 h-4 text-gray-500 dark:text-textTertiary" />
           </button>
 
           <button 

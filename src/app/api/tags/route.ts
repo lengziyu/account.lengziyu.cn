@@ -21,23 +21,21 @@ export async function GET() {
       select: { id: true, name: true },
     })
 
-    if (existingPresets.length === 0) {
-      const itemCount = await prisma.vaultItem.count({
-        where: { userId: user.id },
-      })
+    const existingNameSet = new Set(existingPresets.map((item) => item.name.toLowerCase()))
+    const missingDefaults = DEFAULT_TAGS.filter(
+      (name) => !existingNameSet.has(name.toLowerCase())
+    )
 
-      if (itemCount === 0) {
-        for (const name of DEFAULT_TAGS) {
-          try {
-            await prisma.tagPreset.create({
-              data: { userId: user.id, name },
-            })
-          } catch {
-            // Ignore duplicates caused by concurrent requests.
-          }
+    if (missingDefaults.length > 0) {
+      for (const name of missingDefaults) {
+        try {
+          await prisma.tagPreset.create({
+            data: { userId: user.id, name },
+          })
+        } catch {
+          // Ignore duplicates caused by concurrent requests.
         }
       }
-
       existingPresets = await prisma.tagPreset.findMany({
         where: { userId: user.id },
         orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],

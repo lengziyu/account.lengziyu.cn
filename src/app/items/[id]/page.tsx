@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
-import { ArrowLeft, Plus, Trash2, CheckCircle2, Copy, Check, Pencil, X } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, CheckCircle2, Copy, Check } from "lucide-react"
 
 type Category = { id: string; name: string }
 type Identity = { id: string; name: string; identifier: string; notes?: string | null }
 type ItemTag = { id: string; tag: string; type: "custom" | "system" }
-type TagPreset = { id: string; name: string; builtin: boolean }
 type ItemDetail = {
   id: string
   identityId?: string | null
@@ -23,7 +22,7 @@ type ItemDetail = {
   updatedAt?: string
   tags: ItemTag[]
 }
-type TagResponse = { sections: { label: string; tags: string[] }[]; presets?: TagPreset[] }
+type TagResponse = { sections: { label: string; tags: string[] }[] }
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return ""
@@ -47,7 +46,6 @@ export default function ItemDetailPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [identities, setIdentities] = useState<Identity[]>([])
   const [siteTags, setSiteTags] = useState<string[]>([])
-  const [tagPresets, setTagPresets] = useState<TagPreset[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
   const [isAddingCategory, setIsAddingCategory] = useState(false)
@@ -55,8 +53,6 @@ export default function ItemDetailPage() {
   const [bindIdentity, setBindIdentity] = useState(false)
   const [setAsMain, setSetAsMain] = useState(false)
   const [newTagName, setNewTagName] = useState("")
-  const [editingTagId, setEditingTagId] = useState<string | null>(null)
-  const [editingTagName, setEditingTagName] = useState("")
 
   const [timestamps, setTimestamps] = useState({ createdAt: "", updatedAt: "" })
   const [formData, setFormData] = useState({
@@ -95,7 +91,6 @@ export default function ItemDetailPage() {
     if (!res.ok) return
     const data = (await res.json()) as TagResponse
     setSiteTags(data.sections?.[0]?.tags || [])
-    setTagPresets(data.presets || [])
   }
 
   const fetchItem = async () => {
@@ -179,55 +174,6 @@ export default function ItemDetailPage() {
       return
     }
     setNewTagName("")
-    setError("")
-    await fetchTags()
-  }
-
-  const startEditTagPreset = (id: string, name: string) => {
-    setEditingTagId(id)
-    setEditingTagName(name)
-    setError("")
-  }
-
-  const handleUpdateTagPreset = async () => {
-    if (!editingTagId) return
-    const name = editingTagName.trim()
-    if (!name) return
-
-    const current = tagPresets.find((item) => item.id === editingTagId)
-    if (!current) return
-
-    const res = await fetch("/api/tags", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: editingTagId, name }),
-    })
-    if (!res.ok) {
-      setError(await res.text())
-      return
-    }
-
-    setSelectedTags((prev) => prev.map((tag) => (tag === current.name ? name : tag)))
-    setEditingTagId(null)
-    setEditingTagName("")
-    setError("")
-    await fetchTags()
-  }
-
-  const handleDeleteTagPreset = async (id: string, name: string) => {
-    const res = await fetch(`/api/tags?id=${encodeURIComponent(id)}`, {
-      method: "DELETE",
-    })
-    if (!res.ok) {
-      setError(await res.text())
-      return
-    }
-
-    setSelectedTags((prev) => prev.filter((tag) => tag !== name))
-    if (editingTagId === id) {
-      setEditingTagId(null)
-      setEditingTagName("")
-    }
     setError("")
     await fetchTags()
   }
@@ -476,30 +422,6 @@ export default function ItemDetailPage() {
                 className="flex-1 min-w-[160px] px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]"
               />
               <Button type="button" variant="outline" onClick={handleCreateTagPreset}>新增</Button>
-            </div>
-            <div className="space-y-1">
-              {tagPresets.filter((item) => !item.builtin).map((preset) => (
-                <div key={preset.id} className="flex items-center gap-2 text-xs">
-                  {editingTagId === preset.id ? (
-                    <>
-                      <input
-                        type="text"
-                        value={editingTagName}
-                        onChange={(e) => setEditingTagName(e.target.value)}
-                        className="flex-1 px-2 py-1 rounded border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]"
-                      />
-                      <button type="button" onClick={handleUpdateTagPreset} className="inline-flex items-center text-brandIndigo"><Check className="w-3 h-3 mr-1" />保存</button>
-                      <button type="button" onClick={() => { setEditingTagId(null); setEditingTagName("") }} className="inline-flex items-center text-gray-500"><X className="w-3 h-3 mr-1" />取消</button>
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex-1 text-gray-600 dark:text-gray-300">{preset.name}</span>
-                      <button type="button" onClick={() => startEditTagPreset(preset.id, preset.name)} className="inline-flex items-center text-brandIndigo"><Pencil className="w-3 h-3 mr-1" />修改</button>
-                      <button type="button" onClick={() => handleDeleteTagPreset(preset.id, preset.name)} className="inline-flex items-center text-red-500"><Trash2 className="w-3 h-3 mr-1" />删除</button>
-                    </>
-                  )}
-                </div>
-              ))}
             </div>
           </section>
 
