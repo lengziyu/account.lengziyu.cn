@@ -39,7 +39,7 @@ const formatDate = (dateString?: string) => {
 }
 
 function getIdentityLabel(item: VaultItem) {
-  if (!item.identity) return "未绑定主账号"
+  if (!item.identity) return "未分组"
   return item.identity.name || item.identity.identifier
 }
 
@@ -87,71 +87,71 @@ export default function DashboardPage() {
 
   const renderItemCard = (item: VaultItem) => {
     const tags = item.tags || []
+    const displayTime = (() => {
+      const isUpdated =
+        item.updatedAt &&
+        item.createdAt &&
+        new Date(item.updatedAt).getTime() - new Date(item.createdAt).getTime() > 1000
+      return isUpdated ? formatDate(item.updatedAt) : formatDate(item.createdAt)
+    })()
+
     return (
       <div
         key={item.id}
-        className="group bg-white dark:bg-[rgba(255,255,255,0.03)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] hover:border-gray-200 dark:hover:bg-[rgba(255,255,255,0.05)] shadow-sm dark:shadow-none transition-all rounded-[12px] p-4 cursor-pointer flex flex-col justify-center relative overflow-hidden"
+        className="group bg-white dark:bg-[rgba(255,255,255,0.03)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] hover:border-gray-200 dark:hover:bg-[rgba(255,255,255,0.05)] shadow-sm dark:shadow-none transition-all rounded-[12px] p-3.5 cursor-pointer relative overflow-hidden"
         onClick={() => router.push(`/items/${item.id}`)}
       >
-        <div className="mb-1 text-[11px] uppercase tracking-wide text-gray-400 dark:text-textTertiary">
-          {getIdentityLabel(item)}
-        </div>
-        <div className="flex justify-between items-start mb-2">
-          <div className="text-[15px] font-[510] text-gray-900 dark:text-textPrimary truncate">{item.title}</div>
-          <div className="flex items-center space-x-2 shrink-0 ml-3">
-            <button
-              type="button"
-              onClick={(e) => copyToClipboard(e, item.title, `account-${item.id}`)}
-              className="flex items-center p-2 bg-gray-100 hover:bg-gray-200 dark:bg-[rgba(255,255,255,0.08)] dark:hover:bg-[rgba(255,255,255,0.15)] rounded-md text-gray-700 dark:text-gray-300 transition-colors border border-transparent hover:border-gray-300 dark:hover:border-[rgba(255,255,255,0.2)] shadow-sm"
-              title="复制账号"
-            >
-              {copiedId === `account-${item.id}` ? (
-                <CheckCircle2 className="w-4 h-4 text-statusGreen" />
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-[15px] font-[510] text-gray-900 dark:text-textPrimary truncate">{item.title}</div>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {tags.length > 0 ? (
+                tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="px-2 py-0.5 text-xs bg-brandIndigo/10 dark:bg-brandIndigo/20 text-brandIndigo dark:text-accentHover rounded"
+                  >
+                    {tag.tag}
+                  </span>
+                ))
               ) : (
-                <User className="w-4 h-4 text-brandIndigo" />
+                <span className="text-[12px] text-gray-500 dark:text-textTertiary">无标签</span>
               )}
-            </button>
+            </div>
+          </div>
 
-            {item.password ? (
+          <div className="shrink-0 flex flex-col items-end gap-1.5">
+            <div className="text-[11px] text-gray-400 dark:text-textTertiary whitespace-nowrap">{displayTime}</div>
+            <div className="flex items-center space-x-1.5">
               <button
                 type="button"
-                onClick={(e) => copyToClipboard(e, item.password || "", `pwd-${item.id}`)}
+                onClick={(e) => copyToClipboard(e, item.title, `account-${item.id}`)}
                 className="flex items-center p-2 bg-gray-100 hover:bg-gray-200 dark:bg-[rgba(255,255,255,0.08)] dark:hover:bg-[rgba(255,255,255,0.15)] rounded-md text-gray-700 dark:text-gray-300 transition-colors border border-transparent hover:border-gray-300 dark:hover:border-[rgba(255,255,255,0.2)] shadow-sm"
-                title="复制密码"
+                title="复制账号"
               >
-                {copiedId === `pwd-${item.id}` ? (
+                {copiedId === `account-${item.id}` ? (
                   <CheckCircle2 className="w-4 h-4 text-statusGreen" />
                 ) : (
-                  <KeyRound className="w-4 h-4 text-brandIndigo" />
+                  <User className="w-4 h-4 text-brandIndigo" />
                 )}
               </button>
-            ) : null}
+
+              {item.password ? (
+                <button
+                  type="button"
+                  onClick={(e) => copyToClipboard(e, item.password || "", `pwd-${item.id}`)}
+                  className="flex items-center p-2 bg-gray-100 hover:bg-gray-200 dark:bg-[rgba(255,255,255,0.08)] dark:hover:bg-[rgba(255,255,255,0.15)] rounded-md text-gray-700 dark:text-gray-300 transition-colors border border-transparent hover:border-gray-300 dark:hover:border-[rgba(255,255,255,0.2)] shadow-sm"
+                  title="复制密码"
+                >
+                  {copiedId === `pwd-${item.id}` ? (
+                    <CheckCircle2 className="w-4 h-4 text-statusGreen" />
+                  ) : (
+                    <KeyRound className="w-4 h-4 text-brandIndigo" />
+                  )}
+                </button>
+              ) : null}
+            </div>
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-1 mt-2">
-          {tags.length > 0 ? (
-            tags.map((tag) => (
-              <span
-                key={tag.id}
-                className="px-2 py-0.5 text-xs bg-brandIndigo/10 dark:bg-brandIndigo/20 text-brandIndigo dark:text-accentHover rounded"
-              >
-                {tag.tag}
-              </span>
-            ))
-          ) : (
-            <span className="text-[12px] text-gray-500 dark:text-textTertiary">无标签</span>
-          )}
-        </div>
-
-        <div className="mt-2 text-[11px] text-gray-400 dark:text-textTertiary">
-          {(() => {
-            const isUpdated =
-              item.updatedAt &&
-              item.createdAt &&
-              new Date(item.updatedAt).getTime() - new Date(item.createdAt).getTime() > 1000
-            return isUpdated ? formatDate(item.updatedAt) : formatDate(item.createdAt)
-          })()}
         </div>
       </div>
     )
@@ -186,7 +186,7 @@ export default function DashboardPage() {
         <div className="mb-6">
           <input
             type="text"
-            placeholder="搜索主账号、账号、标签或备注..."
+            placeholder="搜索账号、标签或备注..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-[12px] px-4 py-3 text-[14px] font-[400] text-gray-900 dark:text-textPrimary placeholder-gray-400 dark:placeholder:text-textTertiary focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:border-transparent transition-all shadow-sm dark:shadow-none"

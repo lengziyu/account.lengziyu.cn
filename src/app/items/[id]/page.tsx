@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
-import { ArrowLeft, Plus, Trash2, CheckCircle2, Copy } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, CheckCircle2, Copy, Check } from "lucide-react"
 
 type Category = { id: string; name: string }
 type Identity = { id: string; name: string; identifier: string }
@@ -257,16 +257,23 @@ export default function ItemDetailPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <section className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-textSecondary">主账号绑定</label>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-textSecondary">
-              <input
-                type="checkbox"
-                checked={bindIdentity}
-                onChange={(e) => handleBindIdentityChange(e.target.checked)}
-                className="h-4 w-4 accent-brandIndigo"
-              />
-              是否绑定主账号
-            </label>
+            <button
+              type="button"
+              onClick={() => handleBindIdentityChange(!bindIdentity)}
+              className="inline-flex items-center gap-3 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.12)] px-3 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] hover:border-brandIndigo/60 transition-colors"
+              aria-pressed={bindIdentity}
+            >
+              <span
+                className={`h-6 w-6 rounded-md border flex items-center justify-center transition-colors ${
+                  bindIdentity
+                    ? "bg-brandIndigo border-brandIndigo text-white"
+                    : "bg-white dark:bg-transparent border-gray-300 dark:border-[rgba(255,255,255,0.25)] text-transparent"
+                }`}
+              >
+                <Check className="w-4 h-4" />
+              </span>
+              <span className="text-sm font-medium text-gray-800 dark:text-textPrimary">绑定主账号</span>
+            </button>
             {bindIdentity ? (
               <>
                 <select value={formData.identityId} onChange={(e) => handleIdentitySelect(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
