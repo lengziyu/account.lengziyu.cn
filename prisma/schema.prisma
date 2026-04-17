@@ -40,9 +40,6 @@ model VaultItem {
   platform    String?
   url         String?
   username    String?
-  loginValue  String?
-  serviceName String?
-  serviceDomain String?
   password    String?
   category    String?
   notes       String?

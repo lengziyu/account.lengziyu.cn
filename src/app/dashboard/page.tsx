@@ -10,8 +10,6 @@ type IdentitySummary = {
   id: string
   name: string
   identifier: string
-  kind: string
-  provider?: string | null
 }
 
 type ItemTag = {
@@ -24,9 +22,6 @@ type VaultItem = {
   id: string
   title: string
   password?: string | null
-  loginValue?: string | null
-  serviceName?: string | null
-  serviceDomain?: string | null
   favorite: boolean
   createdAt?: string
   updatedAt?: string
@@ -59,16 +54,14 @@ export default function DashboardPage() {
     if (status === "unauthenticated") {
       router.push("/login")
     } else if (status === "authenticated") {
-      fetchItems()
+      void fetchItems()
     }
   }, [status, search])
 
   const fetchItems = async () => {
     const res = await fetch(`/api/items?search=${encodeURIComponent(search)}`)
-    if (res.ok) {
-      const data = await res.json()
-      setItems(data)
-    }
+    if (!res.ok) return
+    setItems(await res.json())
   }
 
   const copyToClipboard = (e: React.MouseEvent, text: string, id: string) => {
@@ -86,18 +79,14 @@ export default function DashboardPage() {
     for (const item of items) {
       const key = item.identity?.id || "ungrouped"
       const label = getIdentityLabel(item)
-      if (!groups.has(key)) {
-        groups.set(key, { label, items: [] })
-      }
+      if (!groups.has(key)) groups.set(key, { label, items: [] })
       groups.get(key)!.items.push(item)
     }
     return Array.from(groups.values())
   }, [items])
 
   const renderItemCard = (item: VaultItem) => {
-    const customTags = item.tags?.filter((tag) => tag.type === "custom") || []
-    const systemTags = item.tags?.filter((tag) => tag.type === "system") || []
-
+    const tags = item.tags || []
     return (
       <div
         key={item.id}
@@ -108,24 +97,13 @@ export default function DashboardPage() {
           {getIdentityLabel(item)}
         </div>
         <div className="flex justify-between items-start mb-2">
-          <div className="min-w-0">
-            <div className="text-[15px] font-[510] text-gray-900 dark:text-textPrimary truncate">
-              {item.title}
-            </div>
-            <div className="text-[12px] text-gray-500 dark:text-textTertiary truncate">
-              {item.serviceName || "未命名站点"}
-              {item.serviceDomain ? ` · ${item.serviceDomain}` : ""}
-            </div>
-          </div>
-
+          <div className="text-[15px] font-[510] text-gray-900 dark:text-textPrimary truncate">{item.title}</div>
           <div className="flex items-center space-x-2 shrink-0 ml-3">
             <button
               type="button"
-              onClick={(e) =>
-                copyToClipboard(e, item.loginValue || item.title, `account-${item.id}`)
-              }
+              onClick={(e) => copyToClipboard(e, item.title, `account-${item.id}`)}
               className="flex items-center p-2 bg-gray-100 hover:bg-gray-200 dark:bg-[rgba(255,255,255,0.08)] dark:hover:bg-[rgba(255,255,255,0.15)] rounded-md text-gray-700 dark:text-gray-300 transition-colors border border-transparent hover:border-gray-300 dark:hover:border-[rgba(255,255,255,0.2)] shadow-sm"
-              title="复制登录值"
+              title="复制账号"
             >
               {copiedId === `account-${item.id}` ? (
                 <CheckCircle2 className="w-4 h-4 text-statusGreen" />
@@ -137,7 +115,7 @@ export default function DashboardPage() {
             {item.password ? (
               <button
                 type="button"
-                onClick={(e) => copyToClipboard(e, item.password!, `pwd-${item.id}`)}
+                onClick={(e) => copyToClipboard(e, item.password || "", `pwd-${item.id}`)}
                 className="flex items-center p-2 bg-gray-100 hover:bg-gray-200 dark:bg-[rgba(255,255,255,0.08)] dark:hover:bg-[rgba(255,255,255,0.15)] rounded-md text-gray-700 dark:text-gray-300 transition-colors border border-transparent hover:border-gray-300 dark:hover:border-[rgba(255,255,255,0.2)] shadow-sm"
                 title="复制密码"
               >
@@ -151,36 +129,19 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-2 space-y-2">
-          <div className="flex flex-wrap gap-1">
-            {customTags.length > 0 ? (
-              customTags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="px-2 py-0.5 text-xs bg-brandIndigo/10 dark:bg-brandIndigo/20 text-brandIndigo dark:text-accentHover rounded"
-                >
-                  {tag.tag}
-                </span>
-              ))
-            ) : (
-              <span className="text-[12px] text-gray-500 dark:text-textTertiary">
-                无自定义标签
+        <div className="flex flex-wrap gap-1 mt-2">
+          {tags.length > 0 ? (
+            tags.map((tag) => (
+              <span
+                key={tag.id}
+                className="px-2 py-0.5 text-xs bg-brandIndigo/10 dark:bg-brandIndigo/20 text-brandIndigo dark:text-accentHover rounded"
+              >
+                {tag.tag}
               </span>
-            )}
-          </div>
-
-          {systemTags.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {systemTags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="px-2 py-0.5 text-[11px] border border-gray-200 dark:border-[rgba(255,255,255,0.15)] text-gray-500 dark:text-textTertiary rounded"
-                >
-                  {tag.tag}
-                </span>
-              ))}
-            </div>
-          ) : null}
+            ))
+          ) : (
+            <span className="text-[12px] text-gray-500 dark:text-textTertiary">无标签</span>
+          )}
         </div>
 
         <div className="mt-2 text-[11px] text-gray-400 dark:text-textTertiary">
@@ -199,18 +160,9 @@ export default function DashboardPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center transition-colors">
-        <svg
-          className="animate-spin h-8 w-8 text-brandIndigo"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
+        <svg className="animate-spin h-8 w-8 text-brandIndigo" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
       </div>
     )
@@ -234,7 +186,7 @@ export default function DashboardPage() {
         <div className="mb-6">
           <input
             type="text"
-            placeholder="搜索主账号、站点、登录值、标签或备注..."
+            placeholder="搜索主账号、子账号、标签或备注..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-[12px] px-4 py-3 text-[14px] font-[400] text-gray-900 dark:text-textPrimary placeholder-gray-400 dark:placeholder:text-textTertiary focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:border-transparent transition-all shadow-sm dark:shadow-none"
@@ -243,9 +195,7 @@ export default function DashboardPage() {
 
         {favorites.length > 0 && !search ? (
           <div className="mb-10">
-            <h2 className="text-[14px] font-[510] text-gray-400 dark:text-textSecondary mb-4">
-              收藏账号
-            </h2>
+            <h2 className="text-[14px] font-[510] text-gray-400 dark:text-textSecondary mb-4">收藏账号</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{favorites.map(renderItemCard)}</div>
           </div>
         ) : null}
@@ -256,9 +206,7 @@ export default function DashboardPage() {
               <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
                 {group.label} · {group.items.length} 条
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {group.items.map(renderItemCard)}
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{group.items.map(renderItemCard)}</div>
             </section>
           ))}
         </div>

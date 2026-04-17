@@ -3,33 +3,22 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
-import { ArrowLeft, Plus, X, CopyMinus, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, CopyMinus, Trash2 } from "lucide-react"
 
 type Category = { id: string; name: string }
-type Identity = {
-  id: string
-  name: string
-  identifier: string
-  kind: string
-  provider?: string | null
-}
-type TagResponse = {
-  custom: string[]
-  sections: { label: string; tags: string[] }[]
-  suggested: string[]
-}
+type Identity = { id: string; name: string; identifier: string }
+type TagResponse = { sections: { label: string; tags: string[] }[] }
 
 export default function NewItemPage() {
   const router = useRouter()
-
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [mode, setMode] = useState<"single" | "batch">("single")
 
   const [categories, setCategories] = useState<Category[]>([])
   const [identities, setIdentities] = useState<Identity[]>([])
-  const [tagSections, setTagSections] = useState<{ label: string; tags: string[] }[]>([])
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([])
+  const [siteTags, setSiteTags] = useState<string[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
 
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
@@ -37,17 +26,11 @@ export default function NewItemPage() {
   const [newIdentityValue, setNewIdentityValue] = useState("")
   const [newIdentityName, setNewIdentityName] = useState("")
 
-  const [tagInput, setTagInput] = useState("")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-
   const [batchText, setBatchText] = useState("")
   const [parsedItems, setParsedItems] = useState<{ id: string; title: string; password: string }[]>([])
 
   const [formData, setFormData] = useState({
     identityId: "",
-    serviceName: "",
-    serviceDomain: "",
-    loginValue: "",
     title: "",
     password: "",
     category: "social",
@@ -61,55 +44,30 @@ export default function NewItemPage() {
   const fetchCategories = async () => {
     const res = await fetch("/api/categories")
     if (!res.ok) return
-    const data = await res.json()
-    setCategories(data)
+    setCategories(await res.json())
   }
 
   const fetchIdentities = async () => {
     const res = await fetch("/api/identities")
     if (!res.ok) return
-    const data = await res.json()
-    setIdentities(data)
+    setIdentities(await res.json())
   }
 
   const fetchTags = async () => {
     const res = await fetch("/api/tags")
     if (!res.ok) return
     const data = (await res.json()) as TagResponse
-    setTagSections(data.sections || [])
-    setSuggestedTags(data.suggested || data.custom || [])
+    setSiteTags(data.sections?.[0]?.tags || [])
   }
 
-  const handleChange = (name: string, value: string) => {
+  const handleChange = (name: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const onIdentityChange = (identityId: string) => {
-    setFormData((prev) => ({ ...prev, identityId }))
-    if (!identityId) return
-    const identity = identities.find((item) => item.id === identityId)
-    if (identity && !formData.loginValue) {
-      setFormData((prev) => ({ ...prev, identityId, loginValue: identity.identifier }))
-    }
-  }
-
-  const addTag = (raw: string) => {
-    const value = raw.trim()
-    if (!value) return
-    const exists = selectedTags.some((tag) => tag.toLowerCase() === value.toLowerCase())
-    if (exists) return
-    setSelectedTags((prev) => [...prev, value])
-  }
-
-  const removeTag = (tagValue: string) => {
-    setSelectedTags((prev) => prev.filter((tag) => tag !== tagValue))
-  }
-
-  const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter") return
-    e.preventDefault()
-    addTag(tagInput)
-    setTagInput("")
+  const toggleTag = (value: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(value) ? prev.filter((tag) => tag !== value) : [...prev, value]
+    )
   }
 
   const handleAddCategory = async () => {
@@ -130,24 +88,22 @@ export default function NewItemPage() {
     const created = await res.json()
     setCategories((prev) => [...prev, created])
     setFormData((prev) => ({ ...prev, category: created.name }))
-    setIsAddingCategory(false)
     setNewCategoryName("")
+    setIsAddingCategory(false)
   }
 
   const handleAddIdentity = async () => {
     const identifier = newIdentityValue.trim()
     if (!identifier) return
 
-    const payload = {
-      identifier,
-      name: newIdentityName.trim() || identifier,
-      kind: identifier.includes("@") ? "email" : "username",
-    }
-
     const res = await fetch("/api/identities", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        identifier,
+        name: newIdentityName.trim() || identifier,
+        kind: identifier.includes("@") ? "email" : "username",
+      }),
     })
 
     if (!res.ok) {
@@ -157,14 +113,10 @@ export default function NewItemPage() {
 
     const created = await res.json()
     setIdentities((prev) => [created, ...prev.filter((item) => item.id !== created.id)])
-    setFormData((prev) => ({
-      ...prev,
-      identityId: created.id,
-      loginValue: prev.loginValue || created.identifier,
-    }))
-    setIsAddingIdentity(false)
+    setFormData((prev) => ({ ...prev, identityId: created.id }))
     setNewIdentityName("")
     setNewIdentityValue("")
+    setIsAddingIdentity(false)
   }
 
   const handleParseBatch = () => {
@@ -172,6 +124,7 @@ export default function NewItemPage() {
       /(?:账号|收件人|账户|Email|User)\s*[:：]\s*([^\s,，;；]+)\s+(?:密码|Password)\s*[:：]\s*([^\s,，;；]+)/gi
     const result: { id: string; title: string; password: string }[] = []
     let match: RegExpExecArray | null
+
     while ((match = regex.exec(batchText)) !== null) {
       result.push({
         id: Math.random().toString(36).slice(2, 9),
@@ -207,9 +160,6 @@ export default function NewItemPage() {
     try {
       const basePayload = {
         identityId: formData.identityId || null,
-        serviceName: formData.serviceName,
-        serviceDomain: formData.serviceDomain,
-        loginValue: formData.loginValue,
         category: formData.category,
         notes: formData.notes,
         tags: selectedTags,
@@ -225,13 +175,9 @@ export default function NewItemPage() {
             password: isNotes ? "" : formData.password,
           }),
         })
-        if (!res.ok) {
-          throw new Error(await res.text())
-        }
+        if (!res.ok) throw new Error(await res.text())
       } else {
-        if (parsedItems.length === 0) {
-          throw new Error("没有可保存的数据，请先解析")
-        }
+        if (parsedItems.length === 0) throw new Error("没有可保存的数据，请先解析")
         const result = await Promise.all(
           parsedItems.map((item) =>
             fetch("/api/items", {
@@ -245,9 +191,7 @@ export default function NewItemPage() {
             })
           )
         )
-        if (result.some((res) => !res.ok)) {
-          throw new Error("部分记录保存失败")
-        }
+        if (result.some((res) => !res.ok)) throw new Error("部分记录保存失败")
       }
 
       router.push("/dashboard")
@@ -268,6 +212,7 @@ export default function NewItemPage() {
     { value: "finance", label: "金融 (Finance)" },
     { value: "other", label: "其他 (Other)" },
   ]
+
   const categoryOptions = [
     ...presetCategories,
     ...categories
@@ -279,32 +224,17 @@ export default function NewItemPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack flex flex-col p-4 sm:p-8 transition-colors pb-24">
       <div className="max-w-2xl w-full mx-auto bg-white dark:bg-[rgba(255,255,255,0.02)] rounded-3xl shadow-sm dark:shadow-none border border-gray-100 dark:border-[rgba(255,255,255,0.08)] p-6 sm:p-8">
         <div className="flex items-center mb-6 space-x-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors"
-          >
+          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors">
             <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-textPrimary">新增站点子账号</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-textPrimary">新增子账号</h1>
         </div>
 
         <div className="flex p-1 mb-6 bg-gray-100 dark:bg-[rgba(255,255,255,0.03)] rounded-xl">
-          <button
-            type="button"
-            onClick={() => setMode("single")}
-            className={`flex-1 py-2 text-sm rounded-lg transition-colors ${
-              mode === "single" ? "bg-white dark:bg-[#2c2c31] text-brandIndigo" : "text-gray-500"
-            }`}
-          >
+          <button type="button" onClick={() => setMode("single")} className={`flex-1 py-2 text-sm rounded-lg transition-colors ${mode === "single" ? "bg-white dark:bg-[#2c2c31] text-brandIndigo" : "text-gray-500"}`}>
             单条录入
           </button>
-          <button
-            type="button"
-            onClick={() => setMode("batch")}
-            className={`flex-1 py-2 text-sm rounded-lg transition-colors ${
-              mode === "batch" ? "bg-white dark:bg-[#2c2c31] text-brandIndigo" : "text-gray-500"
-            }`}
-          >
+          <button type="button" onClick={() => setMode("batch")} className={`flex-1 py-2 text-sm rounded-lg transition-colors ${mode === "batch" ? "bg-white dark:bg-[#2c2c31] text-brandIndigo" : "text-gray-500"}`}>
             <span className="inline-flex items-center justify-center">
               <CopyMinus className="w-4 h-4 mr-2" />
               批量识别
@@ -312,186 +242,81 @@ export default function NewItemPage() {
           </button>
         </div>
 
-        {error ? (
-          <div className="mb-5 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm border border-red-100 dark:border-transparent">
-            {error}
-          </div>
-        ) : null}
+        {error ? <div className="mb-5 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm border border-red-100 dark:border-transparent">{error}</div> : null}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <section className="space-y-3">
             <div className="flex justify-between items-center">
-              <label className="text-sm font-medium text-gray-700 dark:text-textSecondary">主账号（Identity）</label>
-              <button
-                type="button"
-                onClick={() => setIsAddingIdentity((prev) => !prev)}
-                className="text-xs text-brandIndigo inline-flex items-center"
-              >
+              <label className="text-sm font-medium text-gray-700 dark:text-textSecondary">主账号（可选）</label>
+              <button type="button" onClick={() => setIsAddingIdentity((prev) => !prev)} className="text-xs text-brandIndigo inline-flex items-center">
                 <Plus className="w-3 h-3 mr-1" />
                 新主账号
               </button>
             </div>
             {isAddingIdentity ? (
               <div className="grid sm:grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  value={newIdentityValue}
-                  onChange={(e) => setNewIdentityValue(e.target.value)}
-                  placeholder="主标识，如 1058@qq.com"
-                  className="px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-                />
+                <input type="text" value={newIdentityValue} onChange={(e) => setNewIdentityValue(e.target.value)} placeholder="主标识，如 1058@qq.com" className="px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
                 <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newIdentityName}
-                    onChange={(e) => setNewIdentityName(e.target.value)}
-                    placeholder="显示名(可选)"
-                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-                  />
-                  <Button type="button" variant="brand" onClick={handleAddIdentity}>
-                    保存
-                  </Button>
+                  <input type="text" value={newIdentityName} onChange={(e) => setNewIdentityName(e.target.value)} placeholder="显示名(可选)" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+                  <Button type="button" variant="brand" onClick={handleAddIdentity}>保存</Button>
                 </div>
               </div>
             ) : null}
-            <select
-              value={formData.identityId}
-              onChange={(e) => onIdentityChange(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-            >
+            <select value={formData.identityId} onChange={(e) => handleChange("identityId", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
               <option value="">不绑定主账号</option>
               {identities.map((identity) => (
-                <option key={identity.id} value={identity.id}>
-                  {identity.name} · {identity.identifier}
-                </option>
+                <option key={identity.id} value={identity.id}>{identity.name} · {identity.identifier}</option>
               ))}
             </select>
           </section>
 
           <section className="grid sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">站点名称</label>
-              <input
-                type="text"
-                value={formData.serviceName}
-                onChange={(e) => handleChange("serviceName", e.target.value)}
-                placeholder="如 Github / Apple"
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">站点域名</label>
-              <input
-                type="text"
-                value={formData.serviceDomain}
-                onChange={(e) => handleChange("serviceDomain", e.target.value)}
-                placeholder="github.com"
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">登录值</label>
-              <input
-                type="text"
-                value={formData.loginValue}
-                onChange={(e) => handleChange("loginValue", e.target.value)}
-                placeholder="邮箱/用户名/手机号"
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-              />
-            </div>
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-sm font-medium text-gray-700 dark:text-textSecondary">分类</label>
-                <button
-                  type="button"
-                  onClick={() => setIsAddingCategory((prev) => !prev)}
-                  className="text-xs text-brandIndigo inline-flex items-center"
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  新分类
-                </button>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">分类</label>
               {isAddingCategory ? (
                 <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    placeholder="输入分类名"
-                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-                  />
-                  <Button type="button" variant="brand" onClick={handleAddCategory}>
-                    添加
-                  </Button>
+                  <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="输入分类名" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+                  <Button type="button" variant="brand" onClick={handleAddCategory}>添加</Button>
                 </div>
               ) : (
-                <select
-                  value={formData.category}
-                  onChange={(e) => handleChange("category", e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-                >
+                <select value={formData.category} onChange={(e) => handleChange("category", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
                   {categoryOptions.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
+                    <option key={category.value} value={category.value}>{category.label}</option>
                   ))}
                 </select>
               )}
+            </div>
+            <div className="flex items-end">
+              <button type="button" onClick={() => setIsAddingCategory((prev) => !prev)} className="text-xs text-brandIndigo inline-flex items-center">
+                <Plus className="w-3 h-3 mr-1" />
+                {isAddingCategory ? "取消新分类" : "新分类"}
+              </button>
             </div>
           </section>
 
           {mode === "single" ? (
             <section className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">子账号标题/账号 *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => handleChange("title", e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-                />
+                <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">子账号/邮箱 *</label>
+                <input type="text" required value={formData.title} onChange={(e) => handleChange("title", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">密码</label>
-                <input
-                  type="text"
-                  value={formData.password}
-                  onChange={(e) => handleChange("password", e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-                />
+                <input type="text" value={formData.password} onChange={(e) => handleChange("password", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
               </div>
             </section>
           ) : (
             <section className="space-y-3">
               <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary">批量文本</label>
-              <textarea
-                rows={4}
-                value={batchText}
-                onChange={(e) => setBatchText(e.target.value)}
-                placeholder={"账号：test@qq.com 密码：123456"}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-              />
-              <Button type="button" variant="outline" onClick={handleParseBatch}>
-                解析文本
-              </Button>
+              <textarea rows={4} value={batchText} onChange={(e) => setBatchText(e.target.value)} placeholder="账号：test@qq.com 密码：123456" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+              <Button type="button" variant="outline" onClick={handleParseBatch}>解析文本</Button>
               {parsedItems.length > 0 ? (
                 <div className="space-y-2">
                   {parsedItems.map((item) => (
                     <div key={item.id} className="flex gap-2">
-                      <input
-                        value={item.title}
-                        onChange={(e) => updateParsedItem(item.id, "title", e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]"
-                      />
-                      <input
-                        value={item.password}
-                        onChange={(e) => updateParsedItem(item.id, "password", e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]"
-                      />
-                      <button type="button" onClick={() => removeParsedItem(item.id)} className="px-3 text-red-500">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <input value={item.title} onChange={(e) => updateParsedItem(item.id, "title", e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
+                      <input value={item.password} onChange={(e) => updateParsedItem(item.id, "password", e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
+                      <button type="button" onClick={() => removeParsedItem(item.id)} className="px-3 text-red-500"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}
                 </div>
@@ -500,72 +325,28 @@ export default function NewItemPage() {
           )}
 
           <section className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary">标签（仅自定义）</label>
-            {tagSections.map((section) => (
-              <div key={section.label}>
-                <p className="text-xs text-gray-500 mb-1">{section.label}</p>
-                <div className="flex flex-wrap gap-2">
-                  {section.tags.map((tag) => (
-                    <button
-                      key={`${section.label}-${tag}`}
-                      type="button"
-                      onClick={() => addTag(tag)}
-                      className="px-2 py-1 text-xs rounded-full border border-gray-200 dark:border-gray-700 hover:border-brandIndigo/60"
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-
+            <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary">常用平台（可多选）</label>
             <div className="flex flex-wrap gap-2">
-              {suggestedTags.slice(0, 20).map((tag) => (
+              {siteTags.map((tag) => (
                 <button
-                  key={`suggested-${tag}`}
+                  key={tag}
                   type="button"
-                  onClick={() => addTag(tag)}
-                  className="px-2 py-1 text-xs rounded-full border border-dashed border-gray-300 dark:border-gray-600"
+                  onClick={() => toggleTag(tag)}
+                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${selectedTags.includes(tag) ? "bg-brandIndigo border-brandIndigo text-white" : "bg-white dark:bg-transparent border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-brandIndigo/50"}`}
                 >
                   {tag}
                 </button>
               ))}
             </div>
-
-            <div className="flex flex-wrap items-center gap-2 p-2 bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-xl text-sm">
-              {selectedTags.map((tag) => (
-                <span key={tag} className="flex items-center px-2 py-1 bg-brandIndigo/10 text-brandIndigo rounded">
-                  {tag}
-                  <button type="button" onClick={() => removeTag(tag)} className="ml-1">
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagInput}
-                placeholder="输入标签后回车"
-                className="flex-1 min-w-[140px] bg-transparent outline-none"
-              />
-            </div>
           </section>
 
           <section>
             <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">备注</label>
-            <textarea
-              rows={4}
-              value={formData.notes}
-              onChange={(e) => handleChange("notes", e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
-            />
+            <textarea rows={4} value={formData.notes} onChange={(e) => handleChange("notes", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
           </section>
 
           <div className="pt-2 flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
-              取消
-            </Button>
+            <Button type="button" variant="outline" onClick={() => router.back()}>取消</Button>
             <Button type="submit" disabled={loading || (mode === "batch" && parsedItems.length === 0)} variant="brand">
               {loading ? "保存中..." : mode === "batch" ? `批量保存 ${parsedItems.length} 条` : "保存"}
             </Button>

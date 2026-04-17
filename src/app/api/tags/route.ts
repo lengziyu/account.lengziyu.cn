@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
-import prisma from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
-import { dedupeTags, getDefaultCustomTagSections } from "@/lib/tags"
+import { getTagSections } from "@/lib/tags"
 
 export async function GET() {
   try {
@@ -10,25 +9,12 @@ export async function GET() {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const customTags = await prisma.tag.findMany({
-      where: {
-        type: "custom",
-        item: {
-          userId: user.id,
-        },
-      },
-      select: { tag: true },
-      orderBy: { tag: "asc" },
-    })
-
-    const custom = dedupeTags(customTags.map((item) => item.tag))
-    const defaultSections = getDefaultCustomTagSections()
-    const defaults = dedupeTags(defaultSections.flatMap((group) => group.tags))
-    const suggested = dedupeTags([...defaults, ...custom])
+    const sections = getTagSections()
+    const suggested = sections.flatMap((group) => group.tags)
 
     return NextResponse.json({
-      custom,
-      sections: defaultSections,
+      custom: [],
+      sections,
       suggested,
     })
   } catch {

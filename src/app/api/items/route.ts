@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
-import { computeSystemTags, dedupeTags } from "@/lib/tags"
+import { SITE_TAGS, sanitizeSiteTags } from "@/lib/tags"
 
 type ItemPayload = {
   title?: string
@@ -11,9 +11,6 @@ type ItemPayload = {
   favorite?: boolean
   tags?: string[]
   identityId?: string | null
-  serviceName?: string
-  serviceDomain?: string
-  loginValue?: string
 }
 
 async function ensureIdentityOwner(userId: string, identityId?: string | null) {
@@ -32,24 +29,8 @@ async function ensureIdentityOwner(userId: string, identityId?: string | null) {
 }
 
 function buildTagRecords(payload: ItemPayload) {
-  const customTags = dedupeTags(Array.isArray(payload.tags) ? payload.tags : [])
-  const systemTags = dedupeTags(
-    computeSystemTags({
-      category: payload.category,
-      favorite: payload.favorite,
-      password: payload.password,
-      loginValue: payload.loginValue,
-      title: payload.title,
-      serviceName: payload.serviceName,
-      serviceDomain: payload.serviceDomain,
-      identityId: payload.identityId,
-    })
-  )
-
-  return [
-    ...customTags.map((tag) => ({ tag, type: "custom" as const })),
-    ...systemTags.map((tag) => ({ tag, type: "system" as const })),
-  ]
+  const tags = sanitizeSiteTags(Array.isArray(payload.tags) ? payload.tags : [])
+  return tags.map((tag) => ({ tag, type: "custom" as const }))
 }
 
 export async function GET(req: Request) {
@@ -70,9 +51,6 @@ export async function GET(req: Request) {
         ? {
             OR: [
               { title: { contains: search } },
-              { loginValue: { contains: search } },
-              { serviceName: { contains: search } },
-              { serviceDomain: { contains: search } },
               { notes: { contains: search } },
               { tags: { some: { tag: { contains: search } } } },
               { identity: { is: { name: { contains: search } } } },
@@ -95,6 +73,10 @@ export async function GET(req: Request) {
           },
         },
         tags: {
+          where: {
+            type: "custom",
+            tag: { in: [...SITE_TAGS] },
+          },
           orderBy: [{ type: "asc" }, { tag: "asc" }],
         },
       },
@@ -131,9 +113,6 @@ export async function POST(req: Request) {
         category: payload.category?.trim() || null,
         notes: payload.notes?.trim() || null,
         favorite: !!payload.favorite,
-        loginValue: payload.loginValue?.trim() || null,
-        serviceName: payload.serviceName?.trim() || null,
-        serviceDomain: payload.serviceDomain?.trim() || null,
         tags: {
           create: buildTagRecords({ ...payload, title, identityId }),
         },
