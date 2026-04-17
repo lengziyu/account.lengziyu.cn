@@ -304,30 +304,35 @@ export default function NewItemPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack flex flex-col p-4 sm:p-8 transition-colors pb-24">
-      <div className="max-w-2xl w-full mx-auto bg-white dark:bg-[rgba(255,255,255,0.02)] rounded-3xl shadow-sm dark:shadow-none border border-gray-100 dark:border-[rgba(255,255,255,0.08)] p-6 sm:p-8">
-        <div className="flex items-center mb-6 space-x-3">
-          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors">
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-textPrimary">新增账号</h1>
+    <div className="h-[100dvh] bg-gray-50 dark:bg-marketingBlack flex flex-col overflow-hidden transition-colors">
+      <div className="w-full border-b border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
+        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-3">
+          <div className="flex items-center gap-3">
+            <button onClick={() => router.back()} className="p-1.5 -ml-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            </button>
+            <h1 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-textPrimary">新增账号</h1>
+          </div>
+
+          <div className="flex p-1 mt-3 bg-gray-100 dark:bg-[rgba(255,255,255,0.03)] rounded-xl">
+            <button type="button" onClick={() => setMode("single")} className={`flex-1 py-1.5 text-sm rounded-lg transition-colors ${mode === "single" ? "bg-white dark:bg-[#2c2c31] text-brandIndigo" : "text-gray-500"}`}>
+              单条录入
+            </button>
+            <button type="button" onClick={() => setMode("batch")} className={`flex-1 py-1.5 text-sm rounded-lg transition-colors ${mode === "batch" ? "bg-white dark:bg-[#2c2c31] text-brandIndigo" : "text-gray-500"}`}>
+              <span className="inline-flex items-center justify-center">
+                <CopyMinus className="w-4 h-4 mr-2" />
+                批量识别
+              </span>
+            </button>
+          </div>
         </div>
+      </div>
 
-        <div className="flex p-1 mb-6 bg-gray-100 dark:bg-[rgba(255,255,255,0.03)] rounded-xl">
-          <button type="button" onClick={() => setMode("single")} className={`flex-1 py-2 text-sm rounded-lg transition-colors ${mode === "single" ? "bg-white dark:bg-[#2c2c31] text-brandIndigo" : "text-gray-500"}`}>
-            单条录入
-          </button>
-          <button type="button" onClick={() => setMode("batch")} className={`flex-1 py-2 text-sm rounded-lg transition-colors ${mode === "batch" ? "bg-white dark:bg-[#2c2c31] text-brandIndigo" : "text-gray-500"}`}>
-            <span className="inline-flex items-center justify-center">
-              <CopyMinus className="w-4 h-4 mr-2" />
-              批量识别
-            </span>
-          </button>
-        </div>
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-4">
+          {error ? <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm border border-red-100 dark:border-transparent">{error}</div> : null}
 
-        {error ? <div className="mb-5 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm border border-red-100 dark:border-transparent">{error}</div> : null}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+          <form id="new-item-form" onSubmit={handleSubmit} className="space-y-5 pb-6">
           <section className="space-y-3">
             <button
               type="button"
@@ -497,14 +502,17 @@ export default function NewItemPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">备注</label>
             <textarea rows={4} value={formData.notes} onChange={(e) => handleChange("notes", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
           </section>
-
-          <div className="pt-2 flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => router.back()}>取消</Button>
-            <Button type="submit" disabled={loading || (mode === "batch" && parsedItems.length === 0)} variant="brand">
-              {loading ? "保存中..." : mode === "batch" ? `批量保存 ${parsedItems.length} 条` : "保存"}
-            </Button>
-          </div>
         </form>
+        </div>
+      </div>
+
+      <div className="w-full border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
+        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-2.5 flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>取消</Button>
+          <Button form="new-item-form" type="submit" disabled={loading || (mode === "batch" && parsedItems.length === 0)} variant="brand">
+            {loading ? "保存中..." : mode === "batch" ? `批量保存 ${parsedItems.length} 条` : "保存"}
+          </Button>
+        </div>
       </div>
     </div>
   )

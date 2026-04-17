@@ -327,31 +327,36 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack flex flex-col p-4 sm:p-8 transition-colors">
-      <div className="max-w-2xl w-full mx-auto bg-white dark:bg-[rgba(255,255,255,0.02)] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-[rgba(255,255,255,0.08)] p-6 sm:p-8">
-        <div className="flex justify-between items-center mb-5">
-          <div className="flex items-center gap-2">
-            <button onClick={() => router.back()} className="p-1.5 -ml-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors">
-              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-textPrimary">编辑账号</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => copyToClipboard(formData.title, "account")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
-              {copyStatus === "account" ? <CheckCircle2 className="w-4 h-4" /> : "复制账号"}
-            </button>
-            <button type="button" onClick={() => copyToClipboard(formData.password, "password")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
-              {copyStatus === "password" ? <CheckCircle2 className="w-4 h-4" /> : "复制密码"}
-            </button>
-            <button type="button" onClick={() => copyToClipboard(`主账号: ${formData.identityId || "未绑定"}\n账号: ${formData.title}\n密码: ${formData.password}`, "all")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
-              {copyStatus === "all" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            </button>
+    <div className="h-[100dvh] bg-gray-50 dark:bg-marketingBlack flex flex-col overflow-hidden transition-colors">
+      <div className="w-full border-b border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
+        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button onClick={() => router.back()} className="p-1.5 -ml-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </button>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-textPrimary">编辑账号</h1>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-1.5">
+              <button type="button" onClick={() => copyToClipboard(formData.title, "account")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
+                {copyStatus === "account" ? <CheckCircle2 className="w-4 h-4" /> : "复制账号"}
+              </button>
+              <button type="button" onClick={() => copyToClipboard(formData.password, "password")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
+                {copyStatus === "password" ? <CheckCircle2 className="w-4 h-4" /> : "复制密码"}
+              </button>
+              <button type="button" onClick={() => copyToClipboard(`主账号: ${formData.identityId || "未绑定"}\n账号: ${formData.title}\n密码: ${formData.password}`, "all")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
+                {copyStatus === "all" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        {error ? <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">{error}</div> : null}
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-4">
+          {error ? <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">{error}</div> : null}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+          <form id="edit-item-form" onSubmit={handleSubmit} className="space-y-5 pb-6">
           <section className="space-y-2">
             <button
               type="button"
@@ -507,18 +512,21 @@ export default function ItemDetailPage() {
             创建于: {formatDate(timestamps.createdAt)}
             {timestamps.updatedAt && timestamps.createdAt && new Date(timestamps.updatedAt).getTime() - new Date(timestamps.createdAt).getTime() > 1000 ? ` · 更新于: ${formatDate(timestamps.updatedAt)}` : ""}
           </div>
-
-          <div className="pt-2 flex justify-between items-center">
-            <button type="button" onClick={handleDelete} className="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors flex items-center text-sm font-medium" disabled={saving}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              删除
-            </button>
-            <div className="flex gap-3">
-              <Button type="button" variant="outline" onClick={() => router.back()} disabled={saving}>取消</Button>
-              <Button type="submit" disabled={saving} variant="brand">{saving ? "保存中..." : "保存修改"}</Button>
-            </div>
-          </div>
         </form>
+        </div>
+      </div>
+
+      <div className="w-full border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
+        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-2.5 flex justify-between items-center gap-2">
+          <button type="button" onClick={handleDelete} className="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors flex items-center text-sm font-medium" disabled={saving}>
+            <Trash2 className="w-4 h-4 mr-2" />
+            删除
+          </button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => router.back()} disabled={saving}>取消</Button>
+            <Button form="edit-item-form" type="submit" disabled={saving} variant="brand">{saving ? "保存中..." : "保存修改"}</Button>
+          </div>
+        </div>
       </div>
     </div>
   )

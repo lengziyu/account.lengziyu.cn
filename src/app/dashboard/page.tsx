@@ -6,12 +6,6 @@ import { useEffect, useMemo, useState } from "react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { User, KeyRound, CheckCircle2, Fingerprint } from "lucide-react"
 
-type IdentitySummary = {
-  id: string
-  name: string
-  identifier: string
-}
-
 type ItemTag = {
   id: string
   tag: string
@@ -27,7 +21,6 @@ type VaultItem = {
   createdAt?: string
   updatedAt?: string
   tags?: ItemTag[]
-  identity?: IdentitySummary | null
 }
 
 const formatDate = (dateString?: string) => {
@@ -39,10 +32,7 @@ const formatDate = (dateString?: string) => {
     .padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
 }
 
-function getIdentityLabel(item: VaultItem) {
-  if (!item.identity) return "未分组"
-  return item.identity.name || item.identity.identifier
-}
+const ALL_TAG_FILTER = "全部"
 
 export default function DashboardPage() {
   const { status } = useSession()
@@ -50,6 +40,7 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("")
   const [items, setItems] = useState<VaultItem[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [activeTag, setActiveTag] = useState(ALL_TAG_FILTER)
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -73,18 +64,38 @@ export default function DashboardPage() {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  const favorites = items.filter((item) => item.favorite)
-
-  const groupedItems = useMemo(() => {
-    const groups = new Map<string, { label: string; items: VaultItem[] }>()
+  const topTags = useMemo(() => {
+    const tagCounter = new Map<string, number>()
     for (const item of items) {
-      const key = item.identity?.id || "ungrouped"
-      const label = getIdentityLabel(item)
-      if (!groups.has(key)) groups.set(key, { label, items: [] })
-      groups.get(key)!.items.push(item)
+      const uniqueTags = new Set(
+        (item.tags || [])
+          .map((tag) => tag.tag.trim())
+          .filter((tag) => tag.length > 0)
+      )
+      uniqueTags.forEach((tag) => {
+        tagCounter.set(tag, (tagCounter.get(tag) || 0) + 1)
+      })
     }
-    return Array.from(groups.values())
+
+    return Array.from(tagCounter.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "zh-CN"))
+      .slice(0, 3)
+      .map(([tag]) => tag)
   }, [items])
+
+  useEffect(() => {
+    if (activeTag === ALL_TAG_FILTER) return
+    if (!topTags.includes(activeTag)) {
+      setActiveTag(ALL_TAG_FILTER)
+    }
+  }, [topTags, activeTag])
+
+  const filteredItems = useMemo(() => {
+    if (activeTag === ALL_TAG_FILTER) return items
+    return items.filter((item) => (item.tags || []).some((tag) => tag.tag === activeTag))
+  }, [items, activeTag])
+
+  const favorites = filteredItems.filter((item) => item.favorite)
 
   const renderItemCard = (item: VaultItem) => {
     const tags = item.tags || []
@@ -194,6 +205,23 @@ export default function DashboardPage() {
           />
         </div>
 
+        <div className="mb-6 flex flex-wrap gap-2">
+          {[ALL_TAG_FILTER, ...topTags].map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => setActiveTag(tag)}
+              className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                activeTag === tag
+                  ? "bg-brandIndigo border-brandIndigo text-white"
+                  : "bg-white dark:bg-transparent border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-brandIndigo/50"
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+
         {favorites.length > 0 && !search ? (
           <div className="mb-10">
             <h2 className="text-[14px] font-[510] text-gray-400 dark:text-textSecondary mb-4">收藏账号</h2>
@@ -201,22 +229,18 @@ export default function DashboardPage() {
           </div>
         ) : null}
 
-        <div className="space-y-8">
-          {groupedItems.map((group) => (
-            <section key={group.label}>
-              <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
-                {group.label} · {group.items.length} 条
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{group.items.map(renderItemCard)}</div>
-            </section>
-          ))}
-        </div>
-
-        {items.length === 0 ? (
+        {filteredItems.length > 0 ? (
+          <section>
+            <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
+              账号列表 · {filteredItems.length} 条
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{filteredItems.map(renderItemCard)}</div>
+          </section>
+        ) : (
           <div className="text-[13px] text-gray-500 dark:text-textTertiary py-10 text-center bg-[rgba(255,255,255,0.5)] dark:bg-[rgba(255,255,255,0.01)] rounded-2xl border border-dashed border-gray-200 dark:border-[rgba(255,255,255,0.1)] mt-6">
             没有找到匹配记录。
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   )

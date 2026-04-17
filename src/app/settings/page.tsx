@@ -93,6 +93,17 @@ export default function SettingsPage() {
 
         {/* Actions */}
         <div className="space-y-4">
+          <button
+            onClick={() => router.push("/settings/platforms")}
+            className="w-full bg-white hover:bg-gray-50 dark:bg-[rgba(255,255,255,0.03)] dark:hover:bg-[rgba(255,255,255,0.06)] text-gray-800 dark:text-textPrimary border border-gray-100 dark:border-[rgba(255,255,255,0.08)] font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-between shadow-sm dark:shadow-none"
+          >
+            <span className="inline-flex items-center">
+              <Tags className="w-5 h-5 mr-2 text-brandIndigo" />
+              常用平台管理
+            </span>
+            <span className="text-xs text-gray-500 dark:text-textTertiary">新增 / 修改 / 删除</span>
+          </button>
+
           <button 
             onClick={() => signOut({ callbackUrl: '/login' })}
             className="w-full bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-center shadow-sm dark:shadow-none"
