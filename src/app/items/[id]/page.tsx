@@ -1,193 +1,209 @@
 "use client"
 
-import { useState, useEffect, KeyboardEvent } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
-import { ArrowLeft, Plus, X, Trash2, Heart, Copy, CheckCircle2 } from "lucide-react"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
+import { ArrowLeft, Plus, X, Trash2, CheckCircle2, Copy } from "lucide-react"
+
+type Category = { id: string; name: string }
+type Identity = {
+  id: string
+  name: string
+  identifier: string
+  kind: string
+  provider?: string | null
+}
+type ItemTag = { id: string; tag: string; type: "custom" | "system" }
+type ItemDetail = {
+  id: string
+  identityId?: string | null
+  serviceName?: string | null
+  serviceDomain?: string | null
+  loginValue?: string | null
+  title: string
+  password?: string | null
+  category?: string | null
+  notes?: string | null
+  favorite: boolean
+  createdAt?: string
+  updatedAt?: string
+  tags: ItemTag[]
+}
+
+type TagResponse = {
+  custom: string[]
+  sections: { label: string; tags: string[] }[]
+  suggested: string[]
+}
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return ""
+  const d = new Date(dateString)
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}号 ${d
+    .getHours()
+    .toString()
+    .padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
+}
 
 export default function ItemDetailPage() {
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    const d = new Date(dateString);
-    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}号 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-  }
-
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
-
-  const [categories, setCategories] = useState<{id: string, name: string}[]>([])
-  const [isAddingCategory, setIsAddingCategory] = useState(false)
-  const [newCategoryName, setNewCategoryName] = useState("")
-  const [isPreview, setIsPreview] = useState(true)
-
-  // Tags
-  const [availableTags, setAvailableTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState("")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-
-  // Copy state
   const [copyStatus, setCopyStatus] = useState<string | null>(null)
 
-  const [timestamps, setTimestamps] = useState({ createdAt: '', updatedAt: '' })
+  const [categories, setCategories] = useState<Category[]>([])
+  const [identities, setIdentities] = useState<Identity[]>([])
+  const [tagSections, setTagSections] = useState<{ label: string; tags: string[] }[]>([])
 
+  const [isAddingCategory, setIsAddingCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState("")
+  const [isAddingIdentity, setIsAddingIdentity] = useState(false)
+  const [newIdentityValue, setNewIdentityValue] = useState("")
+  const [newIdentityName, setNewIdentityName] = useState("")
+
+  const [tagInput, setTagInput] = useState("")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [systemTags, setSystemTags] = useState<string[]>([])
+
+  const [timestamps, setTimestamps] = useState({ createdAt: "", updatedAt: "" })
   const [formData, setFormData] = useState({
-    title: "", // Account
+    identityId: "",
+    serviceName: "",
+    serviceDomain: "",
+    loginValue: "",
+    title: "",
     password: "",
     category: "other",
     notes: "",
-    favorite: false
+    favorite: false,
   })
 
   useEffect(() => {
-    fetchCategories()
-    fetchTags()
-    fetchItem()
+    void Promise.all([fetchCategories(), fetchIdentities(), fetchTags(), fetchItem()])
   }, [id])
 
   const fetchCategories = async () => {
-    try {
-      const res = await fetch("/api/categories")
-      if (res.ok) {
-        const data = await res.json()
-        setCategories(data)
-      }
-    } catch (e) {}
+    const res = await fetch("/api/categories")
+    if (!res.ok) return
+    setCategories(await res.json())
+  }
+
+  const fetchIdentities = async () => {
+    const res = await fetch("/api/identities")
+    if (!res.ok) return
+    setIdentities(await res.json())
   }
 
   const fetchTags = async () => {
-    try {
-      const res = await fetch("/api/tags")
-      if (res.ok) {
-        const data = await res.json()
-        setAvailableTags(data)
-      }
-    } catch (e) {}
+    const res = await fetch("/api/tags")
+    if (!res.ok) return
+    const data = (await res.json()) as TagResponse
+    setTagSections(data.sections || [])
   }
 
   const fetchItem = async () => {
-    try {
-      const res = await fetch(`/api/items/${id}`)
-      if (res.ok) {
-        const data = await res.json()
-        setFormData({
-          title: data.title || "",
-          password: data.password || "",
-          category: data.category || "other",
-          notes: data.notes || "",
-          favorite: data.favorite || false
-        })
-        setTimestamps({
-          createdAt: data.createdAt || '',
-          updatedAt: data.updatedAt || ''
-        })
-        const itemTags = data.tags ? data.tags.map((t: any) => t.tag) : []
-        setSelectedTags(itemTags)
-      } else {
-        setError("无法加载记录内容")
-      }
-    } catch (e) {
-      setError("网络错误无法加载记录")
-    } finally {
+    const res = await fetch(`/api/items/${id}`)
+    if (!res.ok) {
+      setError("无法加载记录")
       setLoading(false)
+      return
     }
+
+    const data = (await res.json()) as ItemDetail
+    setFormData({
+      identityId: data.identityId || "",
+      serviceName: data.serviceName || "",
+      serviceDomain: data.serviceDomain || "",
+      loginValue: data.loginValue || "",
+      title: data.title || "",
+      password: data.password || "",
+      category: data.category || "other",
+      notes: data.notes || "",
+      favorite: !!data.favorite,
+    })
+    setSelectedTags(data.tags.filter((tag) => tag.type === "custom").map((tag) => tag.tag))
+    setSystemTags(data.tags.filter((tag) => tag.type === "system").map((tag) => tag.tag))
+    setTimestamps({
+      createdAt: data.createdAt || "",
+      updatedAt: data.updatedAt || "",
+    })
+    setLoading(false)
+  }
+
+  const handleChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const addTag = (raw: string) => {
+    const value = raw.trim()
+    if (!value) return
+    const exists = selectedTags.some((tag) => tag.toLowerCase() === value.toLowerCase())
+    if (exists) return
+    setSelectedTags((prev) => [...prev, value])
+  }
+
+  const removeTag = (value: string) => {
+    setSelectedTags((prev) => prev.filter((tag) => tag !== value))
+  }
+
+  const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return
+    e.preventDefault()
+    addTag(tagInput)
+    setTagInput("")
   }
 
   const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return
-    try {
-      const res = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCategoryName.trim() })
-      })
-      if (res.ok) {
-        const newCat = await res.json()
-        setCategories(prev => [...prev, newCat])
-        setFormData(prev => ({ ...prev, category: newCat.name }))
-        setIsAddingCategory(false)
-        setNewCategoryName("")
-      } else {
-        const msg = await res.text()
-        setError(msg)
-      }
-    } catch (e) {}
-  }
+    const name = newCategoryName.trim()
+    if (!name) return
 
-  const handleTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      const t = tagInput.trim()
-      if (t && !selectedTags.includes(t)) {
-        setSelectedTags([...selectedTags, t])
-      }
-      setTagInput("")
+    const res = await fetch("/api/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    })
+    if (!res.ok) {
+      setError(await res.text())
+      return
     }
+    const created = await res.json()
+    setCategories((prev) => [...prev, created])
+    setFormData((prev) => ({ ...prev, category: created.name }))
+    setNewCategoryName("")
+    setIsAddingCategory(false)
   }
 
-  const toggleTag = (t: string) => {
-    if (selectedTags.includes(t)) {
-      setSelectedTags(selectedTags.filter(st => st !== t))
-    } else {
-      setSelectedTags([...selectedTags, t])
+  const handleAddIdentity = async () => {
+    const identifier = newIdentityValue.trim()
+    if (!identifier) return
+
+    const res = await fetch("/api/identities", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identifier,
+        name: newIdentityName.trim() || identifier,
+        kind: identifier.includes("@") ? "email" : "username",
+      }),
+    })
+    if (!res.ok) {
+      setError(await res.text())
+      return
     }
-  }
-
-  const COMMON_DOMAINS = ["@qq.com", "@gmail.com", "@163.com", "@outlook.com", "@foxmail.com", "@hotmail.com", "@yahoo.com", "@icloud.com"]
-  const [showEmailSuggestions, setShowEmailSuggestions] = useState(false)
-  const [emailSuggestions, setEmailSuggestions] = useState<string[]>([])
-  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0)
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setFormData(prev => ({ ...prev, title: val }))
-
-    if (val.includes("@")) {
-      const parts = val.split("@")
-      if (parts.length === 2) {
-        const [prefix, suffix] = parts
-        const matchedDomains = COMMON_DOMAINS.filter(d => d.startsWith("@" + suffix))
-        if (matchedDomains.length > 0 && val !== prefix + matchedDomains[0]) {
-          setEmailSuggestions(matchedDomains.map(d => prefix + d))
-          setShowEmailSuggestions(true)
-          setActiveSuggestionIndex(0)
-          return
-        }
-      }
-    }
-    setShowEmailSuggestions(false)
-  }
-
-  const selectEmailSuggestion = (suggestion: string) => {
-    setFormData(prev => ({ ...prev, title: suggestion }))
-    setShowEmailSuggestions(false)
-  }
-
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (showEmailSuggestions) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault()
-        setActiveSuggestionIndex(prev => (prev + 1) % emailSuggestions.length)
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault()
-        setActiveSuggestionIndex(prev => (prev - 1 + emailSuggestions.length) % emailSuggestions.length)
-      } else if (e.key === "Enter") {
-        e.preventDefault()
-        selectEmailSuggestion(emailSuggestions[activeSuggestionIndex])
-      } else if (e.key === "Escape") {
-        setShowEmailSuggestions(false)
-      }
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const created = await res.json()
+    setIdentities((prev) => [created, ...prev.filter((item) => item.id !== created.id)])
+    setFormData((prev) => ({
+      ...prev,
+      identityId: created.id,
+      loginValue: prev.loginValue || created.identifier,
+    }))
+    setNewIdentityName("")
+    setNewIdentityValue("")
+    setIsAddingIdentity(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -201,67 +217,54 @@ export default function ItemDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          tags: selectedTags
-        })
+          identityId: formData.identityId || null,
+          tags: selectedTags,
+        }),
       })
 
       if (!res.ok) {
-        throw new Error("保存失败")
+        throw new Error(await res.text())
       }
 
       router.push("/dashboard")
       router.refresh()
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message || "保存失败")
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async () => {
-    if (!confirm("确定要删除这条记录吗？这是不可逆转的操作。")) return
-    
+    if (!confirm("确定要删除这条记录吗？")) return
     setSaving(true)
-    setError("")
-    try {
-      const res = await fetch(`/api/items/${id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("删除失败")
-      router.push("/dashboard")
-      router.refresh()
-    } catch (err: any) {
-      setError(err.message)
+    const res = await fetch(`/api/items/${id}`, { method: "DELETE" })
+    if (!res.ok) {
       setSaving(false)
+      setError("删除失败")
+      return
     }
+    router.push("/dashboard")
+    router.refresh()
   }
 
-  const copyToClipboard = (text: string, type: string) => {
+  const copyToClipboard = (text: string, key: string) => {
+    if (!text) return
     navigator.clipboard.writeText(text)
-    setCopyStatus(type)
-    setTimeout(() => setCopyStatus(null), 2000)
+    setCopyStatus(key)
+    setTimeout(() => setCopyStatus(null), 1500)
   }
 
-  const copyAll = () => {
-    const text = `标签: ${selectedTags.join(", ") || "无"}
-账号: ${formData.title}
-密码: ${formData.password || "无"}
-分类: ${formData.category}
-备注:
-${formData.notes || "无"}`
-    copyToClipboard(text, 'all')
-  }
-
-  const presetCategories = [
+  const categoryOptions = [
     { value: "social", label: "社交 (Social)" },
     { value: "website", label: "网站 (Website)" },
     { value: "device", label: "设备 (Device)" },
     { value: "dev", label: "开发 (Dev)" },
     { value: "finance", label: "金融 (Finance)" },
     { value: "other", label: "其他 (Other)" },
-  ]
-
-  const allCategories = [
-    ...presetCategories,
-    ...categories.filter(c => !presetCategories.some(pc => pc.value === c.name)).map(c => ({ value: c.name, label: c.name }))
+    ...categories
+      .filter((item) => !["social", "website", "device", "dev", "finance", "other"].includes(item.name))
+      .map((item) => ({ value: item.name, label: item.name })),
   ]
 
   if (loading) {
@@ -269,7 +272,11 @@ ${formData.notes || "无"}`
       <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack flex items-center justify-center transition-colors">
         <svg className="animate-spin h-8 w-8 text-brandIndigo" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
         </svg>
       </div>
     )
@@ -277,234 +284,250 @@ ${formData.notes || "无"}`
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack flex flex-col p-4 sm:p-8 transition-colors">
-      <div className="max-w-xl w-full mx-auto bg-white dark:bg-[rgba(255,255,255,0.02)] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-[rgba(255,255,255,0.08)] p-6 sm:p-8">
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-30 -mt-6 -mx-6 sm:-mt-8 sm:-mx-8 px-6 sm:px-8 py-3 mb-6 bg-white/90 dark:bg-marketingBlack/90 backdrop-blur-md border-b border-gray-100 dark:border-[rgba(255,255,255,0.08)] flex flex-row items-center justify-between rounded-t-2xl">
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => router.back()} 
-              className="p-1.5 -ml-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors flex items-center justify-center"
+      <div className="max-w-2xl w-full mx-auto bg-white dark:bg-[rgba(255,255,255,0.02)] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-[rgba(255,255,255,0.08)] p-6 sm:p-8">
+        <div className="flex justify-between items-center mb-5">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.back()}
+              className="p-1.5 -ml-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-textPrimary tracking-tight">编辑属性</h1>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-textPrimary">编辑子账号</h1>
           </div>
-          
-          <div className="flex space-x-2 items-center">
-            <button 
+          <div className="flex items-center gap-2">
+            <button
               type="button"
-              onClick={() => setFormData(prev => ({...prev, favorite: !prev.favorite}))}
-              className={`p-2 rounded-full transition-colors ${formData.favorite ? "text-red-500 bg-red-50 dark:bg-red-500/10" : "text-gray-400 hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)]"}`}
-              title="收藏"
+              onClick={() => copyToClipboard(formData.loginValue || formData.title, "account")}
+              className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700"
             >
-              <Heart className="w-5 h-5" fill={formData.favorite ? "currentColor" : "none"} />
+              {copyStatus === "account" ? <CheckCircle2 className="w-4 h-4" /> : "复制登录值"}
             </button>
-            <div className="flex items-center bg-gray-100 dark:bg-[rgba(255,255,255,0.05)] rounded-lg p-1">
-              <button title="复制账号" type="button" onClick={() => copyToClipboard(formData.title, 'account')} className="p-1.5 hover:bg-white dark:hover:bg-[rgba(255,255,255,0.1)] rounded text-gray-600 dark:text-gray-300 transition-colors">
-                {copyStatus === 'account' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <span className="text-xs font-semibold px-1">账号</span>}
-              </button>
-              <button title="复制密码" type="button" onClick={() => copyToClipboard(formData.password, 'password')} className="p-1.5 hover:bg-white dark:hover:bg-[rgba(255,255,255,0.1)] rounded text-gray-600 dark:text-gray-300 transition-colors">
-                {copyStatus === 'password' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <span className="text-xs font-semibold px-1">密码</span>}
-              </button>
-              <button title="复制全部" type="button" onClick={copyAll} className="p-1.5 hover:bg-white dark:hover:bg-[rgba(255,255,255,0.1)] rounded text-gray-600 dark:text-gray-300 transition-colors border-l border-gray-200 dark:border-gray-700 ml-1 pl-2" >
-                {copyStatus === 'all' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => copyToClipboard(formData.password, "password")}
+              className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700"
+            >
+              {copyStatus === "password" ? <CheckCircle2 className="w-4 h-4" /> : "复制密码"}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                copyToClipboard(
+                  `主账号: ${formData.identityId || "未绑定"}\n站点: ${formData.serviceName}\n域名: ${formData.serviceDomain}\n登录值: ${formData.loginValue}\n账号: ${formData.title}\n密码: ${formData.password}`,
+                  "all"
+                )
+              }
+              className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700"
+            >
+              {copyStatus === "all" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 
-        {error && (
+        {error ? (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
             {error}
           </div>
-        )}
+        ) : null}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary">分类</label>
-              <button 
-                type="button"
-                onClick={() => setIsAddingCategory(!isAddingCategory)}
-                className="text-xs text-brandIndigo flex items-center hover:opacity-80"
-              >
-                <Plus className="w-3 h-3 mr-1" /> 新增分类
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <section className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium text-gray-700 dark:text-textSecondary">主账号（Identity）</label>
+              <button type="button" onClick={() => setIsAddingIdentity((prev) => !prev)} className="text-xs text-brandIndigo inline-flex items-center">
+                <Plus className="w-3 h-3 mr-1" />
+                新主账号
               </button>
             </div>
-            {isAddingCategory ? (
-              <div className="flex space-x-2">
+            {isAddingIdentity ? (
+              <div className="grid sm:grid-cols-2 gap-2">
                 <input
                   type="text"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  className="flex-1 px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo text-gray-900 dark:text-textPrimary transition-all"
-                  placeholder="输入新分类名称"
+                  value={newIdentityValue}
+                  onChange={(e) => setNewIdentityValue(e.target.value)}
+                  placeholder="主标识，如 1058@qq.com"
+                  className="px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
                 />
-                <Button type="button" onClick={handleAddCategory} variant="brand" className="px-4">保存</Button>
-                <Button type="button" onClick={() => setIsAddingCategory(false)} variant="outline">取消</Button>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newIdentityName}
+                    onChange={(e) => setNewIdentityName(e.target.value)}
+                    placeholder="显示名(可选)"
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+                  />
+                  <Button type="button" variant="brand" onClick={handleAddIdentity}>
+                    保存
+                  </Button>
+                </div>
               </div>
-            ) : (
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo text-gray-900 dark:text-textPrimary transition-all appearance-none"
-                style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
-              >
-                {allCategories.map(cat => (
-                  <option key={cat.value} value={cat.value} className="text-gray-900 dark:text-gray-900 bg-white">
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+            ) : null}
+            <select
+              value={formData.identityId}
+              onChange={(e) => handleChange("identityId", e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+            >
+              <option value="">不绑定主账号</option>
+              {identities.map((identity) => (
+                <option key={identity.id} value={identity.id}>
+                  {identity.name} · {identity.identifier}
+                </option>
+              ))}
+            </select>
+          </section>
 
-          <div className={`grid grid-cols-1 ${formData.category === '笔记' ? '' : 'sm:grid-cols-2'} gap-4`}>
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">
-                {formData.category === '笔记' ? '标题 *' : '账号 *'}
-              </label>
+          <section className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">站点名称</label>
               <input
-                type="text"
-                name="title"
-                required
-                value={formData.title}
-                onChange={handleTitleChange}
-                onKeyDown={handleTitleKeyDown}
-                onBlur={() => setTimeout(() => setShowEmailSuggestions(false), 200)}
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:bg-white dark:focus:bg-[rgba(255,255,255,0.03)] text-gray-900 dark:text-textPrimary transition-all"
-                placeholder={formData.category === '笔记' ? "标题" : "yours@example.com / 账号名"}
-                autoComplete="off"
+                value={formData.serviceName}
+                onChange={(e) => handleChange("serviceName", e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
               />
-              {showEmailSuggestions && (
-                <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-marketingBlack border border-gray-200 dark:border-[rgba(255,255,255,0.15)] rounded-lg shadow-lg overflow-hidden">
-                  {emailSuggestions.map((suggestion, index) => (
-                    <li
-                      key={suggestion}
-                      onMouseDown={(e) => { e.preventDefault(); selectEmailSuggestion(suggestion); }}
-                      className={`px-4 py-2 cursor-pointer text-sm transition-colors ${
-                        index === activeSuggestionIndex 
-                          ? "bg-brandIndigo text-white" 
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)]"
-                      }`}
-                    >
-                      {suggestion}
-                    </li>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">站点域名</label>
+              <input
+                value={formData.serviceDomain}
+                onChange={(e) => handleChange("serviceDomain", e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">登录值</label>
+              <input
+                value={formData.loginValue}
+                onChange={(e) => handleChange("loginValue", e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-sm font-medium text-gray-700 dark:text-textSecondary">分类</label>
+                <button type="button" onClick={() => setIsAddingCategory((prev) => !prev)} className="text-xs text-brandIndigo inline-flex items-center">
+                  <Plus className="w-3 h-3 mr-1" />
+                  新分类
+                </button>
+              </div>
+              {isAddingCategory ? (
+                <div className="flex gap-2">
+                  <input
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+                  />
+                  <Button type="button" variant="brand" onClick={handleAddCategory}>
+                    添加
+                  </Button>
+                </div>
+              ) : (
+                <select
+                  value={formData.category}
+                  onChange={(e) => handleChange("category", e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+                >
+                  {categoryOptions.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
                   ))}
-                </ul>
+                </select>
               )}
             </div>
-            {formData.category !== '笔记' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">密码</label>
-                <input
-                  type="text"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:bg-white dark:focus:bg-[rgba(255,255,255,0.03)] text-gray-900 dark:text-textPrimary transition-all"
-                  placeholder="输入密码"
-                />
-              </div>
-            )}
-          </div>
+          </section>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-2">标签 (Tags)</label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {availableTags.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                    selectedTags.includes(tag)
-                      ? "bg-brandIndigo border-brandIndigo text-white"
-                      : "bg-transparent border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
+          <section className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">账号标题 *</label>
+              <input
+                required
+                value={formData.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+              />
             </div>
-            
-            <div className="flex flex-wrap items-center gap-2 p-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg text-sm transition-all focus-within:ring-2 focus-within:ring-brandIndigo focus-within:bg-white dark:focus-within:bg-[rgba(255,255,255,0.03)]">
-              {selectedTags.map(t => (
-                <span key={t} className="flex items-center px-2 py-1 bg-brandIndigo/10 dark:bg-brandIndigo/20 text-brandIndigo dark:text-accentHover rounded">
-                  {t}
-                  <button type="button" onClick={() => toggleTag(t)} className="ml-1 hover:text-brandIndigo/60">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">密码</label>
+              <input
+                value={formData.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+              />
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary">自定义标签</label>
+            {tagSections.map((section) => (
+              <div key={section.label}>
+                <p className="text-xs text-gray-500 mb-1">{section.label}</p>
+                <div className="flex flex-wrap gap-2">
+                  {section.tags.map((tag) => (
+                    <button
+                      key={`${section.label}-${tag}`}
+                      type="button"
+                      onClick={() => addTag(tag)}
+                      className="px-2 py-1 text-xs rounded-full border border-gray-200 dark:border-gray-700"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div className="flex flex-wrap gap-2">
+              {selectedTags.map((tag) => (
+                <span key={tag} className="flex items-center px-2 py-1 bg-brandIndigo/10 text-brandIndigo rounded">
+                  {tag}
+                  <button type="button" onClick={() => removeTag(tag)} className="ml-1">
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               ))}
               <input
-                type="text"
                 value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                className="flex-1 min-w-[120px] bg-transparent outline-none text-gray-900 dark:text-white dark:placeholder-gray-500"
-                placeholder="回车即可创建新标签..."
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagInput}
+                placeholder="输入标签后回车"
+                className="flex-1 min-w-[140px] px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]"
               />
             </div>
+            {systemTags.length > 0 ? (
+              <div className="text-xs text-gray-500 dark:text-textTertiary">
+                系统标签：{systemTags.join("、")}
+              </div>
+            ) : null}
+          </section>
+
+          <section>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">备注</label>
+            <textarea
+              rows={4}
+              value={formData.notes}
+              onChange={(e) => handleChange("notes", e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]"
+            />
+          </section>
+
+          <div className="text-center text-[11px] text-gray-400 dark:text-textTertiary">
+            创建于: {formatDate(timestamps.createdAt)}
+            {timestamps.updatedAt && timestamps.createdAt && new Date(timestamps.updatedAt).getTime() - new Date(timestamps.createdAt).getTime() > 1000
+              ? ` · 更新于: ${formatDate(timestamps.updatedAt)}`
+              : ""}
           </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary">备注 (支持 Markdown)</label>
-              <div className="flex space-x-2 text-xs">
-                <button 
-                  type="button" 
-                  onClick={() => setIsPreview(false)}
-                  className={`px-2 py-1 rounded ${!isPreview ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400'}`}
-                >
-                  编辑
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setIsPreview(true)}
-                  className={`px-2 py-1 rounded ${isPreview ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400'}`}
-                >
-                  预览
-                </button>
-              </div>
-            </div>
-            
-            {isPreview ? (
-              <div className="w-full min-h-[86px] px-4 py-4 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg text-gray-900 dark:text-textPrimary prose dark:prose-invert prose-sm max-w-none">
-                {formData.notes ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{formData.notes}</ReactMarkdown>
-                ) : (
-                  <span className="text-gray-400 italic">没有备注内容</span>
-                )}
-              </div>
-            ) : (
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                onInput={(e) => {
-                  e.currentTarget.style.height = 'auto';
-                  e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-                }}
-                rows={3}
-                style={{ minHeight: '80px' }}
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] border border-gray-200 dark:border-[rgba(255,255,255,0.08)] rounded-lg focus:outline-none focus:ring-2 focus:ring-brandIndigo focus:bg-white dark:focus:bg-[rgba(255,255,255,0.03)] text-gray-900 dark:text-textPrimary transition-all resize-none overflow-hidden"
-                placeholder="请输入备注信息... 支持 Markdown 语法"
-              />
-            )}
-          </div>
-
-          <div className="pt-4 flex justify-between items-center border-t border-gray-100 dark:border-[rgba(255,255,255,0.08)] mt-2">
+          <div className="pt-2 flex justify-between items-center">
             <button
               type="button"
               onClick={handleDelete}
               className="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors flex items-center text-sm font-medium"
               disabled={saving}
             >
-              <Trash2 className="w-4 h-4 mr-2" /> 删除
+              <Trash2 className="w-4 h-4 mr-2" />
+              删除
             </button>
-            <div className="flex space-x-3">
+            <div className="flex gap-3">
               <Button type="button" variant="outline" onClick={() => router.back()} disabled={saving}>
                 取消
               </Button>
@@ -512,14 +535,6 @@ ${formData.notes || "无"}`
                 {saving ? "保存中..." : "保存修改"}
               </Button>
             </div>
-          </div>
-          <div className="text-center pt-2">
-            <p className="text-[11px] text-gray-400 dark:text-textTertiary">
-              创建于: {formatDate(timestamps.createdAt)}
-              {timestamps.updatedAt && timestamps.createdAt && new Date(timestamps.updatedAt).getTime() - new Date(timestamps.createdAt).getTime() > 1000 && (
-                <span className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-700">更新于: {formatDate(timestamps.updatedAt)}</span>
-              )}
-            </p>
           </div>
         </form>
       </div>

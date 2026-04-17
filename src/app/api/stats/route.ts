@@ -13,6 +13,7 @@ export async function GET() {
 
     const totalItems = await prisma.vaultItem.count({ where: { userId } });
     const totalFavorites = await prisma.vaultItem.count({ where: { userId, favorite: true } });
+    const totalIdentities = await prisma.identity.count({ where: { userId } });
     
     const tags = await prisma.tag.findMany({
       where: { item: { userId } },
@@ -29,7 +30,8 @@ export async function GET() {
       totalItems,
       totalFavorites,
       totalTags: uniqueTags,
-      totalCategories: categoryGroups.length
+      totalCategories: categoryGroups.length,
+      totalIdentities
     });
   } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });

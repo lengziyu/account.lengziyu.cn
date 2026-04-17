@@ -1,29 +1,37 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { NextResponse } from "next/server"
+import prisma from "@/lib/prisma"
+import { getCurrentUser } from "@/lib/auth"
+import { dedupeTags, getDefaultCustomTagSections } from "@/lib/tags"
 
 export async function GET() {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
     if (!user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const tags = await prisma.tag.findMany({
+    const customTags = await prisma.tag.findMany({
       where: {
+        type: "custom",
         item: {
-          userId: user.id as string
-        }
+          userId: user.id,
+        },
       },
-      select: { tag: true }
-    });
+      select: { tag: true },
+      orderBy: { tag: "asc" },
+    })
 
-    const defaultTags = ["QQ", "微信", "Google", "Github", "X", "AI Key", "ChatGPT"];
-    const userTags = tags.map(t => t.tag).filter(t => !defaultTags.includes(t)).sort();
-    const uniqueTags = [...defaultTags, ...Array.from(new Set(userTags))];
+    const custom = dedupeTags(customTags.map((item) => item.tag))
+    const defaultSections = getDefaultCustomTagSections()
+    const defaults = dedupeTags(defaultSections.flatMap((group) => group.tags))
+    const suggested = dedupeTags([...defaults, ...custom])
 
-    return NextResponse.json(uniqueTags);
-  } catch (error) {
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json({
+      custom,
+      sections: defaultSections,
+      suggested,
+    })
+  } catch {
+    return new NextResponse("Internal Error", { status: 500 })
   }
 }

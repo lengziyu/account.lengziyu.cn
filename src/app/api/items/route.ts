@@ -1,67 +1,154 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { NextResponse } from "next/server"
+import prisma from "@/lib/prisma"
+import { getCurrentUser } from "@/lib/auth"
+import { computeSystemTags, dedupeTags } from "@/lib/tags"
+
+type ItemPayload = {
+  title?: string
+  password?: string
+  category?: string
+  notes?: string
+  favorite?: boolean
+  tags?: string[]
+  identityId?: string | null
+  serviceName?: string
+  serviceDomain?: string
+  loginValue?: string
+}
+
+async function ensureIdentityOwner(userId: string, identityId?: string | null) {
+  if (!identityId) return null
+
+  const identity = await prisma.identity.findFirst({
+    where: { id: identityId, userId },
+    select: { id: true },
+  })
+
+  if (!identity) {
+    throw new Error("Identity not found")
+  }
+
+  return identity.id
+}
+
+function buildTagRecords(payload: ItemPayload) {
+  const customTags = dedupeTags(Array.isArray(payload.tags) ? payload.tags : [])
+  const systemTags = dedupeTags(
+    computeSystemTags({
+      category: payload.category,
+      favorite: payload.favorite,
+      password: payload.password,
+      loginValue: payload.loginValue,
+      title: payload.title,
+      serviceName: payload.serviceName,
+      serviceDomain: payload.serviceDomain,
+      identityId: payload.identityId,
+    })
+  )
+
+  return [
+    ...customTags.map((tag) => ({ tag, type: "custom" as const })),
+    ...systemTags.map((tag) => ({ tag, type: "system" as const })),
+  ]
+}
 
 export async function GET(req: Request) {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
     if (!user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const { searchParams } = new URL(req.url);
-    const search = searchParams.get('search') || '';
+    const { searchParams } = new URL(req.url)
+    const search = searchParams.get("search")?.trim() || ""
+    const identityId = searchParams.get("identityId")?.trim() || undefined
+
+    const where = {
+      userId: user.id,
+      ...(identityId ? { identityId } : {}),
+      ...(search
+        ? {
+            OR: [
+              { title: { contains: search } },
+              { loginValue: { contains: search } },
+              { serviceName: { contains: search } },
+              { serviceDomain: { contains: search } },
+              { notes: { contains: search } },
+              { tags: { some: { tag: { contains: search } } } },
+              { identity: { is: { name: { contains: search } } } },
+              { identity: { is: { identifier: { contains: search } } } },
+            ],
+          }
+        : {}),
+    }
 
     const items = await prisma.vaultItem.findMany({
-      where: {
-        userId: user.id as string,
-        OR: search ? [
-          { title: { contains: search } },
-          { notes: { contains: search } },
-          { tags: { some: { tag: { contains: search } } } }
-        ] : undefined
+      where,
+      include: {
+        identity: {
+          select: {
+            id: true,
+            name: true,
+            identifier: true,
+            kind: true,
+            provider: true,
+          },
+        },
+        tags: {
+          orderBy: [{ type: "asc" }, { tag: "asc" }],
+        },
       },
-      include: { tags: true },
-      orderBy: { updatedAt: 'desc' }
-    });
+      orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+    })
 
-    return NextResponse.json(items);
-  } catch (error) {
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(items)
+  } catch {
+    return new NextResponse("Internal Error", { status: 500 })
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
     if (!user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const json = await req.json();
-    const { title, password, category, notes, favorite, tags } = json;
-
+    const payload = (await req.json()) as ItemPayload
+    const title = payload.title?.trim()
     if (!title) {
-      return new NextResponse("Account/Title is required", { status: 400 });
+      return new NextResponse("Account/Title is required", { status: 400 })
     }
+
+    const identityId = await ensureIdentityOwner(user.id, payload.identityId)
 
     const item = await prisma.vaultItem.create({
       data: {
-        userId: user.id as string,
+        userId: user.id,
+        identityId,
         title,
-        password,
-        category,
-        notes,
-        favorite: favorite || false,
+        password: payload.password?.trim() || null,
+        category: payload.category?.trim() || null,
+        notes: payload.notes?.trim() || null,
+        favorite: !!payload.favorite,
+        loginValue: payload.loginValue?.trim() || null,
+        serviceName: payload.serviceName?.trim() || null,
+        serviceDomain: payload.serviceDomain?.trim() || null,
         tags: {
-          create: Array.isArray(tags) ? tags.map((t: string) => ({ tag: t })) : []
-        }
+          create: buildTagRecords({ ...payload, title, identityId }),
+        },
       },
-      include: { tags: true }
-    });
+      include: {
+        identity: true,
+        tags: true,
+      },
+    })
 
-    return NextResponse.json(item);
-  } catch (error) {
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(item)
+  } catch (error: any) {
+    if (error?.message === "Identity not found") {
+      return new NextResponse("Identity not found", { status: 400 })
+    }
+    return new NextResponse("Internal Error", { status: 500 })
   }
 }

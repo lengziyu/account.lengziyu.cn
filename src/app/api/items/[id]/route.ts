@@ -1,32 +1,87 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { NextResponse } from "next/server"
+import prisma from "@/lib/prisma"
+import { getCurrentUser } from "@/lib/auth"
+import { computeSystemTags, dedupeTags } from "@/lib/tags"
+
+type ItemPayload = {
+  title?: string
+  password?: string
+  category?: string
+  notes?: string
+  favorite?: boolean
+  tags?: string[]
+  identityId?: string | null
+  serviceName?: string
+  serviceDomain?: string
+  loginValue?: string
+}
+
+async function ensureIdentityOwner(userId: string, identityId?: string | null) {
+  if (!identityId) return null
+
+  const identity = await prisma.identity.findFirst({
+    where: { id: identityId, userId },
+    select: { id: true },
+  })
+
+  if (!identity) {
+    throw new Error("Identity not found")
+  }
+
+  return identity.id
+}
+
+function buildTagRecords(payload: ItemPayload) {
+  const customTags = dedupeTags(Array.isArray(payload.tags) ? payload.tags : [])
+  const systemTags = dedupeTags(
+    computeSystemTags({
+      category: payload.category,
+      favorite: payload.favorite,
+      password: payload.password,
+      loginValue: payload.loginValue,
+      title: payload.title,
+      serviceName: payload.serviceName,
+      serviceDomain: payload.serviceDomain,
+      identityId: payload.identityId,
+    })
+  )
+
+  return [
+    ...customTags.map((tag) => ({ tag, type: "custom" as const })),
+    ...systemTags.map((tag) => ({ tag, type: "system" as const })),
+  ]
+}
 
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
     if (!user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const item = await prisma.vaultItem.findUnique({
+    const item = await prisma.vaultItem.findFirst({
       where: {
         id: params.id,
-        userId: user.id as string
+        userId: user.id,
       },
-      include: { tags: true }
-    });
+      include: {
+        identity: true,
+        tags: {
+          orderBy: [{ type: "asc" }, { tag: "asc" }],
+        },
+      },
+    })
 
     if (!item) {
-      return new NextResponse("Not Found", { status: 404 });
+      return new NextResponse("Not Found", { status: 404 })
     }
 
-    return NextResponse.json(item);
-  } catch (error) {
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(item)
+  } catch {
+    return new NextResponse("Internal Error", { status: 500 })
   }
 }
 
@@ -35,37 +90,58 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
     if (!user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const json = await req.json();
-    const { title, password, category, notes, favorite, tags } = json;
+    const existing = await prisma.vaultItem.findFirst({
+      where: { id: params.id, userId: user.id },
+      select: { id: true },
+    })
 
-    if (tags && Array.isArray(tags)) {
-      await prisma.tag.deleteMany({ where: { itemId: params.id } });
+    if (!existing) {
+      return new NextResponse("Not Found", { status: 404 })
     }
+
+    const payload = (await req.json()) as ItemPayload
+    const title = payload.title?.trim()
+    if (!title) {
+      return new NextResponse("Account/Title is required", { status: 400 })
+    }
+
+    const identityId = await ensureIdentityOwner(user.id, payload.identityId)
+
+    await prisma.tag.deleteMany({ where: { itemId: params.id } })
 
     const item = await prisma.vaultItem.update({
-      where: {
-        id: params.id,
-        userId: user.id as string
-      },
+      where: { id: params.id },
       data: {
-        title, password, category, notes, favorite,
-        ...(tags && Array.isArray(tags) ? {
-          tags: {
-            create: tags.map((t: string) => ({ tag: t }))
-          }
-        } : {})
+        title,
+        password: payload.password?.trim() || null,
+        category: payload.category?.trim() || null,
+        notes: payload.notes?.trim() || null,
+        favorite: !!payload.favorite,
+        identityId,
+        loginValue: payload.loginValue?.trim() || null,
+        serviceName: payload.serviceName?.trim() || null,
+        serviceDomain: payload.serviceDomain?.trim() || null,
+        tags: {
+          create: buildTagRecords({ ...payload, title, identityId }),
+        },
       },
-      include: { tags: true }
-    });
+      include: {
+        identity: true,
+        tags: true,
+      },
+    })
 
-    return NextResponse.json(item);
-  } catch (error) {
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(item)
+  } catch (error: any) {
+    if (error?.message === "Identity not found") {
+      return new NextResponse("Identity not found", { status: 400 })
+    }
+    return new NextResponse("Internal Error", { status: 500 })
   }
 }
 
@@ -74,20 +150,20 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
     if (!user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    await prisma.vaultItem.delete({
+    await prisma.vaultItem.deleteMany({
       where: {
         id: params.id,
-        userId: user.id as string
-      }
-    });
+        userId: user.id,
+      },
+    })
 
-    return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse(null, { status: 204 })
+  } catch {
+    return new NextResponse("Internal Error", { status: 500 })
   }
 }

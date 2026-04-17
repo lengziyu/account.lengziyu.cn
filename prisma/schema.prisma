@@ -16,6 +16,7 @@ model User {
   updatedAt    DateTime    @updatedAt
   vaultItems   VaultItem[]
   categories   Category[]
+  identities   Identity[]
 }
 
 model Category {
@@ -30,25 +31,53 @@ model Category {
 }
 
 model VaultItem {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  platform  String?
-  url       String?
-  username  String?
-  password  String?
-  category  String?
-  notes     String?
-  favorite  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  tags      Tag[]
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identityId  String?
+  identity    Identity? @relation(fields: [identityId], references: [id], onDelete: SetNull)
+  title       String
+  platform    String?
+  url         String?
+  username    String?
+  loginValue  String?
+  serviceName String?
+  serviceDomain String?
+  password    String?
+  category    String?
+  notes       String?
+  favorite    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tags        Tag[]
+
+  @@index([userId, identityId])
+  @@index([userId, updatedAt])
 }
 
 model Tag {
-  id     String    @id @default(uuid())
+  id     String  @id @default(uuid())
   itemId String
   item   VaultItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
   tag    String
+  type   String  @default("custom")
+
+  @@index([itemId, type])
+}
+
+model Identity {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  identifier String
+  kind       String    @default("email")
+  provider   String?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  vaultItems VaultItem[]
+
+  @@unique([userId, identifier])
+  @@index([userId, updatedAt])
 }
