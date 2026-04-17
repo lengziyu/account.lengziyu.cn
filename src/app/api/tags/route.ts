@@ -15,11 +15,35 @@ export async function GET() {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const existingPresets = await prisma.tagPreset.findMany({
+    let existingPresets = await prisma.tagPreset.findMany({
       where: { userId: user.id },
       orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
       select: { id: true, name: true },
     })
+
+    if (existingPresets.length === 0) {
+      const itemCount = await prisma.vaultItem.count({
+        where: { userId: user.id },
+      })
+
+      if (itemCount === 0) {
+        for (const name of DEFAULT_TAGS) {
+          try {
+            await prisma.tagPreset.create({
+              data: { userId: user.id, name },
+            })
+          } catch {
+            // Ignore duplicates caused by concurrent requests.
+          }
+        }
+      }
+
+      existingPresets = await prisma.tagPreset.findMany({
+        where: { userId: user.id },
+        orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+        select: { id: true, name: true },
+      })
+    }
 
     const usedTags = await prisma.tag.findMany({
       where: {
@@ -31,10 +55,9 @@ export async function GET() {
     })
 
     const presetNameSet = new Set(existingPresets.map((item) => item.name.toLowerCase()))
-    const defaultSet = new Set(DEFAULT_TAGS.map((item) => item.toLowerCase()))
     const missingTags = usedTags
       .map((item) => normalizeTag(item.tag))
-      .filter((item) => item && !presetNameSet.has(item.toLowerCase()) && !defaultSet.has(item.toLowerCase()))
+      .filter((item) => item && !presetNameSet.has(item.toLowerCase()))
 
     if (missingTags.length > 0) {
       for (const name of dedupeTags(missingTags)) {
@@ -48,25 +71,19 @@ export async function GET() {
       }
     }
 
-    const customPresets = await prisma.tagPreset.findMany({
+    const allPresets = await prisma.tagPreset.findMany({
       where: { userId: user.id },
       orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
       select: { id: true, name: true },
     })
 
-    const allTags = dedupeTags([
-      ...DEFAULT_TAGS,
-      ...customPresets.map((item) => item.name),
-    ])
+    const allTags = dedupeTags(allPresets.map((item) => item.name))
 
     return NextResponse.json({
-      custom: customPresets.map((item) => item.name),
+      custom: allPresets.map((item) => item.name),
       sections: [{ label: "常用平台", tags: allTags }],
       suggested: allTags,
-      presets: [
-        ...DEFAULT_TAGS.map((name) => ({ id: `builtin:${name}`, name, builtin: true })),
-        ...customPresets.map((item) => ({ id: item.id, name: item.name, builtin: false })),
-      ],
+      presets: allPresets.map((item) => ({ id: item.id, name: item.name, builtin: false })),
     })
   } catch {
     return new NextResponse("Internal Error", { status: 500 })
@@ -84,10 +101,6 @@ export async function POST(req: Request) {
     const name = normalizeTag(body.name || "")
     if (!name) {
       return new NextResponse("Tag name is required", { status: 400 })
-    }
-
-    if (DEFAULT_TAGS.some((item) => item.toLowerCase() === name.toLowerCase())) {
-      return new NextResponse("Tag already exists", { status: 400 })
     }
 
     const allCustom = await prisma.tagPreset.findMany({
@@ -137,10 +150,6 @@ export async function PATCH(req: Request) {
 
     if (!preset) {
       return new NextResponse("Tag preset not found", { status: 404 })
-    }
-
-    if (DEFAULT_TAGS.some((item) => item.toLowerCase() === name.toLowerCase())) {
-      return new NextResponse("Tag already exists", { status: 400 })
     }
 
     const allCustom = await prisma.tagPreset.findMany({

@@ -448,7 +448,7 @@ export default function ItemDetailPage() {
               <input value={formData.password} onChange={(e) => handleChange("password", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">标题（可选）</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">标题</label>
               <input value={formData.displayTitle} onChange={(e) => handleChange("displayTitle", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
             </div>
           </section>

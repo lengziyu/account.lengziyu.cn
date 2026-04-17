@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Pencil, Tags, Trash2, X } from "lucide-react";
@@ -36,15 +36,6 @@ export default function PlatformSettingsPage() {
       void fetchTags();
     }
   }, [status, router]);
-
-  const builtinPresets = useMemo(
-    () => tagPresets.filter((item) => item.builtin),
-    [tagPresets]
-  );
-  const customPresets = useMemo(
-    () => tagPresets.filter((item) => !item.builtin),
-    [tagPresets]
-  );
 
   const clearMessages = () => {
     setError("");
@@ -208,20 +199,7 @@ export default function PlatformSettingsPage() {
             <Tags className="w-5 h-5 mr-2 text-brandIndigo" />
             常用平台管理
           </h1>
-          <p className="text-xs text-gray-500 dark:text-textTertiary mt-2 mb-4">
-            内置平台不可修改；你新增的平台可以修改和删除。
-          </p>
-
-          <div className="flex flex-wrap gap-2 mb-4">
-            {builtinPresets.map((item) => (
-              <span
-                key={item.id}
-                className="px-3 py-1 text-xs rounded-full bg-gray-100 dark:bg-[rgba(255,255,255,0.08)] text-gray-600 dark:text-textSecondary"
-              >
-                {item.name}
-              </span>
-            ))}
-          </div>
+          <p className="text-xs text-gray-500 dark:text-textTertiary mt-2 mb-4">支持新增、修改、删除。</p>
 
           <div className="flex flex-wrap gap-2 mb-4">
             <input
@@ -245,13 +223,13 @@ export default function PlatformSettingsPage() {
 
           {loading ? (
             <p className="text-sm text-gray-500 dark:text-textTertiary">加载中...</p>
-          ) : customPresets.length === 0 ? (
+          ) : tagPresets.length === 0 ? (
             <p className="text-sm text-gray-500 dark:text-textTertiary">
-              还没有自定义平台，先新增一个吧。
+              还没有平台，先新增一个吧。
             </p>
           ) : (
             <div className="space-y-2">
-              {customPresets.map((preset) => (
+              {tagPresets.map((preset) => (
                 <div
                   key={preset.id}
                   className="flex items-center gap-2 text-sm rounded-lg border border-gray-100 dark:border-[rgba(255,255,255,0.08)] px-3 py-2"
