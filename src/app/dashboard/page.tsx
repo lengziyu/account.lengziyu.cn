@@ -148,6 +148,12 @@ export default function DashboardPage() {
         : item.mainIdentityName
           ? `归属 ${item.mainIdentityName}`
           : null)
+    const badgeClassName =
+      badge === "主账号"
+        ? "bg-violet-700 text-white dark:bg-violet-600 dark:text-white"
+        : badge === "子账号"
+          ? "bg-violet-600 text-violet-50 dark:bg-violet-500 dark:text-violet-50"
+          : "bg-brandIndigo/10 text-brandIndigo dark:bg-brandIndigo/20 dark:text-accentHover"
     const displayTime = (() => {
       const isUpdated =
         item.updatedAt &&
@@ -165,7 +171,7 @@ export default function DashboardPage() {
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             {badge ? (
-              <div className="mb-2 inline-flex rounded-full bg-brandIndigo/10 px-2.5 py-1 text-[11px] font-medium text-brandIndigo dark:bg-brandIndigo/20 dark:text-accentHover">
+              <div className={`mb-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${badgeClassName}`}>
                 {badge}
               </div>
             ) : null}
@@ -229,27 +235,47 @@ export default function DashboardPage() {
         key={group.main.id}
         className="flex h-full flex-col rounded-[20px] border border-gray-200 bg-white/90 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none"
       >
-        {renderItemCard(group.main, { badge: "主账号" })}
-
-        <div className="mt-4 flex-1 border-t border-dashed border-gray-200 pt-4 dark:border-[rgba(255,255,255,0.08)]">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="text-sm font-medium text-gray-800 dark:text-textPrimary">
-              子账号
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">
+              账号分组
             </div>
-            <div className="text-xs text-gray-500 dark:text-textSecondary">
-              {group.children.length} 条
+            <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
+              1 个主账号，{group.children.length} 个子账号
             </div>
           </div>
+        </div>
 
-          {group.children.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {group.children.map((item) => renderItemCard(item, { badge: "子账号" }))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-[rgba(255,255,255,0.08)] dark:text-textTertiary">
-              这个主账号下面暂时还没有挂子账号。
-            </div>
-          )}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {renderItemCard(group.main, { badge: "主账号" })}
+          {group.children.map((item) => renderItemCard(item, { badge: "子账号" }))}
+        </div>
+
+        {group.children.length === 0 ? (
+          <div className="mt-3 rounded-2xl border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-[rgba(255,255,255,0.08)] dark:text-textTertiary">
+            这个主账号下面暂时还没有挂子账号。
+          </div>
+        ) : null}
+
+        {group.children.length > 0 && group.children.length % 2 === 0 ? (
+          <div className="mt-3 text-xs text-gray-400 dark:text-textTertiary">
+            大屏下已按两列排布主账号和子账号。
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  const renderStandaloneSection = () => {
+    if (standaloneItems.length === 0) return null
+
+    return (
+      <div>
+        <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
+          独立账号 · {standaloneItems.length} 条
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {standaloneItems.map((item) => renderItemCard(item))}
         </div>
       </div>
     )
@@ -329,22 +355,13 @@ export default function DashboardPage() {
                 <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
                   主账号分组 · {mainGroups.length} 组
                 </h2>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
                   {mainGroups.map(renderMainGroup)}
                 </div>
               </div>
             ) : null}
 
-            {standaloneItems.length > 0 ? (
-              <div>
-                <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
-                  独立账号 · {standaloneItems.length} 条
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {standaloneItems.map((item) => renderItemCard(item))}
-                </div>
-              </div>
-            ) : null}
+            {renderStandaloneSection()}
           </section>
         ) : (
           <div className="text-[13px] text-gray-500 dark:text-textTertiary py-10 text-center bg-[rgba(255,255,255,0.5)] dark:bg-[rgba(255,255,255,0.01)] rounded-2xl border border-dashed border-gray-200 dark:border-[rgba(255,255,255,0.1)] mt-6">
