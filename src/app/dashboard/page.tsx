@@ -227,11 +227,11 @@ export default function DashboardPage() {
     return (
       <div
         key={group.main.id}
-        className="rounded-[20px] border border-gray-200 bg-white/90 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none"
+        className="flex h-full flex-col rounded-[20px] border border-gray-200 bg-white/90 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none"
       >
         {renderItemCard(group.main, { badge: "主账号" })}
 
-        <div className="mt-4 border-t border-dashed border-gray-200 pt-4 dark:border-[rgba(255,255,255,0.08)]">
+        <div className="mt-4 flex-1 border-t border-dashed border-gray-200 pt-4 dark:border-[rgba(255,255,255,0.08)]">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="text-sm font-medium text-gray-800 dark:text-textPrimary">
               子账号
@@ -329,7 +329,9 @@ export default function DashboardPage() {
                 <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
                   主账号分组 · {mainGroups.length} 组
                 </h2>
-                <div className="space-y-4">{mainGroups.map(renderMainGroup)}</div>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {mainGroups.map(renderMainGroup)}
+                </div>
               </div>
             ) : null}
 
