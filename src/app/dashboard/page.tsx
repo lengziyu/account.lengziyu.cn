@@ -246,7 +246,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           {renderItemCard(group.main, { badge: "主账号" })}
           {group.children.map((item) => renderItemCard(item, { badge: "子账号" }))}
         </div>
@@ -274,7 +274,7 @@ export default function DashboardPage() {
         <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
           独立账号 · {standaloneItems.length} 条
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {standaloneItems.map((item) => renderItemCard(item))}
         </div>
       </div>
@@ -355,7 +355,7 @@ export default function DashboardPage() {
                 <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
                   主账号分组 · {mainGroups.length} 组
                 </h2>
-                <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   {mainGroups.map(renderMainGroup)}
                 </div>
               </div>
