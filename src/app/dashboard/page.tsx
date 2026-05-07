@@ -18,6 +18,9 @@ type VaultItem = {
   displayTitle?: string | null
   password?: string | null
   favorite: boolean
+  setAsMain?: boolean
+  mainItemId?: string | null
+  mainIdentityName?: string | null
   createdAt?: string
   updatedAt?: string
   tags?: ItemTag[]
@@ -97,8 +100,54 @@ export default function DashboardPage() {
 
   const favorites = filteredItems.filter((item) => item.favorite)
 
-  const renderItemCard = (item: VaultItem) => {
+  const filteredItemMap = useMemo(
+    () => new Map(filteredItems.map((item) => [item.id, item])),
+    [filteredItems]
+  )
+
+  const mainGroups = useMemo(() => {
+    const childrenByMainId = new Map<string, VaultItem[]>()
+
+    for (const item of filteredItems) {
+      if (!item.mainItemId || !filteredItemMap.has(item.mainItemId)) continue
+      const group = childrenByMainId.get(item.mainItemId) || []
+      group.push(item)
+      childrenByMainId.set(item.mainItemId, group)
+    }
+
+    return filteredItems
+      .filter((item) => item.setAsMain)
+      .map((main) => ({
+        main,
+        children: childrenByMainId.get(main.id) || [],
+      }))
+  }, [filteredItemMap, filteredItems])
+
+  const groupedChildIds = useMemo(
+    () => new Set(mainGroups.flatMap((group) => group.children.map((item) => item.id))),
+    [mainGroups]
+  )
+
+  const standaloneItems = useMemo(
+    () =>
+      filteredItems.filter(
+        (item) => !item.setAsMain && !groupedChildIds.has(item.id)
+      ),
+    [filteredItems, groupedChildIds]
+  )
+
+  const renderItemCard = (
+    item: VaultItem,
+    options?: { badge?: string }
+  ) => {
     const tags = item.tags || []
+    const badge =
+      options?.badge ||
+      (item.setAsMain
+        ? "主账号"
+        : item.mainIdentityName
+          ? `归属 ${item.mainIdentityName}`
+          : null)
     const displayTime = (() => {
       const isUpdated =
         item.updatedAt &&
@@ -115,6 +164,11 @@ export default function DashboardPage() {
       >
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
+            {badge ? (
+              <div className="mb-2 inline-flex rounded-full bg-brandIndigo/10 px-2.5 py-1 text-[11px] font-medium text-brandIndigo dark:bg-brandIndigo/20 dark:text-accentHover">
+                {badge}
+              </div>
+            ) : null}
             <div className="text-[15px] font-[510] text-gray-900 dark:text-textPrimary truncate">{item.displayTitle || item.title}</div>
             <div className="flex flex-wrap gap-1 mt-1">
               {tags.length > 0 ? (
@@ -169,6 +223,38 @@ export default function DashboardPage() {
     )
   }
 
+  const renderMainGroup = (group: { main: VaultItem; children: VaultItem[] }) => {
+    return (
+      <div
+        key={group.main.id}
+        className="rounded-[20px] border border-gray-200 bg-white/90 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none"
+      >
+        {renderItemCard(group.main, { badge: "主账号" })}
+
+        <div className="mt-4 border-t border-dashed border-gray-200 pt-4 dark:border-[rgba(255,255,255,0.08)]">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="text-sm font-medium text-gray-800 dark:text-textPrimary">
+              子账号
+            </div>
+            <div className="text-xs text-gray-500 dark:text-textSecondary">
+              {group.children.length} 条
+            </div>
+          </div>
+
+          {group.children.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {group.children.map((item) => renderItemCard(item, { badge: "子账号" }))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-[rgba(255,255,255,0.08)] dark:text-textTertiary">
+              这个主账号下面暂时还没有挂子账号。
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center transition-colors">
@@ -188,9 +274,14 @@ export default function DashboardPage() {
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brandIndigo to-accentHover flex items-center justify-center shadow-md shadow-brandIndigo/20">
               <Fingerprint className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-[22px] font-bold text-gray-900 dark:text-textPrimary drop-shadow-sm tracking-tight">
-              主账号延展视图
-            </h1>
+            <div>
+              <h1 className="text-[22px] font-bold text-gray-900 dark:text-textPrimary drop-shadow-sm tracking-tight">
+                len的密码库
+              </h1>
+              <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
+                主账号独立展示，子账号自动归在下面
+              </p>
+            </div>
           </div>
           <ThemeToggle />
         </div>
@@ -225,16 +316,33 @@ export default function DashboardPage() {
         {favorites.length > 0 && !search ? (
           <div className="mb-10">
             <h2 className="text-[14px] font-[510] text-gray-400 dark:text-textSecondary mb-4">收藏账号</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{favorites.map(renderItemCard)}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {favorites.map((item) => renderItemCard(item))}
+            </div>
           </div>
         ) : null}
 
         {filteredItems.length > 0 ? (
           <section>
-            <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
-              账号列表 · {filteredItems.length} 条
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{filteredItems.map(renderItemCard)}</div>
+            {mainGroups.length > 0 ? (
+              <div className="mb-8">
+                <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
+                  主账号分组 · {mainGroups.length} 组
+                </h2>
+                <div className="space-y-4">{mainGroups.map(renderMainGroup)}</div>
+              </div>
+            ) : null}
+
+            {standaloneItems.length > 0 ? (
+              <div>
+                <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">
+                  独立账号 · {standaloneItems.length} 条
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {standaloneItems.map((item) => renderItemCard(item))}
+                </div>
+              </div>
+            ) : null}
           </section>
         ) : (
           <div className="text-[13px] text-gray-500 dark:text-textTertiary py-10 text-center bg-[rgba(255,255,255,0.5)] dark:bg-[rgba(255,255,255,0.01)] rounded-2xl border border-dashed border-gray-200 dark:border-[rgba(255,255,255,0.1)] mt-6">

@@ -2,13 +2,13 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "冷子雨账号库",
-    short_name: "账号库",
+    name: "len的密码库",
+    short_name: "len的密码库",
     description: "您的专属本地私密账号保护工具",
     start_url: "/",
     display: "standalone",
-    background_color: "#0f172a",
-    theme_color: "#1d4ed8",
+    background_color: "#08090a",
+    theme_color: "#7c3aed",
     icons: [
       {
         src: "/icon.svg",

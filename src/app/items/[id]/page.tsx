@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
+import { SelectMenu } from "@/components/ui/SelectMenu"
 import { ArrowLeft, Plus, Trash2, CheckCircle2, Copy, Check } from "lucide-react"
 
 type Category = { id: string; name: string }
@@ -128,11 +129,9 @@ export default function ItemDetailPage() {
   }
 
   const handleIdentitySelect = (identityId: string) => {
-    const selected = identities.find((item) => item.id === identityId)
     setFormData((prev) => ({
       ...prev,
       identityId,
-      title: selected ? selected.notes || selected.name : prev.title,
     }))
     setError("")
   }
@@ -205,7 +204,7 @@ export default function ItemDetailPage() {
 
     try {
       if (!setAsMain && bindIdentity && !formData.identityId) {
-        throw new Error("已勾选绑定主账号，请先选择主账号")
+        throw new Error("已选择挂到主账号下，请先选择主账号")
       }
 
       const res = await fetch(`/api/items/${id}`, {
@@ -261,6 +260,22 @@ export default function ItemDetailPage() {
       .map((item) => ({ value: item.name, label: item.name })),
   ]
 
+  const categorySelectOptions = categoryOptions.map((category) => ({
+    value: category.value,
+    label: category.label,
+  }))
+
+  const mainIdentityOptions = identities.map((identity) => ({
+    value: identity.id,
+    label: identity.name,
+    description:
+      identity.notes && identity.notes !== identity.name
+        ? `主账号：${identity.notes}`
+        : identity.identifier,
+  }))
+
+  const selectedIdentity = identities.find((identity) => identity.id === formData.identityId)
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack flex items-center justify-center transition-colors">
@@ -290,7 +305,7 @@ export default function ItemDetailPage() {
               <button type="button" onClick={() => copyToClipboard(formData.password, "password")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
                 {copyStatus === "password" ? <CheckCircle2 className="w-4 h-4" /> : "复制密码"}
               </button>
-              <button type="button" onClick={() => copyToClipboard(`主账号: ${formData.identityId || "未绑定"}\n账号: ${formData.title}\n密码: ${formData.password}`, "all")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
+              <button type="button" onClick={() => copyToClipboard(`主账号: ${selectedIdentity?.name || "未绑定"}\n账号: ${formData.title}\n密码: ${formData.password}`, "all")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
                 {copyStatus === "all" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
@@ -303,58 +318,73 @@ export default function ItemDetailPage() {
           {error ? <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">{error}</div> : null}
 
           <form id="edit-item-form" onSubmit={handleSubmit} className="space-y-5 pb-6">
-          <section className="space-y-2">
-            <button
-              type="button"
-              onClick={() => handleSetAsMainChange(!setAsMain)}
-              className="inline-flex items-center gap-3 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.12)] px-3 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] hover:border-brandIndigo/60 transition-colors"
-              aria-pressed={setAsMain}
-            >
-              <span
-                className={`h-6 w-6 rounded-md border flex items-center justify-center transition-colors ${
-                  setAsMain
-                    ? "bg-brandIndigo border-brandIndigo text-white"
-                    : "bg-white dark:bg-transparent border-gray-300 dark:border-[rgba(255,255,255,0.25)] text-transparent"
-                }`}
-              >
-                <Check className="w-4 h-4" />
-              </span>
-              <span className="text-sm font-medium text-gray-800 dark:text-textPrimary">设为主账号</span>
-            </button>
+          <section className="space-y-3">
+            <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-violet-50/80 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:from-[rgba(255,255,255,0.04)] dark:to-[rgba(168,85,247,0.12)] dark:shadow-none">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSetAsMainChange(!setAsMain)}
+                  className="inline-flex items-center gap-3 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.12)] px-3 py-2 bg-white/80 dark:bg-[rgba(255,255,255,0.02)] hover:border-brandIndigo/60 transition-colors"
+                  aria-pressed={setAsMain}
+                >
+                  <span
+                    className={`h-6 w-6 rounded-md border flex items-center justify-center transition-colors ${
+                      setAsMain
+                        ? "bg-brandIndigo border-brandIndigo text-white"
+                        : "bg-white dark:bg-transparent border-gray-300 dark:border-[rgba(255,255,255,0.25)] text-transparent"
+                    }`}
+                  >
+                    <Check className="w-4 h-4" />
+                  </span>
+                  <span className="text-sm font-medium text-gray-800 dark:text-textPrimary">作为主账号</span>
+                </button>
 
-            {!setAsMain ? (
-            <button
-              type="button"
-              onClick={() => handleBindIdentityChange(!bindIdentity)}
-              className="inline-flex items-center gap-3 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.12)] px-3 py-2 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] hover:border-brandIndigo/60 transition-colors"
-              aria-pressed={bindIdentity}
-            >
-              <span
-                className={`h-6 w-6 rounded-md border flex items-center justify-center transition-colors ${
-                  bindIdentity
-                    ? "bg-brandIndigo border-brandIndigo text-white"
-                    : "bg-white dark:bg-transparent border-gray-300 dark:border-[rgba(255,255,255,0.25)] text-transparent"
-                }`}
-              >
-                <Check className="w-4 h-4" />
-              </span>
-              <span className="text-sm font-medium text-gray-800 dark:text-textPrimary">绑定主账号</span>
-            </button>
-            ) : null}
+                {!setAsMain ? (
+                  <button
+                    type="button"
+                    onClick={() => handleBindIdentityChange(!bindIdentity)}
+                    className="inline-flex items-center gap-3 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.12)] px-3 py-2 bg-white/80 dark:bg-[rgba(255,255,255,0.02)] hover:border-brandIndigo/60 transition-colors"
+                    aria-pressed={bindIdentity}
+                  >
+                    <span
+                      className={`h-6 w-6 rounded-md border flex items-center justify-center transition-colors ${
+                        bindIdentity
+                          ? "bg-brandIndigo border-brandIndigo text-white"
+                          : "bg-white dark:bg-transparent border-gray-300 dark:border-[rgba(255,255,255,0.25)] text-transparent"
+                      }`}
+                    >
+                      <Check className="w-4 h-4" />
+                    </span>
+                    <span className="text-sm font-medium text-gray-800 dark:text-textPrimary">挂到主账号下</span>
+                  </button>
+                ) : null}
+              </div>
+
+              <p className="mt-3 text-xs leading-5 text-gray-600 dark:text-textSecondary">
+                主账号保持独立展示，子账号只记录归属关系，不会自动覆盖你当前填写的账号内容。
+              </p>
+            </div>
             {!setAsMain && bindIdentity ? (
               <>
-                <select value={formData.identityId} onChange={(e) => handleIdentitySelect(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
-                  <option value="">请选择主账号</option>
-                  {identities.map((identity) => (
-                    <option key={identity.id} value={identity.id}>
-                      {identity.notes && identity.notes !== identity.name
-                        ? `${identity.name} · ${identity.notes}`
-                        : identity.name}
-                    </option>
-                  ))}
-                </select>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-textSecondary">
+                    选择归属的主账号
+                  </label>
+                  <SelectMenu
+                    value={formData.identityId}
+                    onChange={handleIdentitySelect}
+                    options={mainIdentityOptions}
+                    placeholder="请选择主账号"
+                    emptyMessage="还没有主账号，请先把一个账号设为主账号。"
+                  />
+                </div>
+                {selectedIdentity ? (
+                  <div className="rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2 text-xs text-violet-700 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-200">
+                    当前将作为“{selectedIdentity.name}”下面的子账号保存。
+                  </div>
+                ) : null}
                 {identities.length === 0 ? (
-                  <p className="text-xs text-amber-600 dark:text-amber-400">暂无可选主账号，请先在系统中准备主账号数据。</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400">暂无可选主账号，请先把一个可独立登录的账号设为主账号。</p>
                 ) : null}
               </>
             ) : null}
@@ -369,11 +399,12 @@ export default function ItemDetailPage() {
                   <Button type="button" variant="brand" onClick={handleAddCategory}>添加</Button>
                 </div>
               ) : (
-                <select value={formData.category} onChange={(e) => handleChange("category", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]">
-                  {categoryOptions.map((category) => (
-                    <option key={category.value} value={category.value}>{category.label}</option>
-                  ))}
-                </select>
+                <SelectMenu
+                  value={formData.category}
+                  onChange={(value) => handleChange("category", value)}
+                  options={categorySelectOptions}
+                  placeholder="请选择分类"
+                />
               )}
             </div>
             <div className="flex items-end">

@@ -18,11 +18,32 @@ export default function AppleIcon() {
           alignItems: "center",
           justifyContent: "center",
           background:
-            "linear-gradient(140deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%)",
+            "linear-gradient(145deg, #08090a 0%, #1f1638 28%, #7c3aed 68%, #d8b4fe 100%)",
           borderRadius: 36,
           position: "relative",
+          overflow: "hidden",
         }}
       >
+        <div
+          style={{
+            position: "absolute",
+            inset: 12,
+            borderRadius: 28,
+            border: "1px solid rgba(255,255,255,0.16)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 18,
+            right: 20,
+            width: 62,
+            height: 62,
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.12)",
+            filter: "blur(6px)",
+          }}
+        />
         <div
           style={{
             width: 98,
@@ -34,6 +55,7 @@ export default function AppleIcon() {
             justifyContent: "center",
             position: "relative",
             marginTop: 18,
+            background: "rgba(255,255,255,0.08)",
           }}
         >
           <div

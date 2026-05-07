@@ -2,7 +2,11 @@ import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
 import { sanitizeItemTags } from "@/lib/tags"
-import { MAIN_IDENTITY_KIND, buildMainIdentityProvider } from "@/lib/mainIdentity"
+import {
+  MAIN_IDENTITY_KIND,
+  buildMainIdentityProvider,
+  getItemIdFromMainIdentityProvider,
+} from "@/lib/mainIdentity"
 
 type ItemPayload = {
   title?: string
@@ -127,7 +131,25 @@ export async function GET(req: Request) {
       orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
     })
 
-    return NextResponse.json(items)
+    const mainIdentities = await prisma.identity.findMany({
+      where: { userId: user.id, kind: MAIN_IDENTITY_KIND },
+      select: { provider: true },
+    })
+
+    const mainItemIds = new Set(
+      mainIdentities
+        .map((identity) => getItemIdFromMainIdentityProvider(identity.provider))
+        .filter((itemId): itemId is string => !!itemId)
+    )
+
+    return NextResponse.json(
+      items.map((item) => ({
+        ...item,
+        setAsMain: mainItemIds.has(item.id),
+        mainItemId: getItemIdFromMainIdentityProvider(item.identity?.provider),
+        mainIdentityName: item.identity?.name || null,
+      }))
+    )
   } catch {
     return new NextResponse("Internal Error", { status: 500 })
   }

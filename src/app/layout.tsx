@@ -8,15 +8,15 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: {
-    default: "冷子雨账号库",
-    template: "%s | 冷子雨账号库",
+    default: "len的密码库",
+    template: "%s | len的密码库",
   },
   description: "您的专属本地私密账号保护工具",
-  applicationName: "冷子雨账号库",
+  applicationName: "len的密码库",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "冷子雨账号库",
+    title: "len的密码库",
     statusBarStyle: "default",
   },
   icons: {
