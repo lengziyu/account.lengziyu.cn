@@ -6,7 +6,7 @@ services:
         PRISMA_ENGINES_MIRROR: ${PRISMA_ENGINES_MIRROR:-https://registry.npmmirror.com/-/binary/prisma}
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3003:3000"
     environment:
       DATABASE_URL: ${DATABASE_URL}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
