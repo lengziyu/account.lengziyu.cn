@@ -12,7 +12,8 @@
     "prisma:push": "prisma db push",
     "seed": "node seed.js",
     "db:export-sqlite": "node scripts/export-sqlite-data.mjs",
-    "db:import-postgres": "node scripts/import-sqlite-export.mjs"
+    "db:import-postgres": "node scripts/import-sqlite-export.mjs",
+    "user:reset-password": "node scripts/reset-user-password.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.12.1",

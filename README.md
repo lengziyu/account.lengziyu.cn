@@ -121,6 +121,79 @@ docker compose up --build
 
 说明：`docker compose up --build` 现在会同时启动一个本地 PostgreSQL 16，默认库名为 `account_vault`，映射到宿主机 `127.0.0.1:5433`。
 
+## 服务器部署
+
+如果你要部署到自己的服务器，最推荐的方式不是再用旧 SQLite，而是直接让服务器版本连接你现在已经在用的 PostgreSQL。
+
+### 方案 A：服务器应用直接连接 Supabase
+
+这是最简单、最稳的方式。
+
+1. 服务器安装 Docker 和 Docker Compose
+2. 拉取当前项目代码
+3. 在项目根目录创建 `.env`
+4. 至少填写这些变量：
+
+```bash
+DATABASE_URL=你的 Supabase PostgreSQL 连接串
+NEXTAUTH_URL=https://你的服务器域名
+NEXTAUTH_SECRET=一串随机长字符串
+CRON_SECRET=另一串随机长字符串
+PUSH_CHANNELS=telegram,feishu
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
+FEISHU_WEBHOOK_URL=...
+FEISHU_SIGN_SECRET=...
+```
+
+5. 启动：
+
+```bash
+docker compose up -d --build app
+```
+
+如果你只跑 `app` 服务，它会直接连接外部 Supabase，不依赖本地 `postgres` 容器。
+
+如果你是纯服务器生产部署，更推荐直接用仓库内的 [docker-compose.server.yml](/Users/lens/Documents/web/lengziyu/github/account.lengziyu.cn/docker-compose.server.yml) 和 [.env.server.example](/Users/lens/Documents/web/lengziyu/github/account.lengziyu.cn/.env.server.example)：
+
+```bash
+cp .env.server.example .env
+docker compose -f docker-compose.server.yml up -d --build
+```
+
+这套配置只启动应用容器，不会额外启动本地 PostgreSQL。
+
+### 方案 B：服务器自己跑 PostgreSQL
+
+如果你不想依赖 Supabase，也可以让服务器自己托管数据库。
+
+1. 在 `.env` 里设置：
+
+```bash
+DATABASE_URL=postgresql://postgres:你的密码@postgres:5432/account_vault?schema=public
+NEXTAUTH_URL=https://你的服务器域名
+NEXTAUTH_SECRET=...
+CRON_SECRET=...
+```
+
+2. 启动完整服务：
+
+```bash
+docker compose up -d --build
+```
+
+3. 首次启动后，把数据导入这台服务器对应的 PostgreSQL
+
+### 当前最建议你的选择
+
+你既然已经把数据导入 Supabase，并且 Vercel 也已经能用，那么自己的服务器如果还要部署，建议直接走“方案 A”：
+
+- 服务器只跑应用
+- 数据继续用同一个 Supabase
+- 不再维护第二套 SQLite / PostgreSQL 数据源
+
+这样最不容易再次出现数据分叉。
+
 ## 订阅提醒说明
 
 1. 在“订阅中心”录入会员信息
