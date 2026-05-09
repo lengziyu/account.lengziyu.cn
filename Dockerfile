@@ -18,8 +18,9 @@ RUN corepack enable
 COPY . .
 
 RUN pnpm install --frozen-lockfile
+RUN pnpm prisma generate
 RUN pnpm build
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "pnpm prisma generate && pnpm prisma db push && pnpm start"]
+CMD ["pnpm", "start"]
