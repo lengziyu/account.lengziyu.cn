@@ -14,6 +14,18 @@ export async function GET() {
     const totalItems = await prisma.vaultItem.count({ where: { userId } });
     const totalFavorites = await prisma.vaultItem.count({ where: { userId, favorite: true } });
     const totalIdentities = await prisma.identity.count({ where: { userId } });
+    const totalSubscriptions = await prisma.subscription.count({ where: { userId } });
+    const dueSubscriptions = await prisma.subscription.count({
+      where: {
+        userId,
+        expiresAt: {
+          lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+        status: {
+          not: "cancelled",
+        },
+      },
+    });
     
     const tags = await prisma.tag.findMany({
       where: { item: { userId } },
@@ -31,7 +43,9 @@ export async function GET() {
       totalFavorites,
       totalTags: uniqueTags,
       totalCategories: categoryGroups.length,
-      totalIdentities
+      totalIdentities,
+      totalSubscriptions,
+      dueSubscriptions
     });
   } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });

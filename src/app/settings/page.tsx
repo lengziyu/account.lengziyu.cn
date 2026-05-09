@@ -4,13 +4,15 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { LogOut, LayoutGrid, Star, Tags, Layers, User, ChevronRight } from "lucide-react";
+import { LogOut, LayoutGrid, Star, Tags, Layers, User, ChevronRight, Bell, WalletCards } from "lucide-react";
 
 interface StatsData {
   totalItems: number;
   totalFavorites: number;
   totalTags: number;
   totalCategories: number;
+  totalSubscriptions?: number;
+  dueSubscriptions?: number;
 }
 
 export default function SettingsPage() {
@@ -93,6 +95,33 @@ export default function SettingsPage() {
 
         {/* Actions */}
         <div className="space-y-4">
+          <button
+            onClick={() => router.push("/subscriptions")}
+            className="w-full bg-white hover:bg-gray-50 dark:bg-[rgba(255,255,255,0.03)] dark:hover:bg-[rgba(255,255,255,0.06)] text-gray-800 dark:text-textPrimary border border-gray-100 dark:border-[rgba(255,255,255,0.08)] font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-between shadow-sm dark:shadow-none"
+          >
+            <span className="inline-flex items-center">
+              <WalletCards className="w-5 h-5 mr-2 text-brandIndigo" />
+              订阅中心
+            </span>
+            <span className="inline-flex items-center gap-3">
+              <span className="text-xs text-gray-500 dark:text-textTertiary">
+                {stats?.totalSubscriptions ?? 0} 项，近 7 天 {stats?.dueSubscriptions ?? 0} 项
+              </span>
+              <ChevronRight className="w-4 h-4 text-gray-500 dark:text-textTertiary" />
+            </span>
+          </button>
+
+          <button
+            onClick={() => router.push("/settings/notifications")}
+            className="w-full bg-white hover:bg-gray-50 dark:bg-[rgba(255,255,255,0.03)] dark:hover:bg-[rgba(255,255,255,0.06)] text-gray-800 dark:text-textPrimary border border-gray-100 dark:border-[rgba(255,255,255,0.08)] font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-between shadow-sm dark:shadow-none"
+          >
+            <span className="inline-flex items-center">
+              <Bell className="w-5 h-5 mr-2 text-brandIndigo" />
+              提醒与推送
+            </span>
+            <ChevronRight className="w-4 h-4 text-gray-500 dark:text-textTertiary" />
+          </button>
+
           <button
             onClick={() => router.push("/settings/platforms")}
             className="w-full bg-white hover:bg-gray-50 dark:bg-[rgba(255,255,255,0.03)] dark:hover:bg-[rgba(255,255,255,0.06)] text-gray-800 dark:text-textPrimary border border-gray-100 dark:border-[rgba(255,255,255,0.08)] font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-between shadow-sm dark:shadow-none"

@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
-import { User, KeyRound, CheckCircle2, Fingerprint } from "lucide-react"
+import { User, KeyRound, CheckCircle2, Fingerprint, BellRing } from "lucide-react"
 
 type ItemTag = {
   id: string
@@ -26,6 +26,14 @@ type VaultItem = {
   tags?: ItemTag[]
 }
 
+type DueSubscription = {
+  id: string
+  platformName: string
+  planName: string
+  expiresAt: string
+  daysUntilExpiry: number
+}
+
 const formatDate = (dateString?: string) => {
   if (!dateString) return ""
   const d = new Date(dateString)
@@ -42,6 +50,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [search, setSearch] = useState("")
   const [items, setItems] = useState<VaultItem[]>([])
+  const [dueSubscriptions, setDueSubscriptions] = useState<DueSubscription[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [activeTag, setActiveTag] = useState(ALL_TAG_FILTER)
 
@@ -58,6 +67,19 @@ export default function DashboardPage() {
     if (!res.ok) return
     setItems(await res.json())
   }
+
+  const fetchDueSubscriptions = async () => {
+    const res = await fetch("/api/subscriptions?dueWithin=7&limit=4")
+    if (!res.ok) return
+    const data = (await res.json()) as { items?: DueSubscription[] }
+    setDueSubscriptions(data.items || [])
+  }
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      void fetchDueSubscriptions()
+    }
+  }, [status])
 
   const copyToClipboard = (e: React.MouseEvent, text: string, id: string) => {
     e.stopPropagation()
@@ -338,6 +360,53 @@ export default function DashboardPage() {
             </button>
           ))}
         </div>
+
+        {dueSubscriptions.length > 0 ? (
+          <div className="mb-8 rounded-[18px] border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-5 shadow-sm dark:border-orange-400/20 dark:from-orange-500/10 dark:to-[rgba(255,255,255,0.03)] dark:shadow-none">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-1 text-[11px] text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+                  <BellRing className="w-3.5 h-3.5 mr-1.5" />
+                  7 天内即将到期
+                </div>
+                <p className="mt-3 text-sm text-gray-600 dark:text-textSecondary">
+                  有 {dueSubscriptions.length} 条订阅进入提醒窗口，点击可直接处理。
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push("/subscriptions")}
+                className="text-sm text-brandIndigo hover:text-accentHover transition-colors"
+              >
+                查看全部
+              </button>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {dueSubscriptions.map((subscription) => (
+                <button
+                  key={subscription.id}
+                  type="button"
+                  onClick={() => router.push(`/subscriptions/${subscription.id}`)}
+                  className="rounded-2xl border border-orange-100 bg-white/90 px-4 py-3 text-left transition hover:border-orange-300 dark:border-orange-400/10 dark:bg-[rgba(255,255,255,0.04)]"
+                >
+                  <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">
+                    {subscription.platformName} / {subscription.planName}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
+                    {subscription.daysUntilExpiry <= 0
+                      ? subscription.daysUntilExpiry === 0
+                        ? "今天到期"
+                        : `已过期 ${Math.abs(subscription.daysUntilExpiry)} 天`
+                      : `还有 ${subscription.daysUntilExpiry} 天到期`}
+                    {" · "}
+                    {new Date(subscription.expiresAt).toLocaleDateString("zh-CN")}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {favorites.length > 0 && !search ? (
           <div className="mb-10">

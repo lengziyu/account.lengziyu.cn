@@ -3,21 +3,25 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String      @id @default(uuid())
-  email        String      @unique
-  passwordHash String
-  name         String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  vaultItems   VaultItem[]
-  categories   Category[]
-  identities   Identity[]
-  tagPresets   TagPreset[]
+  id                   String                    @id @default(uuid())
+  email                String                    @unique
+  passwordHash         String
+  name                 String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  vaultItems           VaultItem[]
+  categories           Category[]
+  identities           Identity[]
+  tagPresets           TagPreset[]
+  subscriptions        Subscription[]
+  reminderRules        ReminderRule[]
+  notificationChannels NotificationChannel[]
+  dispatchLogs         NotificationDispatchLog[]
 }
 
 model Category {
@@ -32,23 +36,24 @@ model Category {
 }
 
 model VaultItem {
-  id          String    @id @default(uuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  identityId  String?
-  identity    Identity? @relation(fields: [identityId], references: [id], onDelete: SetNull)
-  title       String
+  id           String         @id @default(uuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identityId   String?
+  identity     Identity?      @relation(fields: [identityId], references: [id], onDelete: SetNull)
+  title        String
   displayTitle String?
-  platform    String?
-  url         String?
-  username    String?
-  password    String?
-  category    String?
-  notes       String?
-  favorite    Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  tags        Tag[]
+  platform     String?
+  url          String?
+  username     String?
+  password     String?
+  category     String?
+  notes        String?
+  favorite     Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  tags         Tag[]
+  subscriptions Subscription[]
 
   @@index([userId, identityId])
   @@index([userId, updatedAt])
@@ -91,4 +96,88 @@ model Identity {
 
   @@unique([userId, identifier])
   @@index([userId, updatedAt])
+}
+
+model Subscription {
+  id            String                  @id @default(uuid())
+  userId        String
+  user          User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vaultItemId   String?
+  vaultItem     VaultItem?              @relation(fields: [vaultItemId], references: [id], onDelete: SetNull)
+  platformName  String
+  planName      String
+  status        String                  @default("active")
+  decision      String                  @default("pending")
+  startedAt     DateTime?
+  expiresAt     DateTime
+  renewalCycle  String?
+  price         Float?
+  currency      String                  @default("CNY")
+  autoRenew     Boolean                 @default(false)
+  notes         String?
+  lastRenewedAt DateTime?
+  snoozeUntil   DateTime?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  reminderRules ReminderRule[]
+  dispatchLogs  NotificationDispatchLog[]
+
+  @@index([userId, expiresAt])
+  @@index([userId, status])
+  @@index([vaultItemId])
+}
+
+model ReminderRule {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  daysBefore     Int
+  enabled        Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([userId, subscriptionId, daysBefore])
+  @@index([userId, subscriptionId])
+}
+
+model NotificationChannel {
+  id             String                  @id @default(uuid())
+  userId         String
+  user           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           String
+  name           String
+  enabled        Boolean                 @default(true)
+  configJson     String
+  lastVerifiedAt DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  dispatchLogs   NotificationDispatchLog[]
+
+  @@index([userId, type])
+  @@index([userId, enabled])
+}
+
+model NotificationDispatchLog {
+  id              String               @id @default(uuid())
+  userId          String
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId  String
+  subscription    Subscription         @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  channelId       String?
+  channel         NotificationChannel? @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  channelType     String
+  daysBefore      Int
+  triggerDateKey  String
+  status          String               @default("pending")
+  payloadSnapshot String?
+  errorMessage    String?
+  sentAt          DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@unique([subscriptionId, channelType, daysBefore, triggerDateKey])
+  @@index([userId, triggerDateKey])
+  @@index([subscriptionId, status])
 }

@@ -1,0 +1,661 @@
+{
+  "exportedAt": "2026-05-09T11:33:14.601Z",
+  "sourceDb": "migration/online/dev.db",
+  "tables": {
+    "User": [
+      {
+        "id": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "email": "admin",
+        "passwordHash": "$2a$10$uYzHSl8.Cz5UgVQqMnhLUuk1mOlgPCtk7YZQI3HkS0Oc41z8tIQea",
+        "name": "Admin",
+        "createdAt": 1776383107938,
+        "updatedAt": 1776387242348
+      }
+    ],
+    "Category": [],
+    "Identity": [
+      {
+        "id": "7dca077e-4ce5-402f-9eab-b005014651b8",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "ilengziyu@gmail.com",
+        "identifier": "vault-item:fc0a6a7d-b5eb-49a2-b7b1-7761601c3eaa",
+        "kind": "item_main",
+        "provider": "vault-item:fc0a6a7d-b5eb-49a2-b7b1-7761601c3eaa",
+        "notes": null,
+        "createdAt": 1776410280180,
+        "updatedAt": 1776410280180
+      },
+      {
+        "id": "8324000c-c534-400b-a07f-7b5a7143a081",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "ichenbuding@gmail.com",
+        "identifier": "vault-item:5455e593-e9df-4fa6-b05c-5eefe96683d1",
+        "kind": "item_main",
+        "provider": "vault-item:5455e593-e9df-4fa6-b05c-5eefe96683d1",
+        "notes": "ichenbuding@gmail.com",
+        "createdAt": 1778046807151,
+        "updatedAt": 1778046807151
+      }
+    ],
+    "VaultItem": [
+      {
+        "id": "5455e593-e9df-4fa6-b05c-5eefe96683d1",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "identityId": null,
+        "title": "ichenbuding@gmail.com",
+        "platform": null,
+        "url": null,
+        "username": null,
+        "password": "len136214",
+        "category": "website",
+        "notes": null,
+        "favorite": 0,
+        "createdAt": 1776387381994,
+        "updatedAt": 1778046807097,
+        "displayTitle": null
+      },
+      {
+        "id": "fc0a6a7d-b5eb-49a2-b7b1-7761601c3eaa",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "identityId": null,
+        "title": "ilengziyu@gmail.com",
+        "platform": null,
+        "url": null,
+        "username": null,
+        "password": "c21222324",
+        "category": "website",
+        "notes": null,
+        "favorite": 0,
+        "createdAt": 1776387422786,
+        "updatedAt": 1776410280161,
+        "displayTitle": null
+      },
+      {
+        "id": "46e11333-6aac-402c-94f0-202d13d53721",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "identityId": null,
+        "title": "1058566903@qq.com",
+        "platform": null,
+        "url": null,
+        "username": null,
+        "password": "无密码",
+        "category": "website",
+        "notes": "使用的是apple的登录方式",
+        "favorite": 0,
+        "createdAt": 1776387474886,
+        "updatedAt": 1776408687604,
+        "displayTitle": null
+      },
+      {
+        "id": "1640974f-bb58-4463-8533-ba50f21f30b8",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "identityId": null,
+        "title": "ichenfeimao@gmail.com",
+        "platform": null,
+        "url": null,
+        "username": null,
+        "password": "len134214",
+        "category": "social",
+        "notes": "保存您的备用验证码\n请将这些备用验证码放在一个安全无虞且便于取用的地方。\n\n1. 4842 9956\t\t 6. 3989 6952\n2. 1320 3287\t\t 7. 8021 3148\n3. 3594 3804\t\t 8. 2824 4800\n4. 0937 0230\t\t 9. 7306 3944\n5. 7284 3059\t\t10. 9727 2167\n\n(ichenfeimao@gmail.com)\n\n* 每个备用验证码只能使用一次。\n* 需要获取更多验证码？请访问 https://g.co/2sv\n* 这些验证码的生成时间：2026年4月19日。",
+        "favorite": 0,
+        "createdAt": 1776565243792,
+        "updatedAt": 1776565243792,
+        "displayTitle": null
+      },
+      {
+        "id": "f6d36d73-34e9-4582-b2e7-276b1500e4f4",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "identityId": null,
+        "title": "sijingichen@gmail.com",
+        "platform": null,
+        "url": null,
+        "username": null,
+        "password": "len136214",
+        "category": "social",
+        "notes": null,
+        "favorite": 0,
+        "createdAt": 1776571148222,
+        "updatedAt": 1776571148222,
+        "displayTitle": null
+      },
+      {
+        "id": "f7f08fde-c5cd-4e53-861e-481e77f45835",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "identityId": "7dca077e-4ce5-402f-9eab-b005014651b8",
+        "title": "ilengziyu@gmail.com",
+        "platform": null,
+        "url": null,
+        "username": null,
+        "password": "len136214",
+        "category": "social",
+        "notes": "https://build.nvidia.com\n用户名：len\napi-key：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",
+        "favorite": 0,
+        "createdAt": 1776573920923,
+        "updatedAt": 1776607019436,
+        "displayTitle": "英伟达免费api"
+      },
+      {
+        "id": "6174e3dc-df7f-4c03-adc2-077c7e5136ea",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "identityId": "8324000c-c534-400b-a07f-7b5a7143a081",
+        "title": "ichenbuding@gmail.com",
+        "platform": null,
+        "url": null,
+        "username": null,
+        "password": "Len136214.",
+        "category": "social",
+        "notes": "5.5号图区79元礼品卡兑换的Plus会员",
+        "favorite": 0,
+        "createdAt": 1778046882221,
+        "updatedAt": 1778046882221,
+        "displayTitle": "ChatGPT Plus账号"
+      },
+      {
+        "id": "5121b394-f3c7-42f3-9cb9-7b06c794ee86",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "identityId": "7dca077e-4ce5-402f-9eab-b005014651b8",
+        "title": "ilengziyu@gmail.com",
+        "platform": null,
+        "url": null,
+        "username": null,
+        "password": "c21222324",
+        "category": "social",
+        "notes": null,
+        "favorite": 0,
+        "createdAt": 1778291341612,
+        "updatedAt": 1778291375054,
+        "displayTitle": "Snapchat"
+      },
+      {
+        "id": "deecdeaa-a264-4ef5-8bdf-6dfdbc670d59",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "identityId": "8324000c-c534-400b-a07f-7b5a7143a081",
+        "title": "ichenbuding@gmail.com",
+        "platform": null,
+        "url": null,
+        "username": null,
+        "password": null,
+        "category": "social",
+        "notes": null,
+        "favorite": 0,
+        "createdAt": 1778318326748,
+        "updatedAt": 1778318326748,
+        "displayTitle": "Kiro 免费一个月"
+      }
+    ],
+    "TagPreset": [
+      {
+        "id": "903e642e-f066-4efa-b656-e587c7b05964",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Google",
+        "createdAt": 1776420748754,
+        "updatedAt": 1776420763272
+      },
+      {
+        "id": "0bf6d1ed-9bc3-46f3-9f59-cb07759106bf",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "ChatGPT",
+        "createdAt": 1776420748765,
+        "updatedAt": 1776420765792
+      },
+      {
+        "id": "26f6c661-c2ec-43ad-8ae7-e899a0b92c09",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Apple",
+        "createdAt": 1776420748778,
+        "updatedAt": 1776420748778
+      },
+      {
+        "id": "7e0be123-c87c-4121-84d8-d8beec841784",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "QQ",
+        "createdAt": 1776423673761,
+        "updatedAt": 1776423673761
+      },
+      {
+        "id": "13827082-434c-49b4-a768-f3e3ecf04266",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "微信",
+        "createdAt": 1776423673779,
+        "updatedAt": 1776423673779
+      },
+      {
+        "id": "9d2ab143-2d61-413b-94c1-1c9fcfe8a651",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "企业微信",
+        "createdAt": 1776423673788,
+        "updatedAt": 1776423673788
+      },
+      {
+        "id": "ba5c67fb-f727-44ba-8d21-00c93c985e48",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "钉钉",
+        "createdAt": 1776423673797,
+        "updatedAt": 1776423673797
+      },
+      {
+        "id": "1fb35d0a-c71d-4d3a-bc7c-922861accbe2",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "飞书",
+        "createdAt": 1776423673805,
+        "updatedAt": 1776423673805
+      },
+      {
+        "id": "671bd3b4-6786-4456-9997-200d20fc2178",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "支付宝",
+        "createdAt": 1776423673816,
+        "updatedAt": 1776423673816
+      },
+      {
+        "id": "b5f7892b-0cd5-4cc7-975b-3595a07a87b4",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Microsoft",
+        "createdAt": 1776423673824,
+        "updatedAt": 1776423673824
+      },
+      {
+        "id": "54210190-63d7-4ad8-aa7c-68a88b7c186f",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Gmail",
+        "createdAt": 1776423673832,
+        "updatedAt": 1776423673832
+      },
+      {
+        "id": "a587a695-79a5-46bb-bb02-5124843c72bb",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Outlook",
+        "createdAt": 1776423673842,
+        "updatedAt": 1776423673842
+      },
+      {
+        "id": "d71042c2-28c1-406d-bfe1-4b3f6a1225d1",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Telegram",
+        "createdAt": 1776423673852,
+        "updatedAt": 1776423673852
+      },
+      {
+        "id": "53758f21-aff1-418b-9b99-491dcbbf3dd4",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "WhatsApp",
+        "createdAt": 1776423673861,
+        "updatedAt": 1776423673861
+      },
+      {
+        "id": "7782793d-a47b-4713-be9f-3a4a1d7c51b9",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Discord",
+        "createdAt": 1776423673869,
+        "updatedAt": 1776423673869
+      },
+      {
+        "id": "93a76ec5-0356-4dc8-95bf-6c5fde7c1d2f",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Facebook",
+        "createdAt": 1776423673876,
+        "updatedAt": 1776423673876
+      },
+      {
+        "id": "ce30ef4d-cfe9-4d60-9a66-56caa16783af",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Instagram",
+        "createdAt": 1776423673887,
+        "updatedAt": 1776423673887
+      },
+      {
+        "id": "bd99e7b2-5d68-421c-9640-05c6b75102cd",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "X",
+        "createdAt": 1776423673896,
+        "updatedAt": 1776423673896
+      },
+      {
+        "id": "14763265-1821-4d4e-b4ca-f6fa5f721ef4",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "LinkedIn",
+        "createdAt": 1776423673904,
+        "updatedAt": 1776423673904
+      },
+      {
+        "id": "f80b7e56-0776-432f-9935-4af3395037a8",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "YouTube",
+        "createdAt": 1776423673913,
+        "updatedAt": 1776423673913
+      },
+      {
+        "id": "d2027a08-a4e5-4866-9e9f-9fbbb7319560",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Netflix",
+        "createdAt": 1776423673923,
+        "updatedAt": 1776423673923
+      },
+      {
+        "id": "a82f14f8-f046-4bf9-938e-8460ef33aee6",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Github",
+        "createdAt": 1776423673933,
+        "updatedAt": 1776423673933
+      },
+      {
+        "id": "a8683a75-2c2b-4ffb-824f-acdad0190832",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "GitLab",
+        "createdAt": 1776423673944,
+        "updatedAt": 1776423673944
+      },
+      {
+        "id": "5f6a20c7-819f-438f-9a9b-40cf02bf7c61",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Notion",
+        "createdAt": 1776423673964,
+        "updatedAt": 1776423673964
+      },
+      {
+        "id": "3bb627cc-bf46-45c3-b0e4-9d6ef04e794a",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Figma",
+        "createdAt": 1776423673972,
+        "updatedAt": 1776423673972
+      },
+      {
+        "id": "442d3c3e-71e5-43fd-bcdc-2a7252c277c4",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Zoom",
+        "createdAt": 1776423673990,
+        "updatedAt": 1776423673990
+      },
+      {
+        "id": "87a86d40-5c78-40d0-b491-be2d4a04fa85",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "AWS",
+        "createdAt": 1776423673999,
+        "updatedAt": 1776423673999
+      },
+      {
+        "id": "2764b1bc-6076-4247-8adf-cc2e105f13f2",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "PayPal",
+        "createdAt": 1776423674011,
+        "updatedAt": 1776423674011
+      },
+      {
+        "id": "b95b0a04-93cd-483e-a66e-b814f585e6b2",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Spotify",
+        "createdAt": 1776423674021,
+        "updatedAt": 1776423674021
+      },
+      {
+        "id": "746260a2-17ab-4bcc-a434-09733ee35c61",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "OpenAI",
+        "createdAt": 1776423674031,
+        "updatedAt": 1776423674031
+      },
+      {
+        "id": "a5cd0c71-8de2-40b0-9814-92267c83ed6b",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Claude",
+        "createdAt": 1776423674049,
+        "updatedAt": 1776423674049
+      },
+      {
+        "id": "93efc080-6a50-4863-8324-4357092968b8",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "百度",
+        "createdAt": 1776423674060,
+        "updatedAt": 1776423674060
+      },
+      {
+        "id": "8863827c-2602-4b21-b628-b77ebfe1e02a",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "百度网盘",
+        "createdAt": 1776423674072,
+        "updatedAt": 1776423674072
+      },
+      {
+        "id": "0c6a6d90-36e1-4a26-8aed-6aea35b34f0f",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "知乎",
+        "createdAt": 1776423674081,
+        "updatedAt": 1776423674081
+      },
+      {
+        "id": "22eb5196-b0ff-4b99-85c7-6f463ba32e00",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "微博",
+        "createdAt": 1776423674092,
+        "updatedAt": 1776423674092
+      },
+      {
+        "id": "c1dff809-0fcb-4887-9894-be30d859ca08",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "小红书",
+        "createdAt": 1776423674102,
+        "updatedAt": 1776423674102
+      },
+      {
+        "id": "7cf01603-93c3-44de-b494-49f822f61c27",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "抖音",
+        "createdAt": 1776423674112,
+        "updatedAt": 1776423674112
+      },
+      {
+        "id": "1a823656-62b2-4ed9-b387-426ca00816c6",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "快手",
+        "createdAt": 1776423674123,
+        "updatedAt": 1776423674123
+      },
+      {
+        "id": "0b98fb9d-6bd2-4d1f-8571-eb4365a75d53",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "B站",
+        "createdAt": 1776423674133,
+        "updatedAt": 1776423674133
+      },
+      {
+        "id": "97817557-4714-4dce-873e-d81f00335fd9",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "豆瓣",
+        "createdAt": 1776423674144,
+        "updatedAt": 1776423674144
+      },
+      {
+        "id": "67f0ec4e-c1a7-46df-abb4-c57f2e6d7374",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "淘宝",
+        "createdAt": 1776423674154,
+        "updatedAt": 1776423674154
+      },
+      {
+        "id": "e2fd37ed-edc1-490b-8638-b45c1fba0e52",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "天猫",
+        "createdAt": 1776423674163,
+        "updatedAt": 1776423674163
+      },
+      {
+        "id": "f66de55e-b26e-4543-89a2-0586b16daddb",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "京东",
+        "createdAt": 1776423674175,
+        "updatedAt": 1776423674175
+      },
+      {
+        "id": "1a64b5f7-acc8-4e27-a51e-5e83a697116a",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "拼多多",
+        "createdAt": 1776423674184,
+        "updatedAt": 1776423674184
+      },
+      {
+        "id": "7c5bcc5f-cd88-462d-a326-e8e2e55fc3e5",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "咸鱼",
+        "createdAt": 1776423674194,
+        "updatedAt": 1776423674194
+      },
+      {
+        "id": "e03f4f51-d25a-41e4-a0dc-2172982ec6a6",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "美团",
+        "createdAt": 1776423674205,
+        "updatedAt": 1776423674205
+      },
+      {
+        "id": "60e1f0d1-0323-428b-a05c-2eb4dc925897",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "饿了么",
+        "createdAt": 1776423674216,
+        "updatedAt": 1776423674216
+      },
+      {
+        "id": "bd8df227-484d-454f-927b-4cb8e1a9568f",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "携程",
+        "createdAt": 1776423674227,
+        "updatedAt": 1776423674227
+      },
+      {
+        "id": "113a7919-9e31-40a5-85ba-1b7531bacea5",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "12306",
+        "createdAt": 1776423674238,
+        "updatedAt": 1776423674238
+      },
+      {
+        "id": "96d75c17-5995-4e30-a8ff-52ee340fa2bb",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "滴滴",
+        "createdAt": 1776423674247,
+        "updatedAt": 1776423674247
+      },
+      {
+        "id": "3101bf2d-3dab-4b14-b8c6-780fddea5032",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "腾讯视频",
+        "createdAt": 1776423674255,
+        "updatedAt": 1776423674255
+      },
+      {
+        "id": "229bfff4-794a-4f0d-970e-d158ae47526f",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "爱奇艺",
+        "createdAt": 1776423674264,
+        "updatedAt": 1776423674264
+      },
+      {
+        "id": "e65ba9a4-fc2e-470d-a65c-ba2e987525f2",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "优酷",
+        "createdAt": 1776423674273,
+        "updatedAt": 1776423674273
+      },
+      {
+        "id": "7f8a0085-e4a4-45db-ab55-b3ad60b07ef8",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "网易云音乐",
+        "createdAt": 1776423674282,
+        "updatedAt": 1776423674282
+      },
+      {
+        "id": "a932ac06-aa7c-4d36-9df8-c27a41f1e17a",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "QQ音乐",
+        "createdAt": 1776423674291,
+        "updatedAt": 1776423674291
+      },
+      {
+        "id": "4ba6993b-112b-488d-9a0d-9c5d066d7dc6",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Nvidia",
+        "createdAt": 1776573896773,
+        "updatedAt": 1776573896773
+      },
+      {
+        "id": "8d8efb88-83ff-49d3-9ed5-06ad773eb5c8",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Snapchat",
+        "createdAt": 1778291370749,
+        "updatedAt": 1778291370749
+      },
+      {
+        "id": "d694dd1a-f2c2-4bb7-8036-85052721d016",
+        "userId": "bf36a11c-b58f-420e-9c95-c4237c4982a7",
+        "name": "Kiro",
+        "createdAt": 1778318321368,
+        "updatedAt": 1778318321368
+      }
+    ],
+    "Tag": [
+      {
+        "id": "b2fd8a47-c381-4cdf-b324-e70ebf36036c",
+        "itemId": "46e11333-6aac-402c-94f0-202d13d53721",
+        "tag": "ChatGPT",
+        "type": "custom"
+      },
+      {
+        "id": "f1724d6c-eea8-413d-886b-13d10e0b7c16",
+        "itemId": "46e11333-6aac-402c-94f0-202d13d53721",
+        "tag": "Apple",
+        "type": "custom"
+      },
+      {
+        "id": "697e4421-0fe4-42d1-be44-705685140981",
+        "itemId": "fc0a6a7d-b5eb-49a2-b7b1-7761601c3eaa",
+        "tag": "Google",
+        "type": "custom"
+      },
+      {
+        "id": "2a22bd86-3075-4654-a56b-727ffe6b87e2",
+        "itemId": "1640974f-bb58-4463-8533-ba50f21f30b8",
+        "tag": "Google",
+        "type": "custom"
+      },
+      {
+        "id": "7ea82686-17cb-438e-8191-d5ac90d6fc75",
+        "itemId": "f6d36d73-34e9-4582-b2e7-276b1500e4f4",
+        "tag": "Google",
+        "type": "custom"
+      },
+      {
+        "id": "e122e163-35d3-480e-873e-c085f769fa0d",
+        "itemId": "f7f08fde-c5cd-4e53-861e-481e77f45835",
+        "tag": "Nvidia",
+        "type": "custom"
+      },
+      {
+        "id": "4f12a5af-712f-4c4e-af06-7ec320fd057f",
+        "itemId": "5455e593-e9df-4fa6-b05c-5eefe96683d1",
+        "tag": "Google",
+        "type": "custom"
+      },
+      {
+        "id": "69d6314a-0b24-4232-8a2f-400e0edf66f5",
+        "itemId": "6174e3dc-df7f-4c03-adc2-077c7e5136ea",
+        "tag": "ChatGPT",
+        "type": "custom"
+      },
+      {
+        "id": "21f22b8b-790a-46ae-94c8-8ec20298470e",
+        "itemId": "5121b394-f3c7-42f3-9cb9-7b06c794ee86",
+        "tag": "Snapchat",
+        "type": "custom"
+      },
+      {
+        "id": "8ccac2a2-0e23-48ed-9fbc-12ec52ffbe3b",
+        "itemId": "deecdeaa-a264-4ef5-8bdf-6dfdbc670d59",
+        "tag": "Kiro",
+        "type": "custom"
+      }
+    ],
+    "Subscription": [],
+    "ReminderRule": [],
+    "NotificationChannel": [],
+    "NotificationDispatchLog": []
+  }
+}

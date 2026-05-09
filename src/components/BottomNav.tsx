@@ -9,7 +9,13 @@ export function BottomNav() {
 
   // Do not rendering BottomNav on /items/new or /items/[id] natively, if users implement it selectively it's fine.
   // But if it's placed globally in layout, we can hide it conditionally:
-  if (pathname.includes("/items/") || pathname === "/login" || pathname === "/register" || pathname === "/") return null;
+  if (
+    pathname.includes("/items/") ||
+    pathname.includes("/subscriptions/") ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/"
+  ) return null;
 
   return (
     <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] bg-white dark:bg-[#121316] border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] px-6 py-3 flex items-center justify-between z-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">

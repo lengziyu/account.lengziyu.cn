@@ -1,15 +1,38 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: account_vault
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   app:
     build:
       context: .
       args:
         PRISMA_ENGINES_MIRROR: ${PRISMA_ENGINES_MIRROR:-https://registry.npmmirror.com/-/binary/prisma}
+    depends_on:
+      - postgres
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: ${DATABASE_URL:-file:./dev.db}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/account_vault?schema=public}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-super-secret-vault-key-change-me}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      CRON_SECRET: ${CRON_SECRET:-super-secret-cron-change-me}
+      PUSH_CHANNELS: ${PUSH_CHANNELS:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      FEISHU_WEBHOOK_URL: ${FEISHU_WEBHOOK_URL:-}
+      FEISHU_SIGN_SECRET: ${FEISHU_SIGN_SECRET:-}
       PRISMA_ENGINES_MIRROR: ${PRISMA_ENGINES_MIRROR:-https://registry.npmmirror.com/-/binary/prisma}
     volumes:
       - ./prisma:/app/prisma
+
+volumes:
+  postgres_data:
