@@ -30,6 +30,16 @@ export const NOTIFICATION_CHANNEL_OPTIONS = [
   { value: "feishu", label: "飞书" },
 ]
 
+export const COMMON_CURRENCY_OPTIONS = [
+  { value: "CNY", label: "人民币 CNY" },
+  { value: "USD", label: "美元 USD" },
+  { value: "HKD", label: "港币 HKD" },
+  { value: "JPY", label: "日元 JPY" },
+  { value: "EUR", label: "欧元 EUR" },
+  { value: "GBP", label: "英镑 GBP" },
+  { value: "SGD", label: "新加坡元 SGD" },
+]
+
 export function normalizeReminderDays(values: number[]) {
   return Array.from(
     new Set(
@@ -42,4 +52,15 @@ export function normalizeReminderDays(values: number[]) {
 
 export function formatReminderLabel(day: number) {
   return day === 0 ? "当天" : `提前 ${day} 天`
+}
+
+export function deriveSubscriptionStatus(expiresAt: Date, now = new Date()) {
+  const dayMs = 24 * 60 * 60 * 1000
+  const expiresDay = new Date(expiresAt.getFullYear(), expiresAt.getMonth(), expiresAt.getDate()).getTime()
+  const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const diff = Math.floor((expiresDay - currentDay) / dayMs)
+
+  if (diff < 0) return "expired"
+  if (diff <= 7) return "expiring"
+  return "active"
 }

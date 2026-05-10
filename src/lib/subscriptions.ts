@@ -1,6 +1,6 @@
 import crypto from "node:crypto"
 import prisma from "@/lib/prisma"
-import { DEFAULT_REMINDER_DAYS, normalizeReminderDays } from "@/lib/subscription-options"
+import { DEFAULT_REMINDER_DAYS, deriveSubscriptionStatus, normalizeReminderDays } from "@/lib/subscription-options"
 
 export type NotificationChannelConfig = {
   botToken?: string
@@ -32,8 +32,6 @@ export type SubscriptionListItem = {
   currency: string
   autoRenew: boolean
   notes: string | null
-  lastRenewedAt: Date | null
-  snoozeUntil: Date | null
   createdAt: Date
   updatedAt: Date
   vaultItem: {
@@ -232,7 +230,7 @@ export function buildSubscriptionMessage(
 
   const lines = [
     "会员到期提醒",
-    `${subscription.platformName} / ${subscription.planName}`,
+    subscription.planName ? `${subscription.platformName} / ${subscription.planName}` : subscription.platformName,
     `到期时间：${expires.getFullYear()}-${`${expires.getMonth() + 1}`.padStart(2, "0")}-${`${expires.getDate()}`.padStart(2, "0")}`,
     `提醒节点：${daysBefore === 0 ? "当天" : `提前 ${daysBefore} 天`}`,
     `自动续费：${subscription.autoRenew ? "已开启" : "未开启"}`,
@@ -355,7 +353,7 @@ export async function getDueSubscriptionCandidates(userId: string) {
     prisma.subscription.findMany({
       where: {
         userId,
-        status: { not: "cancelled" },
+        decision: { notIn: ["renew", "skip"] },
       },
       include: {
         vaultItem: {
@@ -391,11 +389,11 @@ export async function getDueSubscriptionCandidates(userId: string) {
   const dateKey = formatDateKey(today)
 
   const due = subscriptions.flatMap((subscription) => {
-    if (subscription.snoozeUntil && startOfDay(subscription.snoozeUntil) > startOfDay(today)) {
+    const daysUntilExpiry = diffInDays(subscription.expiresAt, today)
+    const computedStatus = deriveSubscriptionStatus(subscription.expiresAt, today)
+    if (computedStatus === "expired" && daysUntilExpiry < -3) {
       return []
     }
-
-    const daysUntilExpiry = diffInDays(subscription.expiresAt, today)
     const reminderDays = resolveReminderDays(subscription.reminderRules, defaultRules)
     if (!reminderDays.includes(daysUntilExpiry)) {
       return []

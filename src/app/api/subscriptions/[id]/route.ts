@@ -6,6 +6,7 @@ import {
   parseNullableDate,
   replaceReminderRules,
 } from "@/lib/subscriptions"
+import { deriveSubscriptionStatus } from "@/lib/subscription-options"
 
 type SubscriptionPayload = {
   vaultItemId?: string | null
@@ -20,8 +21,6 @@ type SubscriptionPayload = {
   currency?: string | null
   autoRenew?: boolean
   notes?: string | null
-  lastRenewedAt?: string | null
-  snoozeUntil?: string | null
   reminderDays?: number[]
 }
 
@@ -124,15 +123,16 @@ export async function PATCH(
 
     const payload = (await req.json()) as SubscriptionPayload
     const platformName = payload.platformName?.trim()
-    const planName = payload.planName?.trim()
+    const planName = payload.planName?.trim() || ""
     const expiresAt = parseNullableDate(payload.expiresAt)
 
-    if (!platformName || !planName || !expiresAt) {
-      return new NextResponse("platformName、planName、expiresAt 为必填项", { status: 400 })
+    if (!platformName || !expiresAt) {
+      return new NextResponse("platformName、expiresAt 为必填项", { status: 400 })
     }
 
     const vaultItemId = await ensureVaultItemOwner(user.id, payload.vaultItemId)
     const price = normalizePrice(payload.price)
+    const status = deriveSubscriptionStatus(expiresAt)
 
     await prisma.subscription.update({
       where: { id: params.id },
@@ -140,7 +140,7 @@ export async function PATCH(
         vaultItemId,
         platformName,
         planName,
-        status: payload.status?.trim() || "active",
+        status,
         decision: payload.decision?.trim() || "pending",
         startedAt: parseNullableDate(payload.startedAt),
         expiresAt,
@@ -149,8 +149,6 @@ export async function PATCH(
         currency: payload.currency?.trim() || "CNY",
         autoRenew: !!payload.autoRenew,
         notes: payload.notes?.trim() || null,
-        lastRenewedAt: parseNullableDate(payload.lastRenewedAt),
-        snoozeUntil: parseNullableDate(payload.snoozeUntil),
       },
     })
 

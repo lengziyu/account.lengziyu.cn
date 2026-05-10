@@ -6,10 +6,11 @@ import { cn } from "@/lib/utils";
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "brand" | "ghost" | "subtle" | "outline" | "warning" | "danger";
+  loading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "ghost", ...props }, ref) => {
+  ({ className, variant = "ghost", loading = false, children, disabled, ...props }, ref) => {
     return (
       <button
         ref={ref}
@@ -25,8 +26,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           },
           className
         )}
+        disabled={disabled || loading}
+        aria-busy={loading}
         {...props}
-      />
+      >
+        {loading ? (
+          <span className="mr-2 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+        ) : null}
+        {children}
+      </button>
     );
   }
 );

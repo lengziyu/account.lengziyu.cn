@@ -8,6 +8,7 @@ import {
   replaceReminderRules,
   resolveReminderDays,
 } from "@/lib/subscriptions"
+import { deriveSubscriptionStatus } from "@/lib/subscription-options"
 
 type SubscriptionPayload = {
   vaultItemId?: string | null
@@ -22,8 +23,6 @@ type SubscriptionPayload = {
   currency?: string | null
   autoRenew?: boolean
   notes?: string | null
-  lastRenewedAt?: string | null
-  snoozeUntil?: string | null
   reminderDays?: number[]
 }
 
@@ -121,6 +120,7 @@ export async function GET(req: Request) {
         daysUntilExpiry,
         effectiveReminderDays: reminderDays,
         isDueSoon: daysUntilExpiry <= 7,
+        status: deriveSubscriptionStatus(subscription.expiresAt, today),
       }
     })
 
@@ -155,18 +155,17 @@ export async function POST(req: Request) {
 
     const payload = (await req.json()) as SubscriptionPayload
     const platformName = payload.platformName?.trim()
-    const planName = payload.planName?.trim()
+    const planName = payload.planName?.trim() || ""
     const expiresAt = parseNullableDate(payload.expiresAt)
 
-    if (!platformName || !planName || !expiresAt) {
-      return new NextResponse("platformName、planName、expiresAt 为必填项", { status: 400 })
+    if (!platformName || !expiresAt) {
+      return new NextResponse("platformName、expiresAt 为必填项", { status: 400 })
     }
 
     const vaultItemId = await ensureVaultItemOwner(user.id, payload.vaultItemId)
     const startedAt = parseNullableDate(payload.startedAt)
-    const lastRenewedAt = parseNullableDate(payload.lastRenewedAt)
-    const snoozeUntil = parseNullableDate(payload.snoozeUntil)
     const price = normalizePrice(payload.price)
+    const status = deriveSubscriptionStatus(expiresAt)
 
     const subscription = await prisma.subscription.create({
       data: {
@@ -174,7 +173,7 @@ export async function POST(req: Request) {
         vaultItemId,
         platformName,
         planName,
-        status: payload.status?.trim() || "active",
+        status,
         decision: payload.decision?.trim() || "pending",
         startedAt,
         expiresAt,
@@ -183,8 +182,6 @@ export async function POST(req: Request) {
         currency: payload.currency?.trim() || "CNY",
         autoRenew: !!payload.autoRenew,
         notes: payload.notes?.trim() || null,
-        lastRenewedAt,
-        snoozeUntil,
       },
       include: {
         vaultItem: {
