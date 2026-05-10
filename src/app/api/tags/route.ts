@@ -36,15 +36,13 @@ export async function GET() {
       .filter((item) => item && !presetNameSet.has(item.toLowerCase()))
 
     if (missingTags.length > 0) {
-      for (const name of dedupeTags(missingTags)) {
-        try {
-          await prisma.tagPreset.create({
-            data: { userId: user.id, name },
-          })
-        } catch {
-          // Ignore duplicates caused by concurrent requests.
-        }
-      }
+      await prisma.tagPreset.createMany({
+        data: dedupeTags(missingTags).map((name) => ({
+          userId: user.id,
+          name,
+        })),
+        skipDuplicates: true,
+      })
     }
 
     const allPresets = await prisma.tagPreset.findMany({
@@ -79,14 +77,18 @@ export async function POST(req: Request) {
       return new NextResponse("Tag name is required", { status: 400 })
     }
 
-    const allCustom = await prisma.tagPreset.findMany({
-      where: { userId: user.id },
-      select: { id: true, name: true },
+    const existing = await prisma.tagPreset.findFirst({
+      where: {
+        userId: user.id,
+        name: {
+          equals: name,
+          mode: "insensitive",
+        },
+      },
+      select: { id: true },
     })
 
-    const exists = allCustom.some((item) => item.name.toLowerCase() === name.toLowerCase())
-
-    if (exists) {
+    if (existing) {
       return new NextResponse("Tag already exists", { status: 400 })
     }
 
@@ -128,14 +130,17 @@ export async function PATCH(req: Request) {
       return new NextResponse("Tag preset not found", { status: 404 })
     }
 
-    const allCustom = await prisma.tagPreset.findMany({
-      where: { userId: user.id },
-      select: { id: true, name: true },
+    const duplicate = await prisma.tagPreset.findFirst({
+      where: {
+        userId: user.id,
+        id: { not: id },
+        name: {
+          equals: name,
+          mode: "insensitive",
+        },
+      },
+      select: { id: true },
     })
-
-    const duplicate = allCustom.some(
-      (item) => item.id !== id && item.name.toLowerCase() === name.toLowerCase()
-    )
 
     if (duplicate) {
       return new NextResponse("Tag already exists", { status: 400 })

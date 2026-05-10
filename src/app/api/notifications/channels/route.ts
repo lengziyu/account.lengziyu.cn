@@ -31,11 +31,10 @@ export async function GET() {
     const channelState = await getResolvedNotificationChannels(user.id)
 
     return NextResponse.json({
-      channels: [...channelState.dbChannels, ...channelState.envChannels].map((channel) => ({
+      channels: channelState.dbChannels.map((channel) => ({
         ...channel,
         config: parseChannelConfig(channel.configJson),
       })),
-      usingEnvFallback: channelState.usingEnvFallback,
     })
   } catch {
     return new NextResponse("Internal Error", { status: 500 })

@@ -17,7 +17,7 @@ type NotificationChannel = {
   name: string
   enabled: boolean
   lastVerifiedAt?: string | null
-  source?: "database" | "env"
+  source?: "database"
   config: {
     botToken?: string
     chatId?: string
@@ -59,11 +59,9 @@ export default function NotificationSettingsPage() {
   const [channels, setChannels] = useState<NotificationChannel[]>([])
   const [defaultDays, setDefaultDays] = useState<number[]>([])
   const [form, setForm] = useState(emptyForm)
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
   const [scanPreview, setScanPreview] = useState<ScanPreview | null>(null)
-  const [usingEnvFallback, setUsingEnvFallback] = useState(false)
 
   useEffect(() => {
     void Promise.all([fetchChannels(), fetchReminderRules(), fetchScanPreview()])
@@ -72,12 +70,8 @@ export default function NotificationSettingsPage() {
   const fetchChannels = async () => {
     const res = await fetch("/api/notifications/channels")
     if (!res.ok) return
-    const data = (await res.json()) as {
-      channels: NotificationChannel[]
-      usingEnvFallback?: boolean
-    }
+    const data = (await res.json()) as { channels: NotificationChannel[] }
     setChannels(data.channels)
-    setUsingEnvFallback(!!data.usingEnvFallback)
   }
 
   const fetchReminderRules = async () => {
@@ -85,7 +79,6 @@ export default function NotificationSettingsPage() {
     if (!res.ok) return
     const data = (await res.json()) as { days?: number[] }
     setDefaultDays(data.days || [])
-    setLoading(false)
   }
 
   const fetchScanPreview = async () => {
@@ -235,12 +228,6 @@ export default function NotificationSettingsPage() {
         {message ? (
           <div className="mb-4 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.03)] dark:text-textSecondary dark:shadow-none">
             {message}
-          </div>
-        ) : null}
-
-        {usingEnvFallback ? (
-          <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 shadow-sm dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:shadow-none">
-            当前没有数据库内的启用渠道，系统会直接使用 Vercel 环境变量里的机器人配置发送提醒。
           </div>
         ) : null}
 
@@ -439,7 +426,7 @@ export default function NotificationSettingsPage() {
                             {channel.name}
                           </div>
                           <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
-                            {channel.type} · {channel.enabled ? "已启用" : "已停用"} · {channel.source === "env" ? "环境变量" : "数据库"}
+                            {channel.type} · {channel.enabled ? "已启用" : "已停用"} · 数据库配置
                           </div>
                           {channel.lastVerifiedAt ? (
                             <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
@@ -448,34 +435,30 @@ export default function NotificationSettingsPage() {
                           ) : null}
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {channel.source !== "env" ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() =>
-                                setForm({
-                                  id: channel.id,
-                                  type: channel.type,
-                                  name: channel.name,
-                                  enabled: channel.enabled,
-                                  botToken: channel.config.botToken || "",
-                                  chatId: channel.config.chatId || "",
-                                  webhookUrl: channel.config.webhookUrl || "",
-                                  secret: channel.config.secret || "",
-                                })
-                              }
-                            >
-                              编辑
-                            </Button>
-                          ) : null}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() =>
+                              setForm({
+                                id: channel.id,
+                                type: channel.type,
+                                name: channel.name,
+                                enabled: channel.enabled,
+                                botToken: channel.config.botToken || "",
+                                chatId: channel.config.chatId || "",
+                                webhookUrl: channel.config.webhookUrl || "",
+                                secret: channel.config.secret || "",
+                              })
+                            }
+                          >
+                            编辑
+                          </Button>
                           <Button type="button" variant="outline" onClick={() => testChannel(channel.id)} disabled={saving}>
                             测试
                           </Button>
-                          {channel.source !== "env" ? (
-                            <Button type="button" variant="outline" onClick={() => deleteChannel(channel.id)} disabled={saving}>
-                              删除
-                            </Button>
-                          ) : null}
+                          <Button type="button" variant="outline" onClick={() => deleteChannel(channel.id)} disabled={saving}>
+                            删除
+                          </Button>
                         </div>
                       </div>
                     </div>

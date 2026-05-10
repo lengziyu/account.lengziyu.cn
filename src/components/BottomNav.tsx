@@ -1,36 +1,69 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, Plus, Settings } from "lucide-react"
+import { Bell, LayoutDashboard, Plus, Settings, WalletCards } from "lucide-react"
 
 export function BottomNav() {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Do not rendering BottomNav on /items/new or /items/[id] natively, if users implement it selectively it's fine.
-  // But if it's placed globally in layout, we can hide it conditionally:
-  if (
-    pathname.includes("/items/") ||
-    pathname.includes("/subscriptions/") ||
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname === "/"
-  ) return null;
+  const hideOnPaths = [
+    /^\/items\/[^/]+$/,
+    /^\/subscriptions\/new$/,
+    /^\/subscriptions\/[^/]+$/,
+    /^\/login$/,
+    /^\/register$/,
+    /^\/$/,
+  ]
+
+  if (hideOnPaths.some((pattern) => pattern.test(pathname))) return null
+
+  const navItems = [
+    {
+      label: "概览",
+      icon: LayoutDashboard,
+      href: "/dashboard",
+      active: pathname === "/dashboard",
+    },
+    {
+      label: "订阅",
+      icon: WalletCards,
+      href: "/subscriptions",
+      active: pathname === "/subscriptions",
+    },
+    {
+      label: "推送",
+      icon: Bell,
+      href: "/settings/notifications",
+      active: pathname.startsWith("/settings/notifications"),
+    },
+    {
+      label: "我的",
+      icon: Settings,
+      href: "/settings",
+      active:
+        pathname === "/settings" ||
+        (pathname.startsWith("/settings/") && !pathname.startsWith("/settings/notifications")),
+    },
+  ]
 
   return (
-    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] bg-white dark:bg-[#121316] border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] px-6 py-3 flex items-center justify-between z-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
-      
-      {/* Left Tab: Dashboard */}
-      <button 
-        onClick={() => router.push("/dashboard")}
-        className={`flex flex-col items-center justify-center w-16 transition-colors ${pathname === "/dashboard" ? "text-brandIndigo" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
-      >
-        <LayoutDashboard className="w-6 h-6 mb-1" />
-        <span className="text-[10px] font-medium">概览</span>
-      </button>
+    <div className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-[800px] -translate-x-1/2 items-center justify-between rounded-t-2xl border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:border-[rgba(255,255,255,0.08)] dark:bg-[#121316] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
+      {navItems.slice(0, 2).map((item) => {
+        const Icon = item.icon
+        return (
+          <button
+            key={item.href}
+            onClick={() => router.push(item.href)}
+            className={`flex w-16 flex-col items-center justify-center transition-colors ${item.active ? "text-brandIndigo" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
+          >
+            <Icon className="mb-1 h-5 w-5" />
+            <span className="text-[10px] font-medium">{item.label}</span>
+          </button>
+        )
+      })}
 
-      {/* Center Tab: Floating Prominent Add Button */}
-      <div className="relative w-16 flex justify-center">
+      <div className="relative flex w-16 justify-center">
         <button
           onClick={() => router.push("/items/new")}
           className="absolute -top-10 flex items-center justify-center w-14 h-14 bg-brandIndigo text-white rounded-full shadow-[0_8px_20px_rgba(168,85,247,0.35)] hover:scale-105 active:scale-95 transition-all outline-none"
@@ -39,15 +72,19 @@ export function BottomNav() {
         </button>
       </div>
 
-      {/* Right Tab: Settings */}
-      <button 
-        onClick={() => router.push("/settings")}
-        className={`flex flex-col items-center justify-center w-16 transition-colors ${pathname === "/settings" ? "text-brandIndigo" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
-      >
-        <Settings className="w-6 h-6 mb-1" />
-        <span className="text-[10px] font-medium">我的</span>
-      </button>
-
+      {navItems.slice(2).map((item) => {
+        const Icon = item.icon
+        return (
+          <button
+            key={item.href}
+            onClick={() => router.push(item.href)}
+            className={`flex w-16 flex-col items-center justify-center transition-colors ${item.active ? "text-brandIndigo" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
+          >
+            <Icon className="mb-1 h-5 w-5" />
+            <span className="text-[10px] font-medium">{item.label}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }

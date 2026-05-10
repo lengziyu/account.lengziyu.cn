@@ -12,6 +12,7 @@ type ItemTag = { id: string; tag: string; type: "custom" | "system" }
 type ItemDetail = {
   id: string
   identityId?: string | null
+  phoneIdentityId?: string | null
   setAsMain?: boolean
   title: string
   displayTitle?: string | null
@@ -46,6 +47,7 @@ export default function ItemDetailPage() {
 
   const [categories, setCategories] = useState<Category[]>([])
   const [identities, setIdentities] = useState<Identity[]>([])
+  const [phones, setPhones] = useState<Identity[]>([])
   const [siteTags, setSiteTags] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
@@ -58,6 +60,7 @@ export default function ItemDetailPage() {
   const [timestamps, setTimestamps] = useState({ createdAt: "", updatedAt: "" })
   const [formData, setFormData] = useState({
     identityId: "",
+    phoneIdentityId: "",
     title: "",
     displayTitle: "",
     password: "",
@@ -67,7 +70,7 @@ export default function ItemDetailPage() {
   })
 
   useEffect(() => {
-    void Promise.all([fetchCategories(), fetchIdentities(), fetchTags(), fetchItem()])
+    void Promise.all([fetchCategories(), fetchIdentities(), fetchPhones(), fetchTags(), fetchItem()])
   }, [id])
 
   useEffect(() => {
@@ -82,9 +85,15 @@ export default function ItemDetailPage() {
   }
 
   const fetchIdentities = async () => {
-    const res = await fetch("/api/identities")
+    const res = await fetch("/api/identities?kind=main")
     if (!res.ok) return
     setIdentities(await res.json())
+  }
+
+  const fetchPhones = async () => {
+    const res = await fetch("/api/identities?kind=phone")
+    if (!res.ok) return
+    setPhones(await res.json())
   }
 
   const fetchTags = async () => {
@@ -105,6 +114,7 @@ export default function ItemDetailPage() {
     const data = (await res.json()) as ItemDetail
     setFormData({
       identityId: data.identityId || "",
+      phoneIdentityId: data.phoneIdentityId || "",
       title: data.title || "",
       displayTitle: data.displayTitle || "",
       password: data.password || "",
@@ -141,7 +151,13 @@ export default function ItemDetailPage() {
     if (!checked) {
       setFormData((prev) => ({ ...prev, identityId: "" }))
       setError("")
+      return
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      identityId: prev.identityId || identities[0]?.id || "",
+    }))
   }
 
   const handleSetAsMainChange = (checked: boolean) => {
@@ -158,6 +174,11 @@ export default function ItemDetailPage() {
       prev.includes(value) ? prev.filter((tag) => tag !== value) : [...prev, value]
     )
   }
+
+  useEffect(() => {
+    if (!bindIdentity || setAsMain || formData.identityId || identities.length === 0) return
+    setFormData((prev) => ({ ...prev, identityId: identities[0]?.id || "" }))
+  }, [bindIdentity, formData.identityId, identities, setAsMain])
 
   const handleCreateTagPreset = async () => {
     const name = newTagName.trim()
@@ -213,6 +234,7 @@ export default function ItemDetailPage() {
         body: JSON.stringify({
           ...formData,
           identityId: !setAsMain && bindIdentity ? formData.identityId || null : null,
+          phoneIdentityId: formData.phoneIdentityId || null,
           setAsMain,
           tags: selectedTags,
         }),
@@ -275,6 +297,12 @@ export default function ItemDetailPage() {
   }))
 
   const selectedIdentity = identities.find((identity) => identity.id === formData.identityId)
+  const selectedPhone = phones.find((phone) => phone.id === formData.phoneIdentityId)
+  const phoneOptions = phones.map((phone) => ({
+    value: phone.id,
+    label: phone.name,
+    description: phone.notes?.trim() ? `${phone.identifier} · ${phone.notes}` : phone.identifier,
+  }))
 
   if (loading) {
     return (
@@ -388,6 +416,24 @@ export default function ItemDetailPage() {
                 ) : null}
               </>
             ) : null}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-textSecondary">
+                绑定手机号
+              </label>
+              <SelectMenu
+                value={formData.phoneIdentityId}
+                onChange={(value) => handleChange("phoneIdentityId", value)}
+                options={phoneOptions}
+                placeholder="请选择手机号"
+                emptyMessage="还没有手机号，请先去个人中心添加。"
+              />
+              {selectedPhone ? (
+                <div className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-xs text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+                  当前绑定手机号：{selectedPhone.identifier}
+                </div>
+              ) : null}
+            </div>
           </section>
 
           <section className="grid sm:grid-cols-2 gap-3">

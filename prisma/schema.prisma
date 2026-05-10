@@ -40,7 +40,9 @@ model VaultItem {
   userId       String
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   identityId   String?
-  identity     Identity?      @relation(fields: [identityId], references: [id], onDelete: SetNull)
+  identity     Identity?      @relation("AccountIdentity", fields: [identityId], references: [id], onDelete: SetNull)
+  phoneIdentityId String?
+  phoneIdentity Identity?     @relation("PhoneIdentity", fields: [phoneIdentityId], references: [id], onDelete: SetNull)
   title        String
   displayTitle String?
   platform     String?
@@ -55,7 +57,7 @@ model VaultItem {
   tags         Tag[]
   subscriptions Subscription[]
 
-  @@index([userId, identityId])
+  @@index([userId, identityId, phoneIdentityId])
   @@index([userId, updatedAt])
 }
 
@@ -92,7 +94,8 @@ model Identity {
   notes      String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
-  vaultItems VaultItem[]
+  vaultItems VaultItem[] @relation("AccountIdentity")
+  phoneVaultItems VaultItem[] @relation("PhoneIdentity")
 
   @@unique([userId, identifier])
   @@index([userId, updatedAt])

@@ -2,9 +2,9 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { LogOut, LayoutGrid, Star, Tags, Layers, User, ChevronRight, Bell, WalletCards } from "lucide-react";
+import { LogOut, LayoutGrid, Star, Tags, Layers, User, ChevronRight, Smartphone } from "lucide-react";
 
 interface StatsData {
   totalItems: number;
@@ -13,6 +13,45 @@ interface StatsData {
   totalCategories: number;
   totalSubscriptions?: number;
   dueSubscriptions?: number;
+}
+
+function AnimatedCount({
+  value,
+  suffix,
+}: {
+  value?: number;
+  suffix?: string;
+}) {
+  const [displayValue, setDisplayValue] = useState(0);
+  const previousValueRef = useRef(0);
+
+  useEffect(() => {
+    if (typeof value !== "number") return;
+
+    const startValue = previousValueRef.current;
+    const delta = value - startValue;
+    const duration = 900;
+    const startedAt = performance.now();
+    let frameId = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startedAt) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const nextValue = Math.round(startValue + delta * eased);
+      setDisplayValue(nextValue);
+
+      if (progress < 1) {
+        frameId = window.requestAnimationFrame(tick);
+      } else {
+        previousValueRef.current = value;
+      }
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [value]);
+
+  return <>{displayValue}{suffix || ""}</>;
 }
 
 export default function SettingsPage() {
@@ -37,6 +76,33 @@ export default function SettingsPage() {
       }
     } catch (e) {}
   };
+
+  const statCards = [
+    {
+      icon: <LayoutGrid className="w-5 h-5" />,
+      iconClassName: "text-brandIndigo",
+      value: stats?.totalItems,
+      label: "总记录数",
+    },
+    {
+      icon: <Star className="w-5 h-5" fill="currentColor" />,
+      iconClassName: "text-red-500",
+      value: stats?.totalFavorites,
+      label: "特别收藏",
+    },
+    {
+      icon: <Tags className="w-5 h-5" />,
+      iconClassName: "text-green-500",
+      value: stats?.totalTags,
+      label: "使用分类标签数",
+    },
+    {
+      icon: <Layers className="w-5 h-5" />,
+      iconClassName: "text-orange-500",
+      value: stats?.totalCategories,
+      label: "大库总维度",
+    },
+  ];
 
   if (status === "loading" || !session) return (
     <div className="min-h-screen bg-transparent flex items-center justify-center transition-colors">
@@ -71,53 +137,32 @@ export default function SettingsPage() {
         {/* Stats Grid */}
         <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">库内记录雷达</h2>
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] rounded-[16px] p-5 shadow-sm hover:shadow-md transition-shadow text-center">
-            <div className="flex justify-center mb-2 text-brandIndigo"><LayoutGrid className="w-5 h-5" /></div>
-            <div className="text-[28px] font-bold text-gray-900 dark:text-textPrimary leading-none mb-1">{stats?.totalItems ?? "-"}</div>
-            <div className="text-[12px] text-gray-500 dark:text-textTertiary">总记录数</div>
-          </div>
-          <div className="bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] rounded-[16px] p-5 shadow-sm hover:shadow-md transition-shadow text-center">
-            <div className="flex justify-center mb-2 text-red-500"><Star className="w-5 h-5" fill="currentColor" /></div>
-            <div className="text-[28px] font-bold text-gray-900 dark:text-textPrimary leading-none mb-1">{stats?.totalFavorites ?? "-"}</div>
-            <div className="text-[12px] text-gray-500 dark:text-textTertiary">特别收藏</div>
-          </div>
-          <div className="bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] rounded-[16px] p-5 shadow-sm hover:shadow-md transition-shadow text-center">
-            <div className="flex justify-center mb-2 text-green-500"><Tags className="w-5 h-5" /></div>
-            <div className="text-[28px] font-bold text-gray-900 dark:text-textPrimary leading-none mb-1">{stats?.totalTags ?? "-"}</div>
-            <div className="text-[12px] text-gray-500 dark:text-textTertiary">使用分类标签数</div>
-          </div>
-          <div className="bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] rounded-[16px] p-5 shadow-sm hover:shadow-md transition-shadow text-center">
-            <div className="flex justify-center mb-2 text-orange-500"><Layers className="w-5 h-5" /></div>
-            <div className="text-[28px] font-bold text-gray-900 dark:text-textPrimary leading-none mb-1">{stats?.totalCategories ?? "-"}</div>
-            <div className="text-[12px] text-gray-500 dark:text-textTertiary">大库总维度</div>
-          </div>
+          {statCards.map((card, index) => (
+            <div
+              key={card.label}
+              className="bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] rounded-[16px] p-5 shadow-sm hover:shadow-md transition-all duration-300 text-center translate-y-0 hover:-translate-y-1"
+              style={{
+                animation: `fade-in-up 520ms ease-out ${index * 90}ms both`,
+              }}
+            >
+              <div className={`flex justify-center mb-2 ${card.iconClassName}`}>{card.icon}</div>
+              <div className="text-[28px] font-bold text-gray-900 dark:text-textPrimary leading-none mb-1 tabular-nums">
+                <AnimatedCount value={card.value} />
+              </div>
+              <div className="text-[12px] text-gray-500 dark:text-textTertiary">{card.label}</div>
+            </div>
+          ))}
         </div>
 
         {/* Actions */}
         <div className="space-y-4">
           <button
-            onClick={() => router.push("/subscriptions")}
+            onClick={() => router.push("/settings/phones")}
             className="w-full bg-white hover:bg-gray-50 dark:bg-[rgba(255,255,255,0.03)] dark:hover:bg-[rgba(255,255,255,0.06)] text-gray-800 dark:text-textPrimary border border-gray-100 dark:border-[rgba(255,255,255,0.08)] font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-between shadow-sm dark:shadow-none"
           >
             <span className="inline-flex items-center">
-              <WalletCards className="w-5 h-5 mr-2 text-brandIndigo" />
-              订阅中心
-            </span>
-            <span className="inline-flex items-center gap-3">
-              <span className="text-xs text-gray-500 dark:text-textTertiary">
-                {stats?.totalSubscriptions ?? 0} 项，近 7 天 {stats?.dueSubscriptions ?? 0} 项
-              </span>
-              <ChevronRight className="w-4 h-4 text-gray-500 dark:text-textTertiary" />
-            </span>
-          </button>
-
-          <button
-            onClick={() => router.push("/settings/notifications")}
-            className="w-full bg-white hover:bg-gray-50 dark:bg-[rgba(255,255,255,0.03)] dark:hover:bg-[rgba(255,255,255,0.06)] text-gray-800 dark:text-textPrimary border border-gray-100 dark:border-[rgba(255,255,255,0.08)] font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-between shadow-sm dark:shadow-none"
-          >
-            <span className="inline-flex items-center">
-              <Bell className="w-5 h-5 mr-2 text-brandIndigo" />
-              提醒与推送
+              <Smartphone className="w-5 h-5 mr-2 text-brandIndigo" />
+              手机号管理
             </span>
             <ChevronRight className="w-4 h-4 text-gray-500 dark:text-textTertiary" />
           </button>

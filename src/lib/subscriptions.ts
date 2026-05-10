@@ -16,7 +16,7 @@ export type ResolvedNotificationChannel = {
   enabled: boolean
   configJson: string
   lastVerifiedAt: Date | null
-  source: "database" | "env"
+  source: "database"
 }
 
 export type SubscriptionListItem = {
@@ -89,65 +89,6 @@ export function parseChannelConfig(configJson: string): NotificationChannelConfi
   }
 }
 
-function parseEnabledChannelTypes() {
-  const raw = process.env.PUSH_CHANNELS?.trim()
-  if (!raw) {
-    return new Set<string>()
-  }
-
-  return new Set(
-    raw
-      .split(",")
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean)
-  )
-}
-
-export function getEnvNotificationChannels(): ResolvedNotificationChannel[] {
-  const enabledTypes = parseEnabledChannelTypes()
-  const channels: ResolvedNotificationChannel[] = []
-
-  const telegramConfig = normalizeChannelPayload("telegram", {
-    botToken: process.env.TELEGRAM_BOT_TOKEN,
-    chatId: process.env.TELEGRAM_CHAT_ID,
-  })
-  const telegramEnabled =
-    enabledTypes.size === 0 ? !!(telegramConfig.botToken && telegramConfig.chatId) : enabledTypes.has("telegram")
-
-  if (telegramEnabled && telegramConfig.botToken && telegramConfig.chatId) {
-    channels.push({
-      id: "env-telegram",
-      type: "telegram",
-      name: "Vercel Env Telegram",
-      enabled: true,
-      configJson: JSON.stringify(telegramConfig),
-      lastVerifiedAt: null,
-      source: "env",
-    })
-  }
-
-  const feishuConfig = normalizeChannelPayload("feishu", {
-    webhookUrl: process.env.FEISHU_WEBHOOK_URL,
-    secret: process.env.FEISHU_SIGN_SECRET,
-  })
-  const feishuEnabled =
-    enabledTypes.size === 0 ? !!feishuConfig.webhookUrl : enabledTypes.has("feishu")
-
-  if (feishuEnabled && feishuConfig.webhookUrl) {
-    channels.push({
-      id: "env-feishu",
-      type: "feishu",
-      name: "Vercel Env Feishu",
-      enabled: true,
-      configJson: JSON.stringify(feishuConfig),
-      lastVerifiedAt: null,
-      source: "env",
-    })
-  }
-
-  return channels
-}
-
 export async function getResolvedNotificationChannels(userId: string) {
   const dbChannels = await prisma.notificationChannel.findMany({
     where: { userId, enabled: true },
@@ -164,14 +105,9 @@ export async function getResolvedNotificationChannels(userId: string) {
     source: "database",
   }))
 
-  const envChannels = getEnvNotificationChannels()
-  const activeChannels = mappedDbChannels.length > 0 ? mappedDbChannels : envChannels
-
   return {
-    activeChannels,
+    activeChannels: mappedDbChannels,
     dbChannels: mappedDbChannels,
-    envChannels,
-    usingEnvFallback: mappedDbChannels.length === 0 && envChannels.length > 0,
   }
 }
 
@@ -192,7 +128,7 @@ export async function resolveChannelById(userId: string, id: string) {
     }
   }
 
-  return getEnvNotificationChannels().find((item) => item.id === id) || null
+  return null
 }
 
 export function normalizeChannelPayload(
@@ -330,8 +266,20 @@ async function sendTelegramMessage(payload: NotificationChannelConfig, text: str
     }
   )
 
+  const rawText = await response.text()
+  let data: { ok?: boolean; description?: string } | null = null
+  try {
+    data = rawText ? JSON.parse(rawText) : null
+  } catch {
+    data = null
+  }
+
   if (!response.ok) {
-    throw new Error(await response.text())
+    throw new Error(data?.description || rawText || "Telegram 推送失败")
+  }
+
+  if (data && data.ok === false) {
+    throw new Error(data.description || "Telegram 推送失败")
   }
 }
 

@@ -13,14 +13,23 @@ type ItemPayload = {
   favorite?: boolean
   tags?: string[]
   identityId?: string | null
+  phoneIdentityId?: string | null
   setAsMain?: boolean
 }
 
-async function ensureIdentityOwner(userId: string, identityId?: string | null) {
+async function ensureIdentityOwner(
+  userId: string,
+  identityId?: string | null,
+  allowedKinds?: string[]
+) {
   if (!identityId) return null
 
   const identity = await prisma.identity.findFirst({
-    where: { id: identityId, userId },
+    where: {
+      id: identityId,
+      userId,
+      ...(allowedKinds?.length ? { kind: { in: allowedKinds } } : {}),
+    },
     select: { id: true },
   })
 
@@ -104,6 +113,7 @@ export async function GET(
       },
       include: {
         identity: true,
+        phoneIdentity: true,
         tags: {
           where: { type: "custom" },
           orderBy: [{ type: "asc" }, { tag: "asc" }],
@@ -155,7 +165,13 @@ export async function PATCH(
     const setAsMain = !!payload.setAsMain
     const identityId = await ensureIdentityOwner(
       user.id,
-      setAsMain ? null : payload.identityId
+      setAsMain ? null : payload.identityId,
+      [MAIN_IDENTITY_KIND]
+    )
+    const phoneIdentityId = await ensureIdentityOwner(
+      user.id,
+      payload.phoneIdentityId,
+      ["phone"]
     )
 
     await prisma.tag.deleteMany({ where: { itemId: params.id } })
@@ -170,12 +186,14 @@ export async function PATCH(
         notes: payload.notes?.trim() || null,
         favorite: !!payload.favorite,
         identityId,
+        phoneIdentityId,
         tags: {
           create: buildTagRecords({ ...payload, title, identityId }),
         },
       },
       include: {
         identity: true,
+        phoneIdentity: true,
         tags: true,
       },
     })
@@ -191,7 +209,7 @@ export async function PATCH(
     return NextResponse.json({ ...item, setAsMain })
   } catch (error: any) {
     if (error?.message === "Identity not found") {
-      return new NextResponse("Identity not found", { status: 400 })
+      return new NextResponse("主账号或手机号不存在", { status: 400 })
     }
     return new NextResponse("Internal Error", { status: 500 })
   }

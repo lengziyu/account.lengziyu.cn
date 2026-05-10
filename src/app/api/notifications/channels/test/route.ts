@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     let type = body.type?.trim()
     let configJson = ""
-    let resolvedSource: "database" | "env" | null = null
+    let resolvedSource: "database" | null = null
 
     if (body.id) {
       const channel = await resolveChannelById(user.id, body.id)

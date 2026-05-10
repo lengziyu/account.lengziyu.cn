@@ -17,14 +17,23 @@ type ItemPayload = {
   favorite?: boolean
   tags?: string[]
   identityId?: string | null
+  phoneIdentityId?: string | null
   setAsMain?: boolean
 }
 
-async function ensureIdentityOwner(userId: string, identityId?: string | null) {
+async function ensureIdentityOwner(
+  userId: string,
+  identityId?: string | null,
+  allowedKinds?: string[]
+) {
   if (!identityId) return null
 
   const identity = await prisma.identity.findFirst({
-    where: { id: identityId, userId },
+    where: {
+      id: identityId,
+      userId,
+      ...(allowedKinds?.length ? { kind: { in: allowedKinds } } : {}),
+    },
     select: { id: true },
   })
 
@@ -106,6 +115,8 @@ export async function GET(req: Request) {
               { tags: { some: { tag: { contains: search } } } },
               { identity: { is: { name: { contains: search } } } },
               { identity: { is: { identifier: { contains: search } } } },
+              { phoneIdentity: { is: { name: { contains: search } } } },
+              { phoneIdentity: { is: { identifier: { contains: search } } } },
             ],
           }
         : {}),
@@ -121,6 +132,14 @@ export async function GET(req: Request) {
             identifier: true,
             kind: true,
             provider: true,
+          },
+        },
+        phoneIdentity: {
+          select: {
+            id: true,
+            name: true,
+            identifier: true,
+            kind: true,
           },
         },
         tags: {
@@ -172,13 +191,20 @@ export async function POST(req: Request) {
     const setAsMain = !!payload.setAsMain
     const identityId = await ensureIdentityOwner(
       user.id,
-      setAsMain ? null : payload.identityId
+      setAsMain ? null : payload.identityId,
+      [MAIN_IDENTITY_KIND]
+    )
+    const phoneIdentityId = await ensureIdentityOwner(
+      user.id,
+      payload.phoneIdentityId,
+      ["phone"]
     )
 
     const item = await prisma.vaultItem.create({
       data: {
         userId: user.id,
         identityId,
+        phoneIdentityId,
         title,
         displayTitle,
         password: payload.password?.trim() || null,
@@ -200,7 +226,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ...item, setAsMain })
   } catch (error: any) {
     if (error?.message === "Identity not found") {
-      return new NextResponse("Identity not found", { status: 400 })
+      return new NextResponse("主账号或手机号不存在", { status: 400 })
     }
     return new NextResponse("Internal Error", { status: 500 })
   }
