@@ -415,9 +415,6 @@ export default function NotificationSettingsPage() {
                           >
                             测试
                           </Button>
-                          <span className="hidden rounded-lg border border-white/80 bg-white/70 px-2 py-1 text-[11px] text-gray-500 backdrop-blur sm:inline dark:border-white/10 dark:bg-white/5 dark:text-textSecondary">
-                            点击编辑
-                          </span>
                           <button
                             type="button"
                             aria-label={`删除 ${channel.name}`}
