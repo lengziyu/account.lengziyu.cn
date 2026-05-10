@@ -145,10 +145,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const search = searchParams.get("search")?.trim() || ""
     const identityId = searchParams.get("identityId")?.trim() || undefined
+    const favorite = searchParams.get("favorite") === "true"
 
     const where = {
       userId: user.id,
       ...(identityId ? { identityId } : {}),
+      ...(favorite ? { favorite: true } : {}),
       ...(search
         ? {
             OR: [
@@ -172,6 +174,7 @@ export async function GET(req: Request) {
           : {
               userId: user.id,
               ...(identityId ? { identityId } : {}),
+              ...(favorite ? { favorite: true } : {}),
               ...(search
                 ? {
                     OR: [

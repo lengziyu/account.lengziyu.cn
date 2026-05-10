@@ -126,7 +126,7 @@ export async function GET(req: Request) {
 
     const filtered = mapped.filter((subscription) => {
       if (!Number.isFinite(dueWithin)) return true
-      return subscription.daysUntilExpiry <= dueWithin
+      return subscription.daysUntilExpiry >= 0 && subscription.daysUntilExpiry <= dueWithin
     })
 
     const finalItems = Number.isFinite(limit) && limit > 0 ? filtered.slice(0, limit) : filtered
@@ -135,7 +135,7 @@ export async function GET(req: Request) {
       items: finalItems,
       summary: {
         total: mapped.length,
-        dueSoon: mapped.filter((item) => item.daysUntilExpiry <= 7).length,
+        dueSoon: mapped.filter((item) => item.daysUntilExpiry >= 0 && item.daysUntilExpiry <= 7).length,
         expired: mapped.filter((item) => item.daysUntilExpiry < 0).length,
         autoRenew: mapped.filter((item) => item.autoRenew).length,
       },

@@ -67,6 +67,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true })
   } catch (error: any) {
+    console.error("[api/notifications/channels/test] failed", error)
     return new NextResponse(error?.message || "测试发送失败", { status: 400 })
   }
 }

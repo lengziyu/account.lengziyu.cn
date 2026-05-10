@@ -53,6 +53,13 @@ export default function DashboardPage() {
   const [dueSubscriptions, setDueSubscriptions] = useState<DueSubscription[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [activeTag, setActiveTag] = useState(ALL_TAG_FILTER)
+  const [favoriteOnly, setFavoriteOnly] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+    setFavoriteOnly(params.get("favorite") === "true")
+  }, [])
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -60,10 +67,15 @@ export default function DashboardPage() {
     } else if (status === "authenticated") {
       void fetchItems()
     }
-  }, [status, search])
+  }, [status, search, favoriteOnly])
 
   const fetchItems = async () => {
-    const res = await fetch(`/api/items?search=${encodeURIComponent(search)}`)
+    const params = new URLSearchParams()
+    params.set("search", search)
+    if (favoriteOnly) {
+      params.set("favorite", "true")
+    }
+    const res = await fetch(`/api/items?${params.toString()}`)
     if (!res.ok) return
     setItems(await res.json())
   }
@@ -327,7 +339,7 @@ export default function DashboardPage() {
                 len的密码库
               </h1>
               <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
-                主账号独立展示，子账号自动归在下面
+                {favoriteOnly ? "当前只显示特别收藏。" : "主账号独立展示，子账号自动归在下面"}
               </p>
             </div>
           </div>

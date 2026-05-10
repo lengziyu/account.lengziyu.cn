@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ArrowRight, Bell, CalendarClock, Plus } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { Button } from "@/components/ui/Button"
+import { Skeleton } from "@/components/ui/Skeleton"
 
 type SubscriptionItem = {
   id: string
@@ -78,13 +79,13 @@ export default function SubscriptionsPage() {
   }, [data])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack transition-colors">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eef4ff_0%,#f8fafc_42%,#f3f0ff_100%)] transition-colors dark:bg-[radial-gradient(circle_at_top,#1c2238_0%,#171b2b_48%,#1a1630_100%)]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-28">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-[30px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">订阅中心</h1>
-            <p className="mt-2 text-sm text-gray-500 dark:text-textSecondary">
-              把会员、服务年费、自动续费项目统一管理，到期前自动提醒。
+            <h1 className="text-[24px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">订阅中心</h1>
+            <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
+              统一看订阅、到期和提醒状态。
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -97,25 +98,25 @@ export default function SubscriptionsPage() {
         </div>
 
         <div className="mx-auto mb-6 grid w-full max-w-3xl grid-cols-2 gap-4">
-          <div className="rounded-[18px] border border-gray-100 bg-white p-5 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none">
+          <div className="rounded-[20px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="text-xs text-gray-500 dark:text-textSecondary">总订阅数</div>
             <div className="mt-2 text-3xl font-semibold text-gray-900 dark:text-textPrimary">{data?.summary.total ?? "-"}</div>
           </div>
-          <div className="rounded-[18px] border border-gray-100 bg-white p-5 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none">
+          <div className="rounded-[20px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="text-xs text-gray-500 dark:text-textSecondary">7 天内到期</div>
             <div className="mt-2 text-3xl font-semibold text-orange-600 dark:text-orange-300">{data?.summary.dueSoon ?? "-"}</div>
           </div>
-          <div className="rounded-[18px] border border-gray-100 bg-white p-5 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none">
+          <div className="rounded-[20px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="text-xs text-gray-500 dark:text-textSecondary">已过期</div>
             <div className="mt-2 text-3xl font-semibold text-red-600 dark:text-red-300">{data?.summary.expired ?? "-"}</div>
           </div>
-          <div className="rounded-[18px] border border-gray-100 bg-white p-5 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none">
+          <div className="rounded-[20px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="text-xs text-gray-500 dark:text-textSecondary">自动续费</div>
             <div className="mt-2 text-3xl font-semibold text-brandIndigo">{data?.summary.autoRenew ?? "-"}</div>
           </div>
         </div>
 
-        <div className="rounded-[18px] border border-gray-100 bg-white p-4 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none">
+        <div className="rounded-[20px] border border-white/70 bg-white/75 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <input
               value={search}
@@ -162,11 +163,9 @@ export default function SubscriptionsPage() {
 
               <div className="grid gap-3">
                 {loading ? (
-                  <div className="rounded-[18px] border border-gray-100 bg-white p-5 text-sm text-gray-500 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:text-textSecondary dark:shadow-none">
-                    加载中...
-                  </div>
+                  <Skeleton className="h-28 w-full rounded-[20px]" />
                 ) : section.items.length === 0 ? (
-                  <div className="rounded-[18px] border border-dashed border-gray-200 bg-white/70 p-5 text-sm text-gray-500 dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textSecondary">
+                  <div className="rounded-[20px] border border-dashed border-white/70 bg-white/55 p-5 text-sm text-gray-500 backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-textSecondary">
                     当前分组没有记录。
                   </div>
                 ) : (
@@ -175,7 +174,7 @@ export default function SubscriptionsPage() {
                       key={item.id}
                       type="button"
                       onClick={() => router.push(`/subscriptions/${item.id}`)}
-                      className="rounded-[18px] border border-gray-100 bg-white p-5 text-left shadow-sm transition hover:border-brandIndigo/30 dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none"
+                      className="rounded-[20px] border border-white/70 bg-white/75 p-5 text-left shadow-sm backdrop-blur transition hover:border-brandIndigo/30 dark:border-white/10 dark:bg-white/5"
                     >
                       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                         <div className="min-w-0">

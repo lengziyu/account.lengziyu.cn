@@ -5,6 +5,7 @@ import { Bell, RefreshCcw, Send, Trash2 } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { Button } from "@/components/ui/Button"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
+import { Skeleton } from "@/components/ui/Skeleton"
 import {
   formatReminderLabel,
   NOTIFICATION_CHANNEL_OPTIONS,
@@ -63,10 +64,18 @@ export default function NotificationSettingsPage() {
   const [scanPreview, setScanPreview] = useState<ScanPreview | null>(null)
   const [deletingChannel, setDeletingChannel] = useState<NotificationChannel | null>(null)
   const [confirmingClear, setConfirmingClear] = useState(false)
+  const [pageLoading, setPageLoading] = useState(true)
+  const [activeAction, setActiveAction] = useState<"" | "rules" | "scan" | "test-form" | "test-channel" | "save-channel" | "delete-channel">("")
 
   useEffect(() => {
-    void Promise.all([fetchChannels(), fetchReminderRules(), fetchScanPreview()])
+    void loadPage()
   }, [])
+
+  const loadPage = async () => {
+    setPageLoading(true)
+    await Promise.all([fetchChannels(), fetchReminderRules(), fetchScanPreview()])
+    setPageLoading(false)
+  }
 
   const fetchChannels = async () => {
     const res = await fetch("/api/notifications/channels")
@@ -122,6 +131,7 @@ export default function NotificationSettingsPage() {
   }
 
   const saveDefaultRules = async () => {
+    setActiveAction("rules")
     setSaving(true)
     setMessage("")
     const res = await fetch("/api/reminder-rules", {
@@ -130,6 +140,7 @@ export default function NotificationSettingsPage() {
       body: JSON.stringify({ days: defaultDays }),
     })
     setSaving(false)
+    setActiveAction("")
     if (!res.ok) {
       setMessage("默认提醒规则保存失败")
       return
@@ -138,6 +149,7 @@ export default function NotificationSettingsPage() {
   }
 
   const saveChannel = async () => {
+    setActiveAction("save-channel")
     setSaving(true)
     setMessage("")
     const payload = {
@@ -159,6 +171,7 @@ export default function NotificationSettingsPage() {
       body: JSON.stringify(payload),
     })
     setSaving(false)
+    setActiveAction("")
     if (!res.ok) {
       setMessage(await res.text())
       return
@@ -170,6 +183,7 @@ export default function NotificationSettingsPage() {
   }
 
   const testChannel = async (id?: string) => {
+    setActiveAction(id ? "test-channel" : "test-form")
     setSaving(true)
     setMessage("")
     const payload = id
@@ -190,6 +204,7 @@ export default function NotificationSettingsPage() {
       body: JSON.stringify(payload),
     })
     setSaving(false)
+    setActiveAction("")
     if (!res.ok) {
       setMessage(await res.text())
       return
@@ -200,11 +215,13 @@ export default function NotificationSettingsPage() {
 
   const deleteChannel = async () => {
     if (!deletingChannel?.id) return
+    setActiveAction("delete-channel")
     setSaving(true)
     const res = await fetch(`/api/notifications/channels?id=${encodeURIComponent(deletingChannel.id)}`, {
       method: "DELETE",
     })
     setSaving(false)
+    setActiveAction("")
     if (!res.ok) {
       setMessage("删除失败")
       return
@@ -215,12 +232,14 @@ export default function NotificationSettingsPage() {
   }
 
   const runScan = async () => {
+    setActiveAction("scan")
     setSaving(true)
     setMessage("")
     const res = await fetch("/api/notifications/scan", {
       method: "POST",
     })
     setSaving(false)
+    setActiveAction("")
     if (!res.ok) {
       setMessage("执行扫描失败")
       return
@@ -230,13 +249,13 @@ export default function NotificationSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack transition-colors">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eef4ff_0%,#f8fafc_42%,#f3f0ff_100%)] transition-colors dark:bg-[radial-gradient(circle_at_top,#1c2238_0%,#171b2b_48%,#1a1630_100%)]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-24">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-[30px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">提醒与推送</h1>
-            <p className="mt-2 text-sm text-gray-500 dark:text-textSecondary">
-              配置默认提醒时间、Telegram / 飞书渠道，并可手动触发一次到期扫描。
+            <h1 className="text-[24px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">提醒与推送</h1>
+            <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
+              渠道、提醒规则和扫描预览都在这里处理。
             </p>
           </div>
           <ThemeToggle />
@@ -248,14 +267,20 @@ export default function NotificationSettingsPage() {
           </div>
         ) : null}
 
+        {pageLoading ? (
+          <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
+            <Skeleton className="h-[620px] w-full rounded-[26px]" />
+            <Skeleton className="h-[620px] w-full rounded-[26px]" />
+          </div>
+        ) : (
         <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-          <section className="rounded-[18px] border border-gray-100 bg-white p-5 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none">
+          <section className="rounded-[24px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">默认提醒规则</h2>
                 <p className="mt-2 text-xs text-gray-500 dark:text-textSecondary">未单独覆盖的订阅将继承这里的提醒时间。</p>
               </div>
-              <Button type="button" variant="outline" onClick={saveDefaultRules} disabled={saving}>
+              <Button type="button" variant="outline" onClick={saveDefaultRules} disabled={saving} loading={activeAction === "rules"}>
                 保存规则
               </Button>
             </div>
@@ -280,27 +305,27 @@ export default function NotificationSettingsPage() {
               })}
             </div>
 
-            <div className="mt-6 flex items-center justify-between rounded-2xl border border-gray-200 px-4 py-4 dark:border-[rgba(255,255,255,0.08)]">
+            <div className="mt-6 flex items-center justify-between rounded-2xl border border-white/70 bg-white/45 px-4 py-4 dark:border-white/10 dark:bg-white/5">
               <div>
                 <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">手动执行一次扫描</div>
                 <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
                   用当前默认规则扫描即将到期订阅，并直接推送到启用渠道。
                 </div>
               </div>
-              <Button type="button" variant="brand" onClick={runScan} disabled={saving}>
+              <Button type="button" variant="brand" onClick={runScan} disabled={saving} loading={activeAction === "scan"}>
                 <RefreshCcw className="w-4 h-4 mr-2" />
                 立即扫描
               </Button>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-gray-200 px-4 py-4 dark:border-[rgba(255,255,255,0.08)]">
+            <div className="mt-4 rounded-2xl border border-white/70 bg-white/45 px-4 py-4 dark:border-white/10 dark:bg-white/5">
               <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">当前扫描预览</div>
               <div className="mt-2 text-xs text-gray-500 dark:text-textSecondary">
                 待触发订阅：{scanPreview?.totalCandidates ?? 0}
               </div>
               <div className="mt-3 space-y-2">
                 {scanPreview?.results.flatMap((result) => result.items).slice(0, 5).map((item) => (
-                  <div key={item.id} className="rounded-xl bg-gray-50 px-3 py-3 text-sm dark:bg-white/5">
+                  <div key={item.id} className="rounded-xl bg-white/70 px-3 py-3 text-sm backdrop-blur dark:bg-white/5">
                     <div className="font-medium text-gray-900 dark:text-textPrimary">
                       {item.platformName} / {item.planName}
                     </div>
@@ -319,13 +344,13 @@ export default function NotificationSettingsPage() {
           </section>
 
           <div className="space-y-5">
-            <section className="rounded-[18px] border border-gray-100 bg-white p-5 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none">
+            <section className="rounded-[24px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">通知渠道</h2>
                   <p className="mt-2 text-xs text-gray-500 dark:text-textSecondary">支持 Telegram 和飞书群机器人。</p>
                 </div>
-                <Button type="button" variant="outline" onClick={() => testChannel()} disabled={saving}>
+                <Button type="button" variant="outline" onClick={() => testChannel()} disabled={saving} loading={activeAction === "test-form"}>
                   <Send className="w-4 h-4 mr-2" />
                   测试表单配置
                 </Button>
@@ -413,7 +438,7 @@ export default function NotificationSettingsPage() {
                 </label>
 
                 <div className="flex flex-wrap gap-3">
-                  <Button type="button" variant="brand" onClick={saveChannel} disabled={saving}>
+                  <Button type="button" variant="brand" onClick={saveChannel} disabled={saving} loading={activeAction === "save-channel"}>
                     {form.id ? "更新渠道" : "新增渠道"}
                   </Button>
                   <Button
@@ -434,7 +459,7 @@ export default function NotificationSettingsPage() {
               </div>
             </section>
 
-            <section className="rounded-[18px] border border-gray-100 bg-white p-5 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none">
+            <section className="rounded-[24px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-brandIndigo" />
                 <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">已配置渠道</h2>
@@ -476,6 +501,7 @@ export default function NotificationSettingsPage() {
                               void testChannel(channel.id)
                             }}
                             disabled={saving}
+                            loading={activeAction === "test-channel"}
                           >
                             测试
                           </Button>
@@ -501,6 +527,7 @@ export default function NotificationSettingsPage() {
             </section>
           </div>
         </div>
+        )}
       </div>
 
       <ConfirmDialog

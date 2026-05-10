@@ -4,24 +4,29 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { LogOut, LayoutGrid, Star, Tags, Layers, User, ChevronRight, Smartphone } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { StatsOverviewChart } from "@/components/settings/StatsOverviewChart";
+import {
+  LogOut,
+  LayoutGrid,
+  Star,
+  Tags,
+  User,
+  ChevronRight,
+  Smartphone,
+  BellRing,
+  CreditCard,
+} from "lucide-react";
 
 interface StatsData {
   totalItems: number;
   totalFavorites: number;
   totalTags: number;
-  totalCategories: number;
   totalSubscriptions?: number;
   dueSubscriptions?: number;
 }
 
-function AnimatedCount({
-  value,
-  suffix,
-}: {
-  value?: number;
-  suffix?: string;
-}) {
+function AnimatedCount({ value, suffix }: { value?: number; suffix?: string }) {
   const [displayValue, setDisplayValue] = useState(0);
   const previousValueRef = useRef(0);
 
@@ -30,7 +35,7 @@ function AnimatedCount({
 
     const startValue = previousValueRef.current;
     const delta = value - startValue;
-    const duration = 900;
+    const duration = 700;
     const startedAt = performance.now();
     let frameId = 0;
 
@@ -51,30 +56,38 @@ function AnimatedCount({
     return () => window.cancelAnimationFrame(frameId);
   }, [value]);
 
-  return <>{displayValue}{suffix || ""}</>;
+  return (
+    <>
+      {displayValue}
+      {suffix || ""}
+    </>
+  );
 }
 
 export default function SettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<StatsData | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     } else if (status === "authenticated") {
-      fetchStats();
+      void fetchStats();
     }
   }, [status, router]);
 
   const fetchStats = async () => {
+    setLoadingStats(true);
     try {
       const res = await fetch("/api/stats");
       if (res.ok) {
-        const data = await res.json();
-        setStats(data);
+        setStats(await res.json());
       }
-    } catch (e) {}
+    } finally {
+      setLoadingStats(false);
+    }
   };
 
   const statCards = [
@@ -82,111 +95,160 @@ export default function SettingsPage() {
       icon: <LayoutGrid className="w-5 h-5" />,
       iconClassName: "text-brandIndigo",
       value: stats?.totalItems,
-      label: "总记录数",
-    },
-    {
-      icon: <Star className="w-5 h-5" fill="currentColor" />,
-      iconClassName: "text-red-500",
-      value: stats?.totalFavorites,
-      label: "特别收藏",
+      label: "库内记录",
+      hint: "查看全部账号",
+      onClick: () => router.push("/dashboard"),
     },
     {
       icon: <Tags className="w-5 h-5" />,
-      iconClassName: "text-green-500",
+      iconClassName: "text-emerald-500",
       value: stats?.totalTags,
-      label: "使用分类标签数",
+      label: "平台标签",
+      hint: "管理平台标签",
+      onClick: () => router.push("/settings/platforms"),
     },
     {
-      icon: <Layers className="w-5 h-5" />,
+      icon: <CreditCard className="w-5 h-5" />,
+      iconClassName: "text-sky-500",
+      value: stats?.totalSubscriptions,
+      label: "订阅数",
+      hint: "进入订阅中心",
+      onClick: () => router.push("/subscriptions"),
+    },
+    {
+      icon: <BellRing className="w-5 h-5" />,
       iconClassName: "text-orange-500",
-      value: stats?.totalCategories,
-      label: "大库总维度",
+      value: stats?.dueSubscriptions,
+      label: "即将到期数",
+      hint: "查看到期提醒",
+      onClick: () => router.push("/subscriptions"),
     },
   ];
 
-  if (status === "loading" || !session) return (
-    <div className="min-h-screen bg-transparent flex items-center justify-center transition-colors">
-      <svg className="animate-spin h-8 w-8 text-brandIndigo" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-    </div>
-  );
+  if (status === "loading" || !session) {
+    return (
+      <div className="min-h-screen bg-transparent px-4 py-8">
+        <div className="mx-auto max-w-[920px] space-y-4">
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-24 w-full" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full flex flex-col items-center pt-8 md:pt-16 px-4 transition-colors">
-      <div className="w-full max-w-[500px]">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-[32px] font-semibold text-gray-900 dark:text-textPrimary tracking-tight">个人中心</h1>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eef4ff_0%,#f8fafc_42%,#f3f0ff_100%)] px-4 py-6 transition-colors dark:bg-[radial-gradient(circle_at_top,#1c2238_0%,#171b2b_48%,#1a1630_100%)]">
+      <div className="mx-auto w-full max-w-[920px]">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h1 className="text-[24px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">个人中心</h1>
+            <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">常用入口、库内统计和提醒概览。</p>
+          </div>
           <ThemeToggle />
         </div>
 
-        {/* Profile Card */}
-        <div className="bg-white dark:bg-[rgba(255,255,255,0.03)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] rounded-[16px] p-6 mb-6 shadow-sm flex items-center space-x-4">
-          <div className="w-14 h-14 bg-brandIndigo/10 dark:bg-brandIndigo/20 flex items-center justify-center rounded-full text-brandIndigo">
-            <User className="w-7 h-7" />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-[13px] text-gray-500 dark:text-textTertiary mb-1">当前登录账号</p>
-            <p className="text-[16px] font-semibold text-gray-900 dark:text-textPrimary truncate">
-              {session.user?.email || "未知用户"}
-            </p>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <h2 className="text-[14px] font-[510] text-gray-500 dark:text-textSecondary mb-4">库内记录雷达</h2>
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          {statCards.map((card, index) => (
-            <div
-              key={card.label}
-              className="bg-white dark:bg-[rgba(255,255,255,0.02)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] rounded-[16px] p-5 shadow-sm hover:shadow-md transition-all duration-300 text-center translate-y-0 hover:-translate-y-1"
-              style={{
-                animation: `fade-in-up 520ms ease-out ${index * 90}ms both`,
-              }}
-            >
-              <div className={`flex justify-center mb-2 ${card.iconClassName}`}>{card.icon}</div>
-              <div className="text-[28px] font-bold text-gray-900 dark:text-textPrimary leading-none mb-1 tabular-nums">
-                <AnimatedCount value={card.value} />
-              </div>
-              <div className="text-[12px] text-gray-500 dark:text-textTertiary">{card.label}</div>
+        <div className="mb-5 rounded-[24px] border border-white/70 bg-white/75 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brandIndigo/12 text-brandIndigo dark:bg-brandIndigo/20">
+              <User className="h-5 w-5" />
             </div>
-          ))}
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] text-gray-500 dark:text-textTertiary">当前登录账号</p>
+              <p className="truncate text-[15px] font-semibold text-gray-900 dark:text-textPrimary">
+                {session.user?.email || "未知用户"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard?favorite=true")}
+              className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700 transition hover:bg-orange-100 dark:border-orange-400/20 dark:bg-orange-500/10 dark:text-orange-300 dark:hover:bg-orange-500/15"
+            >
+              <Star className="h-4 w-4" fill="currentColor" />
+              <span className="font-medium">
+                <AnimatedCount value={stats?.totalFavorites} />
+              </span>
+              <span className="hidden sm:inline">特别收藏</span>
+            </button>
+          </div>
         </div>
 
-        {/* Actions */}
+        <div className="mb-5">
+          {loadingStats || !stats ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-[120px] w-full rounded-[22px]" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {statCards.map((card, index) => (
+                <button
+                  key={card.label}
+                  type="button"
+                  onClick={card.onClick}
+                  className="rounded-[22px] border border-white/70 bg-white/75 p-5 text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/5"
+                  style={{ animation: `fade-in-up 520ms ease-out ${index * 70}ms both` }}
+                >
+                  <div className={`mb-3 ${card.iconClassName}`}>{card.icon}</div>
+                  <div className="text-[26px] font-semibold leading-none text-gray-900 dark:text-textPrimary">
+                    <AnimatedCount value={card.value} />
+                  </div>
+                  <div className="mt-2 text-sm text-gray-700 dark:text-textSecondary">{card.label}</div>
+                  <div className="mt-1 text-xs text-gray-500 dark:text-textTertiary">{card.hint}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {stats ? (
+          <div className="mb-5">
+            <StatsOverviewChart
+              totalItems={stats.totalItems}
+              totalFavorites={stats.totalFavorites}
+              totalSubscriptions={stats.totalSubscriptions || 0}
+              dueSubscriptions={stats.dueSubscriptions || 0}
+            />
+          </div>
+        ) : null}
+
         <div className="space-y-4">
           <button
             onClick={() => router.push("/settings/phones")}
-            className="w-full bg-white hover:bg-gray-50 dark:bg-[rgba(255,255,255,0.03)] dark:hover:bg-[rgba(255,255,255,0.06)] text-gray-800 dark:text-textPrimary border border-gray-100 dark:border-[rgba(255,255,255,0.08)] font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-between shadow-sm dark:shadow-none"
+            className="flex w-full items-center justify-between rounded-[18px] border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary dark:hover:bg-white/10"
           >
             <span className="inline-flex items-center">
-              <Smartphone className="w-5 h-5 mr-2 text-brandIndigo" />
+              <Smartphone className="mr-2 h-5 w-5 text-brandIndigo" />
               手机号管理
             </span>
-            <ChevronRight className="w-4 h-4 text-gray-500 dark:text-textTertiary" />
+            <ChevronRight className="h-4 w-4 text-gray-500 dark:text-textTertiary" />
           </button>
 
           <button
             onClick={() => router.push("/settings/platforms")}
-            className="w-full bg-white hover:bg-gray-50 dark:bg-[rgba(255,255,255,0.03)] dark:hover:bg-[rgba(255,255,255,0.06)] text-gray-800 dark:text-textPrimary border border-gray-100 dark:border-[rgba(255,255,255,0.08)] font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-between shadow-sm dark:shadow-none"
+            className="flex w-full items-center justify-between rounded-[18px] border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary dark:hover:bg-white/10"
           >
             <span className="inline-flex items-center">
-              <Tags className="w-5 h-5 mr-2 text-brandIndigo" />
+              <Tags className="mr-2 h-5 w-5 text-brandIndigo" />
               常用平台管理
             </span>
-            <ChevronRight className="w-4 h-4 text-gray-500 dark:text-textTertiary" />
+            <ChevronRight className="h-4 w-4 text-gray-500 dark:text-textTertiary" />
           </button>
 
-          <button 
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            className="w-full bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 font-medium py-4 px-4 rounded-[12px] transition-colors flex items-center justify-center shadow-sm dark:shadow-none"
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex w-full items-center justify-center rounded-[18px] bg-red-50 px-4 py-4 font-medium text-red-600 transition hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
           >
-            <LogOut className="w-5 h-5 mr-2" />
+            <LogOut className="mr-2 h-5 w-5" />
             安全退出当前账号
           </button>
         </div>
-        
       </div>
     </div>
   );

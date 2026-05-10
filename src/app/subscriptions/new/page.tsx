@@ -5,7 +5,7 @@ export default function NewSubscriptionPage() {
     <SubscriptionForm
       mode="create"
       title="新增订阅"
-      description="把会员、年费服务、自动续费项目统一录入，后续就能在到期前集中提醒。"
+      description="先选关联账号，再补充到期时间和提醒决策。"
     />
   )
 }

@@ -21,10 +21,11 @@ export async function GET() {
           where: {
             userId,
             expiresAt: {
+              gte: new Date(new Date().setHours(0, 0, 0, 0)),
               lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             },
-            status: {
-              not: "cancelled",
+            decision: {
+              notIn: ["renew", "skip"],
             },
           },
         }),
