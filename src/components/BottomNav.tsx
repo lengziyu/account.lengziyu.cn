@@ -48,7 +48,7 @@ export function BottomNav() {
   ]
 
   return (
-    <div className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-[800px] -translate-x-1/2 items-center justify-between rounded-t-2xl border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:border-[rgba(255,255,255,0.08)] dark:bg-[#121316] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
+    <div className="fixed bottom-0 left-1/2 z-50 flex w-[calc(100%-1rem)] max-w-[900px] -translate-x-1/2 items-center justify-between rounded-t-xl border border-b-0 border-gray-200 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:border-[rgba(255,255,255,0.08)] dark:bg-[#121316] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
       {navItems.slice(0, 2).map((item) => {
         const Icon = item.icon
         return (

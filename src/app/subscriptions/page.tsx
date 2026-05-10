@@ -80,7 +80,7 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="min-h-screen bg-transparent transition-colors">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-28">
+      <div className="mx-auto max-w-[900px] px-4 py-8 pb-28 sm:px-6">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
             <h1 className="text-[24px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">订阅中心</h1>
@@ -97,26 +97,26 @@ export default function SubscriptionsPage() {
           </div>
         </div>
 
-        <div className="mx-auto mb-6 grid w-full max-w-3xl grid-cols-2 gap-4">
-          <div className="rounded-[20px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+        <div className="mb-6 grid w-full grid-cols-2 gap-4">
+          <div className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="text-xs text-gray-500 dark:text-textSecondary">总订阅数</div>
             <div className="mt-2 text-3xl font-semibold text-gray-900 dark:text-textPrimary">{data?.summary.total ?? "-"}</div>
           </div>
-          <div className="rounded-[20px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+          <div className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="text-xs text-gray-500 dark:text-textSecondary">7 天内到期</div>
             <div className="mt-2 text-3xl font-semibold text-orange-600 dark:text-orange-300">{data?.summary.dueSoon ?? "-"}</div>
           </div>
-          <div className="rounded-[20px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+          <div className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="text-xs text-gray-500 dark:text-textSecondary">已过期</div>
             <div className="mt-2 text-3xl font-semibold text-red-600 dark:text-red-300">{data?.summary.expired ?? "-"}</div>
           </div>
-          <div className="rounded-[20px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+          <div className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="text-xs text-gray-500 dark:text-textSecondary">自动续费</div>
             <div className="mt-2 text-3xl font-semibold text-brandIndigo">{data?.summary.autoRenew ?? "-"}</div>
           </div>
         </div>
 
-        <div className="rounded-[20px] border border-white/70 bg-white/75 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+        <div className="rounded-xl border border-white/70 bg-white/75 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <input
               value={search}
@@ -163,9 +163,9 @@ export default function SubscriptionsPage() {
 
               <div className="grid gap-3">
                 {loading ? (
-                  <Skeleton className="h-28 w-full rounded-[20px]" />
+                  <Skeleton className="h-28 w-full rounded-xl" />
                 ) : section.items.length === 0 ? (
-                  <div className="rounded-[20px] border border-dashed border-white/70 bg-white/55 p-5 text-sm text-gray-500 backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-textSecondary">
+                  <div className="rounded-xl border border-dashed border-white/70 bg-white/55 p-5 text-sm text-gray-500 backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-textSecondary">
                     当前分组没有记录。
                   </div>
                 ) : (
@@ -174,7 +174,7 @@ export default function SubscriptionsPage() {
                       key={item.id}
                       type="button"
                       onClick={() => router.push(`/subscriptions/${item.id}`)}
-                      className="rounded-[20px] border border-white/70 bg-white/75 p-5 text-left shadow-sm backdrop-blur transition hover:border-brandIndigo/30 dark:border-white/10 dark:bg-white/5"
+                      className="rounded-xl border border-white/70 bg-white/75 p-5 text-left shadow-sm backdrop-blur transition hover:border-brandIndigo/30 dark:border-white/10 dark:bg-white/5"
                     >
                       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                         <div className="min-w-0">

@@ -259,7 +259,7 @@ export default function NotificationSettingsPage() {
 
   return (
     <div className="min-h-screen bg-transparent transition-colors">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-24">
+      <div className="mx-auto max-w-[900px] px-4 py-8 pb-24 sm:px-6">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
             <h1 className="text-[20px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">提醒与推送</h1>

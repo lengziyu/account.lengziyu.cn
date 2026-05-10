@@ -123,7 +123,7 @@ export default function SettingsPage() {
   if (status === "loading" || !session) {
     return (
       <div className="min-h-screen bg-transparent px-4 py-8">
-        <div className="mx-auto max-w-[920px] space-y-4">
+        <div className="mx-auto max-w-[900px] space-y-4">
           <Skeleton className="h-10 w-40" />
           <Skeleton className="h-20 w-full rounded-xl" />
           <div className="grid grid-cols-4 gap-2">
@@ -139,7 +139,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eef4ff_0%,#f8fafc_42%,#f3f0ff_100%)] px-4 py-6 transition-colors dark:bg-[radial-gradient(circle_at_top,#1c2238_0%,#171b2b_48%,#1a1630_100%)]">
-      <div className="mx-auto w-full max-w-[920px]">
+      <div className="mx-auto w-full max-w-[900px]">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h1 className="text-[20px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">个人中心</h1>

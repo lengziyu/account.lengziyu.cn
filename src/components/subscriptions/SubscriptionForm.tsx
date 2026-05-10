@@ -281,7 +281,7 @@ export function SubscriptionForm({
   if (loading) {
     return (
       <div className="min-h-screen bg-transparent px-4 py-6">
-        <div className="mx-auto max-w-5xl space-y-4">
+        <div className="mx-auto max-w-[900px] space-y-4">
           <Skeleton className="h-16 w-full rounded-[24px]" />
           <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
             <Skeleton className="h-[680px] w-full rounded-[28px]" />
@@ -295,7 +295,7 @@ export function SubscriptionForm({
   return (
     <div className="min-h-screen bg-transparent transition-colors">
       <div className="sticky top-0 z-30 border-b border-white/70 bg-white/65 backdrop-blur dark:border-white/10 dark:bg-[#151927]/65">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-[900px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="min-w-0">
             <button
               type="button"
@@ -317,7 +317,7 @@ export function SubscriptionForm({
           ) : null}
         </div>
 
-        <div className="mx-auto grid max-w-5xl grid-cols-[0.9fr_1.4fr] gap-3 px-4 pb-3 sm:px-6">
+        <div className="mx-auto grid max-w-[900px] grid-cols-[0.9fr_1.4fr] gap-3 px-4 pb-3 sm:px-6">
           <Button type="button" variant="outline" onClick={() => router.push("/subscriptions")} disabled={saving} className="w-full">
             取消
           </Button>
@@ -327,7 +327,7 @@ export function SubscriptionForm({
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6">
+      <div className="mx-auto max-w-[900px] px-4 py-5 sm:px-6">
         {error ? (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
             {error}
