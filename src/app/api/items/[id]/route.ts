@@ -45,6 +45,17 @@ function buildTagRecords(payload: ItemPayload) {
   return tags.map((tag) => ({ tag, type: "custom" as const }))
 }
 
+function isPhoneIdentitySchemaMismatch(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+  return (
+    message.includes("phoneIdentity") ||
+    message.includes("phoneIdentityId") ||
+    message.includes("The column") ||
+    message.includes("P2022") ||
+    message.includes("P2021")
+  )
+}
+
 async function getMainIdentity(userId: string, itemId: string) {
   return prisma.identity.findFirst({
     where: {
@@ -106,20 +117,32 @@ export async function GET(
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const item = await prisma.vaultItem.findFirst({
-      where: {
-        id: params.id,
-        userId: user.id,
-      },
-      include: {
-        identity: true,
-        phoneIdentity: true,
-        tags: {
-          where: { type: "custom" },
-          orderBy: [{ type: "asc" }, { tag: "asc" }],
+    const fetchItem = async (includePhoneIdentity: boolean) =>
+      prisma.vaultItem.findFirst({
+        where: {
+          id: params.id,
+          userId: user.id,
         },
-      },
-    })
+        include: {
+          identity: true,
+          ...(includePhoneIdentity ? { phoneIdentity: true } : {}),
+          tags: {
+            where: { type: "custom" },
+            orderBy: [{ type: "asc" }, { tag: "asc" }],
+          },
+        },
+      })
+
+    let item = null
+    try {
+      item = await fetchItem(true)
+    } catch (error) {
+      if (!isPhoneIdentitySchemaMismatch(error)) {
+        throw error
+      }
+      console.error("[api/items/:id] phone identity fallback triggered", error)
+      item = await fetchItem(false)
+    }
 
     if (!item) {
       return new NextResponse("Not Found", { status: 404 })
@@ -131,7 +154,8 @@ export async function GET(
       ...item,
       setAsMain: !!mainIdentity,
     })
-  } catch {
+  } catch (error) {
+    console.error("[api/items/:id] GET failed", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
 }
@@ -211,6 +235,7 @@ export async function PATCH(
     if (error?.message === "Identity not found") {
       return new NextResponse("主账号或手机号不存在", { status: 400 })
     }
+    console.error("[api/items/:id] PATCH failed", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
 }
@@ -238,7 +263,8 @@ export async function DELETE(
     })
 
     return new NextResponse(null, { status: 204 })
-  } catch {
+  } catch (error) {
+    console.error("[api/items/:id] DELETE failed", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
 }

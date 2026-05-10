@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Bell, RefreshCcw, Send } from "lucide-react"
+import { Bell, RefreshCcw, Send, Trash2 } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { Button } from "@/components/ui/Button"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import {
   formatReminderLabel,
   NOTIFICATION_CHANNEL_OPTIONS,
@@ -55,13 +55,14 @@ const emptyForm = {
 }
 
 export default function NotificationSettingsPage() {
-  const router = useRouter()
   const [channels, setChannels] = useState<NotificationChannel[]>([])
   const [defaultDays, setDefaultDays] = useState<number[]>([])
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
   const [scanPreview, setScanPreview] = useState<ScanPreview | null>(null)
+  const [deletingChannel, setDeletingChannel] = useState<NotificationChannel | null>(null)
+  const [confirmingClear, setConfirmingClear] = useState(false)
 
   useEffect(() => {
     void Promise.all([fetchChannels(), fetchReminderRules(), fetchScanPreview()])
@@ -90,6 +91,29 @@ export default function NotificationSettingsPage() {
   const resetForm = () => {
     setForm(emptyForm)
   }
+
+  const applyChannelToForm = (channel: NotificationChannel) => {
+    setForm({
+      id: channel.id,
+      type: channel.type,
+      name: channel.name,
+      enabled: channel.enabled,
+      botToken: channel.config.botToken || "",
+      chatId: channel.config.chatId || "",
+      webhookUrl: channel.config.webhookUrl || "",
+      secret: channel.config.secret || "",
+    })
+    setMessage("")
+  }
+
+  const hasFormValue =
+    !!form.id ||
+    !!form.name.trim() ||
+    !!form.botToken.trim() ||
+    !!form.chatId.trim() ||
+    !!form.webhookUrl.trim() ||
+    !!form.secret.trim() ||
+    !form.enabled
 
   const toggleDefaultDay = (day: number) => {
     setDefaultDays((prev) =>
@@ -174,10 +198,10 @@ export default function NotificationSettingsPage() {
     await fetchChannels()
   }
 
-  const deleteChannel = async (id: string) => {
-    if (!confirm("确定删除这个通知渠道吗？")) return
+  const deleteChannel = async () => {
+    if (!deletingChannel?.id) return
     setSaving(true)
-    const res = await fetch(`/api/notifications/channels?id=${encodeURIComponent(id)}`, {
+    const res = await fetch(`/api/notifications/channels?id=${encodeURIComponent(deletingChannel.id)}`, {
       method: "DELETE",
     })
     setSaving(false)
@@ -185,6 +209,7 @@ export default function NotificationSettingsPage() {
       setMessage("删除失败")
       return
     }
+    setDeletingChannel(null)
     setMessage("通知渠道已删除")
     await Promise.all([fetchChannels(), fetchScanPreview()])
   }
@@ -209,15 +234,7 @@ export default function NotificationSettingsPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-24">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
-            <button
-              type="button"
-              onClick={() => router.push("/settings")}
-              className="inline-flex items-center text-sm text-gray-600 dark:text-textSecondary hover:text-brandIndigo transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              返回个人中心
-            </button>
-            <h1 className="mt-3 text-[30px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">提醒与推送</h1>
+            <h1 className="text-[30px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">提醒与推送</h1>
             <p className="mt-2 text-sm text-gray-500 dark:text-textSecondary">
               配置默认提醒时间、Telegram / 飞书渠道，并可手动触发一次到期扫描。
             </p>
@@ -399,7 +416,18 @@ export default function NotificationSettingsPage() {
                   <Button type="button" variant="brand" onClick={saveChannel} disabled={saving}>
                     {form.id ? "更新渠道" : "新增渠道"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={resetForm} disabled={saving}>
+                  <Button
+                    type="button"
+                    variant="warning"
+                    onClick={() => {
+                      if (!hasFormValue) {
+                        resetForm()
+                        return
+                      }
+                      setConfirmingClear(true)
+                    }}
+                    disabled={saving}
+                  >
                     清空表单
                   </Button>
                 </div>
@@ -419,9 +447,14 @@ export default function NotificationSettingsPage() {
                   </div>
                 ) : (
                   channels.map((channel) => (
-                    <div key={channel.id} className="rounded-2xl border border-gray-200 px-4 py-4 dark:border-[rgba(255,255,255,0.08)]">
+                    <button
+                      key={channel.id}
+                      type="button"
+                      onClick={() => applyChannelToForm(channel)}
+                      className="w-full rounded-2xl border border-gray-200 px-4 py-4 text-left transition hover:border-brandIndigo/40 hover:bg-gray-50/60 dark:border-[rgba(255,255,255,0.08)] dark:hover:bg-white/5"
+                    >
                       <div className="flex items-start justify-between gap-3">
-                        <div>
+                        <div className="min-w-0">
                           <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">
                             {channel.name}
                           </div>
@@ -434,34 +467,34 @@ export default function NotificationSettingsPage() {
                             </div>
                           ) : null}
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex shrink-0 items-start gap-2">
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() =>
-                              setForm({
-                                id: channel.id,
-                                type: channel.type,
-                                name: channel.name,
-                                enabled: channel.enabled,
-                                botToken: channel.config.botToken || "",
-                                chatId: channel.config.chatId || "",
-                                webhookUrl: channel.config.webhookUrl || "",
-                                secret: channel.config.secret || "",
-                              })
-                            }
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              void testChannel(channel.id)
+                            }}
+                            disabled={saving}
                           >
-                            编辑
-                          </Button>
-                          <Button type="button" variant="outline" onClick={() => testChannel(channel.id)} disabled={saving}>
                             测试
                           </Button>
-                          <Button type="button" variant="outline" onClick={() => deleteChannel(channel.id)} disabled={saving}>
-                            删除
-                          </Button>
+                          <button
+                            type="button"
+                            aria-label={`删除 ${channel.name}`}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setDeletingChannel(channel)
+                              setMessage("")
+                            }}
+                            disabled={saving}
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15 disabled:opacity-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))
                 )}
               </div>
@@ -469,6 +502,35 @@ export default function NotificationSettingsPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmingClear}
+        title="清空渠道表单"
+        description="当前填写的渠道配置会被清空。确认继续吗？"
+        confirmLabel="确认清空"
+        tone="warning"
+        busy={saving}
+        onCancel={() => setConfirmingClear(false)}
+        onConfirm={() => {
+          resetForm()
+          setConfirmingClear(false)
+        }}
+      />
+
+      <ConfirmDialog
+        open={!!deletingChannel}
+        title="删除通知渠道"
+        description={
+          deletingChannel
+            ? `确定删除渠道「${deletingChannel.name}」吗？删除后，这个渠道将不再参与提醒推送。`
+            : ""
+        }
+        confirmLabel="确认删除"
+        tone="danger"
+        busy={saving}
+        onCancel={() => setDeletingChannel(null)}
+        onConfirm={() => void deleteChannel()}
+      />
     </div>
   )
 }

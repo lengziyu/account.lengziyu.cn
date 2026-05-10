@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { SelectMenu } from "@/components/ui/SelectMenu"
 import { ArrowLeft, Plus, Trash2, CheckCircle2, Copy, Check } from "lucide-react"
 
@@ -44,6 +45,7 @@ export default function ItemDetailPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [copyStatus, setCopyStatus] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [identities, setIdentities] = useState<Identity[]>([])
@@ -251,7 +253,6 @@ export default function ItemDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!confirm("确定要删除这条记录吗？")) return
     setSaving(true)
     const res = await fetch(`/api/items/${id}`, { method: "DELETE" })
     if (!res.ok) {
@@ -517,7 +518,12 @@ export default function ItemDetailPage() {
 
       <div className="w-full border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
         <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-2.5 flex justify-between items-center gap-2">
-          <button type="button" onClick={handleDelete} className="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors flex items-center text-sm font-medium" disabled={saving}>
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            className="flex items-center rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"
+            disabled={saving}
+          >
             <Trash2 className="w-4 h-4 mr-2" />
             删除
           </button>
@@ -527,6 +533,17 @@ export default function ItemDetailPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        title="删除账号"
+        description={`确定删除账号「${formData.displayTitle || formData.title || "当前记录"}」吗？删除后，这条账号记录和平台标签关联将无法恢复。`}
+        confirmLabel="确认删除"
+        tone="danger"
+        busy={saving}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={() => void handleDelete()}
+      />
     </div>
   )
 }

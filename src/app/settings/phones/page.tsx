@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, PencilLine, Phone, Trash2 } from "lucide-react";
+import { ArrowLeft, Phone, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type PhoneIdentity = {
   id: string;
@@ -42,6 +43,8 @@ export default function PhoneSettingsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [deletingPhone, setDeletingPhone] = useState<PhoneIdentity | null>(null);
+  const [confirmingClear, setConfirmingClear] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -79,6 +82,12 @@ export default function PhoneSettingsPage() {
     setForm(emptyForm);
     setEditing(null);
   };
+
+  const hasFormValue =
+    !!editing ||
+    !!form.name.trim() ||
+    !!form.identifier.trim() ||
+    !!form.notes.trim();
 
   const handleCreate = async () => {
     const name = form.name.trim();
@@ -157,22 +166,22 @@ export default function PhoneSettingsPage() {
     }
   };
 
-  const handleDelete = async (phone: PhoneIdentity) => {
-    if (!confirm(`确定删除手机号“${phone.identifier}”吗？`)) return;
-
+  const handleDelete = async () => {
+    if (!deletingPhone) return;
     setSubmitting(true);
     clearMessages();
     try {
-      const res = await fetch(`/api/identities?id=${encodeURIComponent(phone.id)}`, {
+      const res = await fetch(`/api/identities?id=${encodeURIComponent(deletingPhone.id)}`, {
         method: "DELETE",
       });
       if (!res.ok) {
         setError(await getErrorMessage(res, "删除手机号失败"));
         return;
       }
-      if (editing?.id === phone.id) {
+      if (editing?.id === deletingPhone.id) {
         resetForm();
       }
+      setDeletingPhone(null);
       setSuccess("手机号已删除");
       await fetchPhones();
     } catch {
@@ -266,7 +275,18 @@ export default function PhoneSettingsPage() {
             <Button type="button" variant="brand" onClick={editing ? handleUpdate : handleCreate} disabled={submitting}>
               {editing ? "保存修改" : "新增手机号"}
             </Button>
-            <Button type="button" variant="outline" onClick={resetForm} disabled={submitting}>
+            <Button
+              type="button"
+              variant="warning"
+              onClick={() => {
+                if (!hasFormValue) {
+                  resetForm();
+                  return;
+                }
+                setConfirmingClear(true);
+              }}
+              disabled={submitting}
+            >
               {editing ? "取消编辑" : "清空"}
             </Button>
           </div>
@@ -285,9 +305,12 @@ export default function PhoneSettingsPage() {
               </div>
             ) : (
               phones.map((phone) => (
-                <div
+                <button
                   key={phone.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-gray-200 px-4 py-4 dark:border-[rgba(255,255,255,0.08)] sm:flex-row sm:items-center sm:justify-between"
+                  type="button"
+                  onClick={() => startEdit(phone)}
+                  disabled={submitting}
+                  className="relative flex w-full flex-col gap-3 rounded-2xl border border-gray-200 px-4 py-4 text-left transition hover:border-brandIndigo/40 hover:bg-gray-50/60 dark:border-[rgba(255,255,255,0.08)] dark:hover:bg-white/5 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">{phone.name}</div>
@@ -296,22 +319,50 @@ export default function PhoneSettingsPage() {
                       <div className="mt-1 text-xs text-gray-500 dark:text-textTertiary">{phone.notes}</div>
                     ) : null}
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" onClick={() => startEdit(phone)} disabled={submitting}>
-                      <PencilLine className="w-4 h-4 mr-2" />
-                      编辑
-                    </Button>
-                    <Button type="button" variant="outline" onClick={() => handleDelete(phone)} disabled={submitting}>
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      删除
-                    </Button>
-                  </div>
-                </div>
+                  <button
+                    type="button"
+                    aria-label={`删除 ${phone.identifier}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setDeletingPhone(phone);
+                      clearMessages();
+                    }}
+                    disabled={submitting}
+                    className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15 disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </button>
               ))
             )}
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmingClear}
+        title={editing ? "取消当前编辑" : "清空手机号表单"}
+        description={editing ? "当前修改内容会被丢弃，确认取消编辑吗？" : "当前填写的手机号内容会被清空，确认继续吗？"}
+        confirmLabel={editing ? "确认取消" : "确认清空"}
+        tone="warning"
+        busy={submitting}
+        onCancel={() => setConfirmingClear(false)}
+        onConfirm={() => {
+          resetForm();
+          setConfirmingClear(false);
+        }}
+      />
+
+      <ConfirmDialog
+        open={!!deletingPhone}
+        title="删除手机号"
+        description={deletingPhone ? `确定删除手机号「${deletingPhone.identifier}」吗？删除后，绑定它的账号将失去这条手机号关联。` : ""}
+        confirmLabel="确认删除"
+        tone="danger"
+        busy={submitting}
+        onCancel={() => setDeletingPhone(null)}
+        onConfirm={() => void handleDelete()}
+      />
     </div>
   );
 }

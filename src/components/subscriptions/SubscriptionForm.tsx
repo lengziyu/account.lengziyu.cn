@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Bell, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { SelectMenu } from "@/components/ui/SelectMenu"
 import {
   DEFAULT_REMINDER_DAYS,
@@ -82,6 +83,7 @@ export function SubscriptionForm({
   const [loading, setLoading] = useState(mode === "edit")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [items, setItems] = useState<VaultItemOption[]>([])
   const [resolvedDefaultReminderDays, setResolvedDefaultReminderDays] = useState<number[]>(
     defaultReminderDays && defaultReminderDays.length > 0
@@ -221,7 +223,7 @@ export function SubscriptionForm({
   }
 
   const handleDelete = async () => {
-    if (!value?.id || !confirm("确定要删除这条订阅吗？")) return
+    if (!value?.id) return
     setSaving(true)
     const res = await fetch(`/api/subscriptions/${value.id}`, {
       method: "DELETE",
@@ -268,7 +270,7 @@ export function SubscriptionForm({
           </div>
 
           {mode === "edit" ? (
-            <Button type="button" variant="outline" onClick={handleDelete} disabled={saving}>
+            <Button type="button" variant="danger" onClick={() => setConfirmingDelete(true)} disabled={saving}>
               <Trash2 className="w-4 h-4 mr-2" />
               删除
             </Button>
@@ -532,6 +534,17 @@ export function SubscriptionForm({
           </div>
         </form>
       </div>
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        title="删除订阅"
+        description={`确定删除「${formData.platformName || value?.platformName || "当前订阅"}」吗？删除后，这条订阅和提醒记录将无法恢复。`}
+        confirmLabel="确认删除"
+        tone="danger"
+        busy={saving}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={() => void handleDelete()}
+      />
     </div>
   )
 }

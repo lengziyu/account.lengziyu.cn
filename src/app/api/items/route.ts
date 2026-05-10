@@ -49,6 +49,17 @@ function buildTagRecords(payload: ItemPayload) {
   return tags.map((tag) => ({ tag, type: "custom" as const }))
 }
 
+function isPhoneIdentitySchemaMismatch(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+  return (
+    message.includes("phoneIdentity") ||
+    message.includes("phoneIdentityId") ||
+    message.includes("The column") ||
+    message.includes("P2022") ||
+    message.includes("P2021")
+  )
+}
+
 async function syncMainIdentity(
   userId: string,
   itemId: string,
@@ -122,33 +133,66 @@ export async function GET(req: Request) {
         : {}),
     }
 
-    const items = await prisma.vaultItem.findMany({
-      where,
-      include: {
-        identity: {
-          select: {
-            id: true,
-            name: true,
-            identifier: true,
-            kind: true,
-            provider: true,
+    const fetchItems = async (includePhoneIdentity: boolean) =>
+      prisma.vaultItem.findMany({
+        where: includePhoneIdentity
+          ? where
+          : {
+              userId: user.id,
+              ...(identityId ? { identityId } : {}),
+              ...(search
+                ? {
+                    OR: [
+                      { title: { contains: search } },
+                      { displayTitle: { contains: search } },
+                      { notes: { contains: search } },
+                      { tags: { some: { tag: { contains: search } } } },
+                      { identity: { is: { name: { contains: search } } } },
+                      { identity: { is: { identifier: { contains: search } } } },
+                    ],
+                  }
+                : {}),
+          },
+        include: {
+          identity: {
+            select: {
+              id: true,
+              name: true,
+              identifier: true,
+              kind: true,
+              provider: true,
+            },
+          },
+          ...(includePhoneIdentity
+            ? {
+                phoneIdentity: {
+                  select: {
+                    id: true,
+                    name: true,
+                    identifier: true,
+                    kind: true,
+                  },
+                },
+              }
+            : {}),
+          tags: {
+            where: { type: "custom" },
+            orderBy: [{ type: "asc" }, { tag: "asc" }],
           },
         },
-        phoneIdentity: {
-          select: {
-            id: true,
-            name: true,
-            identifier: true,
-            kind: true,
-          },
-        },
-        tags: {
-          where: { type: "custom" },
-          orderBy: [{ type: "asc" }, { tag: "asc" }],
-        },
-      },
-      orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
-    })
+        orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+      })
+
+    let items: any[] = []
+    try {
+      items = await fetchItems(true)
+    } catch (error) {
+      if (!isPhoneIdentitySchemaMismatch(error)) {
+        throw error
+      }
+      console.error("[api/items] phone identity fallback triggered", error)
+      items = await fetchItems(false)
+    }
 
     const mainIdentities = await prisma.identity.findMany({
       where: { userId: user.id, kind: MAIN_IDENTITY_KIND },
@@ -169,7 +213,8 @@ export async function GET(req: Request) {
         mainIdentityName: item.identity?.name || null,
       }))
     )
-  } catch {
+  } catch (error) {
+    console.error("[api/items] GET failed", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
 }
@@ -228,6 +273,7 @@ export async function POST(req: Request) {
     if (error?.message === "Identity not found") {
       return new NextResponse("主账号或手机号不存在", { status: 400 })
     }
+    console.error("[api/items] POST failed", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
 }
