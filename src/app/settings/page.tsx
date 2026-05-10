@@ -131,7 +131,7 @@ export default function SettingsPage() {
         <div className="mx-auto max-w-[920px] space-y-4">
           <Skeleton className="h-10 w-40" />
           <Skeleton className="h-24 w-full" />
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-4">
             <Skeleton className="h-28 w-full" />
             <Skeleton className="h-28 w-full" />
             <Skeleton className="h-28 w-full" />
@@ -166,7 +166,7 @@ export default function SettingsPage() {
             </div>
             <button
               type="button"
-              onClick={() => router.push("/dashboard?favorite=true")}
+              onClick={() => router.push(`/dashboard?tag=${encodeURIComponent("收藏")}`)}
               className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700 transition hover:bg-orange-100 dark:border-orange-400/20 dark:bg-orange-500/10 dark:text-orange-300 dark:hover:bg-orange-500/15"
             >
               <Star className="h-4 w-4" fill="currentColor" />
@@ -186,7 +186,7 @@ export default function SettingsPage() {
               ))}
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-4">
               {statCards.map((card, index) => (
                 <button
                   key={card.label}

@@ -280,7 +280,7 @@ export function SubscriptionForm({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eef4ff_0%,#f8fafc_42%,#f3f0ff_100%)] px-4 py-6 dark:bg-[radial-gradient(circle_at_top,#1c2238_0%,#171b2b_48%,#1a1630_100%)]">
+      <div className="min-h-screen bg-transparent px-4 py-6">
         <div className="mx-auto max-w-5xl space-y-4">
           <Skeleton className="h-16 w-full rounded-[24px]" />
           <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
@@ -293,7 +293,7 @@ export function SubscriptionForm({
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eef4ff_0%,#f8fafc_42%,#f3f0ff_100%)] transition-colors dark:bg-[radial-gradient(circle_at_top,#1c2238_0%,#171b2b_48%,#1a1630_100%)]">
+    <div className="min-h-screen bg-transparent transition-colors">
       <div className="sticky top-0 z-30 border-b border-white/70 bg-white/65 backdrop-blur dark:border-white/10 dark:bg-[#151927]/65">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="min-w-0">

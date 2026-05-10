@@ -44,6 +44,7 @@ const formatDate = (dateString?: string) => {
 }
 
 const ALL_TAG_FILTER = "全部"
+const FAVORITES_TAG_FILTER = "收藏"
 
 export default function DashboardPage() {
   const { status } = useSession()
@@ -53,12 +54,14 @@ export default function DashboardPage() {
   const [dueSubscriptions, setDueSubscriptions] = useState<DueSubscription[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [activeTag, setActiveTag] = useState(ALL_TAG_FILTER)
-  const [favoriteOnly, setFavoriteOnly] = useState(false)
 
   useEffect(() => {
     if (typeof window === "undefined") return
     const params = new URLSearchParams(window.location.search)
-    setFavoriteOnly(params.get("favorite") === "true")
+    const tag = params.get("tag")
+    if (tag === FAVORITES_TAG_FILTER) {
+      setActiveTag(FAVORITES_TAG_FILTER)
+    }
   }, [])
 
   useEffect(() => {
@@ -67,15 +70,10 @@ export default function DashboardPage() {
     } else if (status === "authenticated") {
       void fetchItems()
     }
-  }, [status, search, favoriteOnly])
+  }, [status, search])
 
   const fetchItems = async () => {
-    const params = new URLSearchParams()
-    params.set("search", search)
-    if (favoriteOnly) {
-      params.set("favorite", "true")
-    }
-    const res = await fetch(`/api/items?${params.toString()}`)
+    const res = await fetch(`/api/items?search=${encodeURIComponent(search)}`)
     if (!res.ok) return
     setItems(await res.json())
   }
@@ -121,7 +119,7 @@ export default function DashboardPage() {
   }, [items])
 
   useEffect(() => {
-    if (activeTag === ALL_TAG_FILTER) return
+    if (activeTag === ALL_TAG_FILTER || activeTag === FAVORITES_TAG_FILTER) return
     if (!topTags.includes(activeTag)) {
       setActiveTag(ALL_TAG_FILTER)
     }
@@ -129,6 +127,7 @@ export default function DashboardPage() {
 
   const filteredItems = useMemo(() => {
     if (activeTag === ALL_TAG_FILTER) return items
+    if (activeTag === FAVORITES_TAG_FILTER) return items.filter((item) => item.favorite)
     return items.filter((item) => (item.tags || []).some((tag) => tag.tag === activeTag))
   }, [items, activeTag])
 
@@ -339,7 +338,7 @@ export default function DashboardPage() {
                 len的密码库
               </h1>
               <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
-                {favoriteOnly ? "当前只显示特别收藏。" : "主账号独立展示，子账号自动归在下面"}
+                {activeTag === FAVORITES_TAG_FILTER ? "当前高亮特别收藏。" : "主账号独立展示，子账号自动归在下面"}
               </p>
             </div>
           </div>
@@ -357,7 +356,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mb-6 flex flex-wrap gap-2">
-          {[ALL_TAG_FILTER, ...topTags].map((tag) => (
+          {[ALL_TAG_FILTER, ...topTags, FAVORITES_TAG_FILTER].map((tag) => (
             <button
               key={tag}
               type="button"

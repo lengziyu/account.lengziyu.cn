@@ -249,7 +249,7 @@ export default function NotificationSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eef4ff_0%,#f8fafc_42%,#f3f0ff_100%)] transition-colors dark:bg-[radial-gradient(circle_at_top,#1c2238_0%,#171b2b_48%,#1a1630_100%)]">
+    <div className="min-h-screen bg-transparent transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-24">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
@@ -269,8 +269,16 @@ export default function NotificationSettingsPage() {
 
         {pageLoading ? (
           <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-            <Skeleton className="h-[620px] w-full rounded-[26px]" />
-            <Skeleton className="h-[620px] w-full rounded-[26px]" />
+            <div className="space-y-5">
+              <Skeleton className="h-28 w-full rounded-[26px]" />
+              <Skeleton className="h-24 w-full rounded-[26px]" />
+              <Skeleton className="h-40 w-full rounded-[26px]" />
+              <Skeleton className="h-36 w-full rounded-[26px]" />
+            </div>
+            <div className="space-y-5">
+              <Skeleton className="h-[340px] w-full rounded-[26px]" />
+              <Skeleton className="h-[240px] w-full rounded-[26px]" />
+            </div>
           </div>
         ) : (
         <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">

@@ -79,7 +79,7 @@ export default function SubscriptionsPage() {
   }, [data])
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eef4ff_0%,#f8fafc_42%,#f3f0ff_100%)] transition-colors dark:bg-[radial-gradient(circle_at_top,#1c2238_0%,#171b2b_48%,#1a1630_100%)]">
+    <div className="min-h-screen bg-transparent transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-28">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
