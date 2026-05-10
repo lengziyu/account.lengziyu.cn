@@ -148,7 +148,7 @@ export default function SettingsPage() {
           <ThemeToggle />
         </div>
 
-        <div className="mb-3 rounded-xl border border-white/70 bg-white/75 p-2.5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+        <div className="mb-3 rounded-xl border border-white/70 bg-white/75 p-2.5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-transparent">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brandIndigo/12 text-brandIndigo dark:bg-brandIndigo/20">
               <User className="h-5 w-5" />
@@ -187,12 +187,14 @@ export default function SettingsPage() {
                   key={card.label}
                   type="button"
                   onClick={card.onClick}
-                  className="rounded-xl border border-white/70 bg-white/75 p-2.5 text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/5"
+                  className="rounded-xl border border-white/70 bg-white/75 p-2.5 text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-transparent"
                   style={{ animation: `fade-in-up 520ms ease-out ${index * 70}ms both` }}
                 >
-                  <div className={`mb-1.5 ${card.iconClassName}`}>{card.icon}</div>
-                  <div className="text-base font-semibold leading-none text-gray-900 dark:text-textPrimary">
-                    <AnimatedCount value={card.value} />
+                  <div className="flex items-center gap-2.5">
+                    <div className={card.iconClassName}>{card.icon}</div>
+                    <div className="text-base font-semibold leading-none text-gray-900 dark:text-textPrimary">
+                      <AnimatedCount value={card.value} />
+                    </div>
                   </div>
                   <div className="mt-1 text-[11px] text-gray-700 dark:text-textSecondary">{card.label}</div>
                 </button>
@@ -204,7 +206,7 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <button
             onClick={() => router.push("/settings/phones")}
-            className="flex w-full items-center justify-between rounded-xl border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary dark:hover:bg-white/10"
+            className="flex w-full items-center justify-between rounded-xl border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-transparent dark:text-textPrimary dark:hover:bg-white/10"
           >
             <span className="inline-flex items-center">
               <Smartphone className="mr-2 h-5 w-5 text-brandIndigo" />
@@ -215,7 +217,7 @@ export default function SettingsPage() {
 
           <button
             onClick={() => router.push("/settings/platforms")}
-            className="flex w-full items-center justify-between rounded-xl border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary dark:hover:bg-white/10"
+            className="flex w-full items-center justify-between rounded-xl border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-transparent dark:text-textPrimary dark:hover:bg-white/10"
           >
             <span className="inline-flex items-center">
               <Tags className="mr-2 h-5 w-5 text-brandIndigo" />

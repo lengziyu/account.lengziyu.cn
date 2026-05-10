@@ -204,6 +204,96 @@ docker compose up -d --build
 
 如果部署在 Vercel，仓库内的 [vercel.json](/Users/lens/Documents/web/lengziyu/github/account.lengziyu.cn/vercel.json) 已配置每天 `01:00 UTC` 触发一次扫描。设置 `CRON_SECRET` 后，Vercel 会自动在 `Authorization: Bearer <CRON_SECRET>` 请求头中附带该值；如果你是自建定时任务，也可以手动传 `x-cron-secret`。
 
+## GitHub Actions 发 Telegram
+
+如果你的主服务器连不上 `api.telegram.org`，最小可用方案是：
+
+- 主站继续跑在你自己的服务器
+- 数据继续用 Supabase PostgreSQL
+- Telegram 提醒改由 GitHub Actions 定时执行
+
+仓库已经内置：
+
+- 工作流：[.github/workflows/telegram-reminders.yml](/Users/lens/Documents/web/lengziyu/github/account.lengziyu.cn/.github/workflows/telegram-reminders.yml)
+- 扫描脚本：[scripts/send-telegram-reminders.mjs](/Users/lens/Documents/web/lengziyu/github/account.lengziyu.cn/scripts/send-telegram-reminders.mjs)
+
+### 最小配置
+
+去 GitHub 仓库：
+
+`Settings -> Secrets and variables -> Actions`
+
+至少添加这些 `Repository secrets`：
+
+```bash
+DATABASE_URL=你的 Supabase PostgreSQL 连接串
+TELEGRAM_BOT_TOKEN=你的 Telegram Bot Token
+TELEGRAM_CHAT_ID=你的 Telegram Chat ID
+```
+
+推荐再加：
+
+```bash
+APP_BASE_URL=https://你的正式域名
+TARGET_USER_EMAIL=你的登录账号（例如 admin）
+```
+
+说明：
+
+- `APP_BASE_URL` 用来在提醒消息里拼订阅详情链接
+- `TARGET_USER_EMAIL` 是可选的；如果你是单用户项目，不填也能跑
+- 工作流默认每天 `01:15 UTC` 执行一次
+- 也支持在 GitHub 页面手动 `Run workflow`
+- 手动运行时可选：
+  - `test`：直接发一条测试消息，不依赖订阅是否到期
+  - `normal`：按订阅规则正常扫描并推送
+
+### 本地手工验证
+
+你也可以在本地先跑一次同一套逻辑：
+
+```bash
+DATABASE_URL='你的 Supabase 连接串' \
+TELEGRAM_BOT_TOKEN='你的 Telegram Bot Token' \
+TELEGRAM_CHAT_ID='你的 Telegram Chat ID' \
+APP_BASE_URL='https://你的正式域名' \
+pnpm notify:telegram
+```
+
+如果只想看命中哪些提醒、不真的发送，可以：
+
+```bash
+DATABASE_URL='你的 Supabase 连接串' \
+TELEGRAM_BOT_TOKEN='你的 Telegram Bot Token' \
+TELEGRAM_CHAT_ID='你的 Telegram Chat ID' \
+DRY_RUN=1 \
+pnpm notify:telegram
+```
+
+如果想在本地直接发送一条测试消息，可以：
+
+```bash
+DATABASE_URL='你的 Supabase 连接串' \
+TELEGRAM_BOT_TOKEN='你的 Telegram Bot Token' \
+TELEGRAM_CHAT_ID='你的 Telegram Chat ID' \
+RUN_MODE=test \
+TEST_MESSAGE='这是一条手动测试消息' \
+pnpm notify:telegram
+```
+
+### 这个方案做了什么
+
+- 直接读取 PostgreSQL 里的订阅、提醒规则和续费决策
+- 只处理 `decision` 不是 `renew / skip` 的订阅
+- 按默认提醒规则或订阅级提醒规则命中后发送 Telegram
+- 写入 `NotificationDispatchLog`，避免同一天同一提醒节点重复推送
+
+这意味着：
+
+- 你不需要再依赖主服务器访问 Telegram
+- 页面内“测试发送”即使还失败，也不影响 GitHub Actions 定时提醒
+- 真正的生产提醒链路会独立于你当前服务器网络
+
 ## Vercel 接入
 
 1. 把仓库导入 Vercel

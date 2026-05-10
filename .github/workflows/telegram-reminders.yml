@@ -1,0 +1,56 @@
+name: Telegram Reminders
+
+on:
+  schedule:
+    - cron: "15 1 * * *"
+  workflow_dispatch:
+    inputs:
+      run_mode:
+        description: "执行模式：normal 为扫描订阅，test 为直接发测试消息"
+        required: true
+        default: "test"
+        type: choice
+        options:
+          - test
+          - normal
+      test_message:
+        description: "仅 test 模式使用，可选自定义测试消息"
+        required: false
+        type: string
+
+concurrency:
+  group: telegram-reminders
+  cancel-in-progress: false
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Telegram reminder scan
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          TARGET_USER_EMAIL: ${{ secrets.TARGET_USER_EMAIL }}
+          RUN_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.run_mode || 'normal' }}
+          TEST_MESSAGE: ${{ inputs.test_message }}
+        run: node scripts/send-telegram-reminders.mjs

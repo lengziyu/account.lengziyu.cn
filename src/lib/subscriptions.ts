@@ -260,16 +260,29 @@ async function sendTelegramMessage(payload: NotificationChannelConfig, text: str
     text,
   })
 
-  let response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  })
+  let response: Response
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    })
+  } catch (error: any) {
+    throw new Error(
+      `服务器无法连接 Telegram API（api.telegram.org）：${error?.message || "网络请求失败"}`
+    )
+  }
 
   if (!response.ok) {
-    response = await fetch(`${endpoint}?${body.toString()}`, {
-      method: "GET",
-    })
+    try {
+      response = await fetch(`${endpoint}?${body.toString()}`, {
+        method: "GET",
+      })
+    } catch (error: any) {
+      throw new Error(
+        `服务器无法连接 Telegram API（api.telegram.org）：${error?.message || "网络请求失败"}`
+      )
+    }
   }
 
   const rawText = await response.text()
