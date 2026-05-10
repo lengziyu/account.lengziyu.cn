@@ -3,6 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { StatsOverviewChart } from "@/components/settings/StatsOverviewChart";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Skeleton } from "@/components/ui/Skeleton";
 import {
@@ -93,6 +94,8 @@ export default function SettingsPage() {
     {
       icon: <LayoutGrid className="w-5 h-5" />,
       iconClassName: "text-brandIndigo",
+      cardClassName:
+        "border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-indigo-100/70 dark:border-indigo-400/10 dark:from-indigo-500/14 dark:via-white/5 dark:to-indigo-500/8",
       value: stats?.totalItems,
       label: "库内记录",
       onClick: () => router.push("/dashboard"),
@@ -100,6 +103,8 @@ export default function SettingsPage() {
     {
       icon: <Tags className="w-5 h-5" />,
       iconClassName: "text-emerald-500",
+      cardClassName:
+        "border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/70 dark:border-emerald-400/10 dark:from-emerald-500/14 dark:via-white/5 dark:to-emerald-500/8",
       value: stats?.totalTags,
       label: "平台标签",
       onClick: () => router.push("/settings/platforms"),
@@ -107,6 +112,8 @@ export default function SettingsPage() {
     {
       icon: <CreditCard className="w-5 h-5" />,
       iconClassName: "text-sky-500",
+      cardClassName:
+        "border-sky-100 bg-gradient-to-br from-sky-50 via-white to-sky-100/70 dark:border-sky-400/10 dark:from-sky-500/14 dark:via-white/5 dark:to-sky-500/8",
       value: stats?.totalSubscriptions,
       label: "订阅数",
       onClick: () => router.push("/subscriptions"),
@@ -114,6 +121,8 @@ export default function SettingsPage() {
     {
       icon: <BellRing className="w-5 h-5" />,
       iconClassName: "text-orange-500",
+      cardClassName:
+        "border-orange-100 bg-gradient-to-br from-orange-50 via-white to-orange-100/70 dark:border-orange-400/10 dark:from-orange-500/14 dark:via-white/5 dark:to-orange-500/8",
       value: stats?.dueSubscriptions,
       label: "即将到期数",
       onClick: () => router.push("/subscriptions"),
@@ -187,26 +196,42 @@ export default function SettingsPage() {
                   key={card.label}
                   type="button"
                   onClick={card.onClick}
-                  className="rounded-xl border border-white/70 bg-white/75 p-2.5 text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-transparent"
+                  className={`rounded-xl border p-3 text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md ${card.cardClassName}`}
                   style={{ animation: `fade-in-up 520ms ease-out ${index * 70}ms both` }}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className={card.iconClassName}>{card.icon}</div>
-                    <div className="text-base font-semibold leading-none text-gray-900 dark:text-textPrimary">
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-white/80 shadow-sm dark:bg-white/10 ${card.iconClassName}`}>{card.icon}</div>
+                    <div className="ml-auto text-right text-base font-semibold leading-none text-gray-900 dark:text-textPrimary">
                       <AnimatedCount value={card.value} />
                     </div>
                   </div>
-                  <div className="mt-1 text-[11px] text-gray-700 dark:text-textSecondary">{card.label}</div>
+                  <div className="mt-2 text-center text-[11px] text-gray-700 dark:text-textSecondary">{card.label}</div>
                 </button>
               ))}
             </div>
           )}
         </div>
 
+        {loadingStats || !stats ? (
+          <div className="mb-4 grid gap-4 lg:grid-cols-[220px_1fr]">
+            <Skeleton className="h-[260px] w-full rounded-xl" />
+            <Skeleton className="h-[260px] w-full rounded-xl" />
+          </div>
+        ) : (
+          <div className="mb-4">
+            <StatsOverviewChart
+              totalItems={stats.totalItems}
+              totalFavorites={stats.totalFavorites}
+              totalSubscriptions={stats.totalSubscriptions ?? 0}
+              dueSubscriptions={stats.dueSubscriptions ?? 0}
+            />
+          </div>
+        )}
+
         <div className="space-y-4">
           <button
             onClick={() => router.push("/settings/phones")}
-            className="flex w-full items-center justify-between rounded-xl border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-transparent dark:text-textPrimary dark:hover:bg-white/10"
+            className="flex w-full items-center justify-between rounded-xl border border-sky-100 bg-gradient-to-r from-white via-sky-50/75 to-cyan-50/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md dark:border-sky-400/10 dark:from-white/10 dark:via-sky-500/10 dark:to-cyan-500/10 dark:text-textPrimary dark:hover:bg-white/10"
           >
             <span className="inline-flex items-center">
               <Smartphone className="mr-2 h-5 w-5 text-brandIndigo" />
@@ -217,7 +242,7 @@ export default function SettingsPage() {
 
           <button
             onClick={() => router.push("/settings/platforms")}
-            className="flex w-full items-center justify-between rounded-xl border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-transparent dark:text-textPrimary dark:hover:bg-white/10"
+            className="flex w-full items-center justify-between rounded-xl border border-violet-100 bg-gradient-to-r from-white via-violet-50/75 to-fuchsia-50/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md dark:border-violet-400/10 dark:from-white/10 dark:via-violet-500/10 dark:to-fuchsia-500/10 dark:text-textPrimary dark:hover:bg-white/10"
           >
             <span className="inline-flex items-center">
               <Tags className="mr-2 h-5 w-5 text-brandIndigo" />
