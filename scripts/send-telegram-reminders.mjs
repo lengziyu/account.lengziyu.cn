@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import { PrismaClient } from "@prisma/client";
+import prismaPkg from "@prisma/client";
 
+const { PrismaClient } = prismaPkg;
 const prisma = new PrismaClient();
 
 const DEFAULT_REMINDER_DAYS = [7, 3, 1, 0];
