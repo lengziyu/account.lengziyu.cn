@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   BarElement,
   CategoryScale,
@@ -33,7 +32,6 @@ export function StatsOverviewChart({
     { label: "订阅总数", value: totalSubscriptions, color: "#10b981", hint: "当前录入的全部订阅项目" },
     { label: "即将到期", value: dueSubscriptions, color: "#ef4444", hint: "7 天内会进入提醒窗口的订阅" },
   ];
-  const [activeIndex, setActiveIndex] = useState(0);
 
   const chartData = {
     labels: segments.map((segment) => segment.label),
@@ -52,11 +50,6 @@ export function StatsOverviewChart({
     responsive: true,
     maintainAspectRatio: false,
     indexAxis: "y" as const,
-    onClick: (_: unknown, elements: { index: number }[]) => {
-      if (elements.length > 0) {
-        setActiveIndex(elements[0].index);
-      }
-    },
     plugins: {
       legend: {
         display: false,
@@ -98,41 +91,10 @@ export function StatsOverviewChart({
 
   return (
     <div className="rounded-xl border border-white/70 bg-gradient-to-br from-white/90 via-white/80 to-violet-50/70 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:from-white/10 dark:via-white/5 dark:to-violet-500/10">
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div>
-          <div className="mb-3 text-sm font-medium text-gray-900 dark:text-textPrimary">数据总览</div>
-          <div className="h-[220px]">
-            <Bar data={chartData} options={chartOptions} />
-          </div>
-        </div>
-
-        <div className="grid gap-3">
-          <div className="rounded-xl bg-slate-50/80 px-4 py-4 dark:bg-white/5">
-            <div className="text-[12px] text-gray-500 dark:text-textSecondary">{segments[activeIndex].label}</div>
-            <div className="mt-1 text-[30px] font-semibold text-gray-900 dark:text-textPrimary">{segments[activeIndex].value}</div>
-            <div className="mt-1 text-[11px] text-gray-500 dark:text-textTertiary">{segments[activeIndex].hint}</div>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            {segments.map((segment, index) => (
-              <button
-                key={segment.label}
-                type="button"
-                onClick={() => setActiveIndex(index)}
-                className={`rounded-xl border px-3 py-2 text-left transition ${
-                  activeIndex === index
-                    ? "border-brandIndigo/40 bg-brandIndigo/8"
-                    : "border-transparent bg-slate-50/70 hover:border-slate-200 dark:bg-white/5 dark:hover:border-white/10"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{ backgroundColor: segment.color }} />
-                  <span className="text-xs font-medium text-gray-800 dark:text-textPrimary">{segment.label}</span>
-                </div>
-                <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">{segment.hint}</div>
-              </button>
-            ))}
-          </div>
+      <div>
+        <div className="mb-3 text-sm font-medium text-gray-900 dark:text-textPrimary">数据总览</div>
+        <div className="h-[220px]">
+          <Bar data={chartData} options={chartOptions} />
         </div>
       </div>
     </div>

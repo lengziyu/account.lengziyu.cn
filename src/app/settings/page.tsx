@@ -95,7 +95,7 @@ export default function SettingsPage() {
       icon: <LayoutGrid className="w-5 h-5" />,
       iconClassName: "text-brandIndigo",
       cardClassName:
-        "border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-indigo-100/70 dark:border-indigo-400/10 dark:from-indigo-500/14 dark:via-white/5 dark:to-indigo-500/8",
+        "border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-indigo-100/70 dark:border-indigo-400/10 dark:from-indigo-500/10 dark:via-white/[0.035] dark:to-indigo-500/6",
       value: stats?.totalItems,
       label: "库内记录",
       onClick: () => router.push("/dashboard"),
@@ -104,7 +104,7 @@ export default function SettingsPage() {
       icon: <Tags className="w-5 h-5" />,
       iconClassName: "text-emerald-500",
       cardClassName:
-        "border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/70 dark:border-emerald-400/10 dark:from-emerald-500/14 dark:via-white/5 dark:to-emerald-500/8",
+        "border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/70 dark:border-emerald-400/10 dark:from-emerald-500/10 dark:via-white/[0.035] dark:to-emerald-500/6",
       value: stats?.totalTags,
       label: "平台标签",
       onClick: () => router.push("/settings/platforms"),
@@ -113,7 +113,7 @@ export default function SettingsPage() {
       icon: <CreditCard className="w-5 h-5" />,
       iconClassName: "text-sky-500",
       cardClassName:
-        "border-sky-100 bg-gradient-to-br from-sky-50 via-white to-sky-100/70 dark:border-sky-400/10 dark:from-sky-500/14 dark:via-white/5 dark:to-sky-500/8",
+        "border-sky-100 bg-gradient-to-br from-sky-50 via-white to-sky-100/70 dark:border-sky-400/10 dark:from-sky-500/10 dark:via-white/[0.035] dark:to-sky-500/6",
       value: stats?.totalSubscriptions,
       label: "订阅数",
       onClick: () => router.push("/subscriptions"),
@@ -122,7 +122,7 @@ export default function SettingsPage() {
       icon: <BellRing className="w-5 h-5" />,
       iconClassName: "text-orange-500",
       cardClassName:
-        "border-orange-100 bg-gradient-to-br from-orange-50 via-white to-orange-100/70 dark:border-orange-400/10 dark:from-orange-500/14 dark:via-white/5 dark:to-orange-500/8",
+        "border-orange-100 bg-gradient-to-br from-orange-50 via-white to-orange-100/70 dark:border-orange-400/10 dark:from-orange-500/10 dark:via-white/[0.035] dark:to-orange-500/6",
       value: stats?.dueSubscriptions,
       label: "即将到期数",
       onClick: () => router.push("/subscriptions"),
