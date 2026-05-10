@@ -60,6 +60,38 @@ function isPhoneIdentitySchemaMismatch(error: unknown) {
   )
 }
 
+function buildBaseItemSelect() {
+  return {
+    id: true,
+    userId: true,
+    identityId: true,
+    title: true,
+    displayTitle: true,
+    platform: true,
+    url: true,
+    username: true,
+    password: true,
+    category: true,
+    notes: true,
+    favorite: true,
+    createdAt: true,
+    updatedAt: true,
+    identity: {
+      select: {
+        id: true,
+        name: true,
+        identifier: true,
+        kind: true,
+        provider: true,
+      },
+    },
+    tags: {
+      where: { type: "custom" as const },
+      orderBy: [{ type: "asc" as const }, { tag: "asc" as const }],
+    },
+  }
+}
+
 async function syncMainIdentity(
   userId: string,
   itemId: string,
@@ -153,16 +185,8 @@ export async function GET(req: Request) {
                   }
                 : {}),
           },
-        include: {
-          identity: {
-            select: {
-              id: true,
-              name: true,
-              identifier: true,
-              kind: true,
-              provider: true,
-            },
-          },
+        select: {
+          ...buildBaseItemSelect(),
           ...(includePhoneIdentity
             ? {
                 phoneIdentity: {
@@ -175,10 +199,6 @@ export async function GET(req: Request) {
                 },
               }
             : {}),
-          tags: {
-            where: { type: "custom" },
-            orderBy: [{ type: "asc" }, { tag: "asc" }],
-          },
         },
         orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
       })

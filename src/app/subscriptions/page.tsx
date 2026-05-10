@@ -96,7 +96,7 @@ export default function SubscriptionsPage() {
           </div>
         </div>
 
-        <div className="mx-auto mb-6 grid max-w-3xl gap-4 sm:grid-cols-2">
+        <div className="mx-auto mb-6 grid w-full max-w-3xl grid-cols-2 gap-4">
           <div className="rounded-[18px] border border-gray-100 bg-white p-5 shadow-sm dark:border-[rgba(255,255,255,0.06)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none">
             <div className="text-xs text-gray-500 dark:text-textSecondary">总订阅数</div>
             <div className="mt-2 text-3xl font-semibold text-gray-900 dark:text-textPrimary">{data?.summary.total ?? "-"}</div>

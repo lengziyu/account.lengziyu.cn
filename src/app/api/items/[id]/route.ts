@@ -56,6 +56,30 @@ function isPhoneIdentitySchemaMismatch(error: unknown) {
   )
 }
 
+function buildItemDetailSelect() {
+  return {
+    id: true,
+    userId: true,
+    identityId: true,
+    title: true,
+    displayTitle: true,
+    platform: true,
+    url: true,
+    username: true,
+    password: true,
+    category: true,
+    notes: true,
+    favorite: true,
+    createdAt: true,
+    updatedAt: true,
+    identity: true,
+    tags: {
+      where: { type: "custom" as const },
+      orderBy: [{ type: "asc" as const }, { tag: "asc" as const }],
+    },
+  }
+}
+
 async function getMainIdentity(userId: string, itemId: string) {
   return prisma.identity.findFirst({
     where: {
@@ -123,13 +147,9 @@ export async function GET(
           id: params.id,
           userId: user.id,
         },
-        include: {
-          identity: true,
+        select: {
+          ...buildItemDetailSelect(),
           ...(includePhoneIdentity ? { phoneIdentity: true } : {}),
-          tags: {
-            where: { type: "custom" },
-            orderBy: [{ type: "asc" }, { tag: "asc" }],
-          },
         },
       })
 
