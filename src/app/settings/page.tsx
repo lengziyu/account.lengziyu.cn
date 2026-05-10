@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { StatsOverviewChart } from "@/components/settings/StatsOverviewChart";
 import {
   LogOut,
   LayoutGrid,
@@ -96,7 +95,6 @@ export default function SettingsPage() {
       iconClassName: "text-brandIndigo",
       value: stats?.totalItems,
       label: "库内记录",
-      hint: "查看全部账号",
       onClick: () => router.push("/dashboard"),
     },
     {
@@ -104,7 +102,6 @@ export default function SettingsPage() {
       iconClassName: "text-emerald-500",
       value: stats?.totalTags,
       label: "平台标签",
-      hint: "管理平台标签",
       onClick: () => router.push("/settings/platforms"),
     },
     {
@@ -112,7 +109,6 @@ export default function SettingsPage() {
       iconClassName: "text-sky-500",
       value: stats?.totalSubscriptions,
       label: "订阅数",
-      hint: "进入订阅中心",
       onClick: () => router.push("/subscriptions"),
     },
     {
@@ -120,7 +116,6 @@ export default function SettingsPage() {
       iconClassName: "text-orange-500",
       value: stats?.dueSubscriptions,
       label: "即将到期数",
-      hint: "查看到期提醒",
       onClick: () => router.push("/subscriptions"),
     },
   ];
@@ -130,12 +125,12 @@ export default function SettingsPage() {
       <div className="min-h-screen bg-transparent px-4 py-8">
         <div className="mx-auto max-w-[920px] space-y-4">
           <Skeleton className="h-10 w-40" />
-          <Skeleton className="h-24 w-full" />
-          <div className="grid grid-cols-2 gap-4">
-            <Skeleton className="h-28 w-full" />
-            <Skeleton className="h-28 w-full" />
-            <Skeleton className="h-28 w-full" />
-            <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-20 w-full rounded-xl" />
+          <div className="grid grid-cols-4 gap-2">
+            <Skeleton className="h-20 w-full rounded-xl" />
+            <Skeleton className="h-20 w-full rounded-xl" />
+            <Skeleton className="h-20 w-full rounded-xl" />
+            <Skeleton className="h-20 w-full rounded-xl" />
           </div>
         </div>
       </div>
@@ -145,29 +140,29 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eef4ff_0%,#f8fafc_42%,#f3f0ff_100%)] px-4 py-6 transition-colors dark:bg-[radial-gradient(circle_at_top,#1c2238_0%,#171b2b_48%,#1a1630_100%)]">
       <div className="mx-auto w-full max-w-[920px]">
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <h1 className="text-[24px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">个人中心</h1>
-            <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">常用入口、库内统计和提醒概览。</p>
+            <h1 className="text-[20px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">个人中心</h1>
+            <p className="mt-1 text-[11px] text-gray-500 dark:text-textSecondary">常用入口和账号概览。</p>
           </div>
           <ThemeToggle />
         </div>
 
-        <div className="mb-5 rounded-[24px] border border-white/70 bg-white/75 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+        <div className="mb-3 rounded-xl border border-white/70 bg-white/75 p-2.5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brandIndigo/12 text-brandIndigo dark:bg-brandIndigo/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brandIndigo/12 text-brandIndigo dark:bg-brandIndigo/20">
               <User className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[11px] text-gray-500 dark:text-textTertiary">当前登录账号</p>
-              <p className="truncate text-[15px] font-semibold text-gray-900 dark:text-textPrimary">
+              <p className="truncate text-sm font-semibold text-gray-900 dark:text-textPrimary">
                 {session.user?.email || "未知用户"}
               </p>
             </div>
             <button
               type="button"
               onClick={() => router.push(`/dashboard?tag=${encodeURIComponent("收藏")}`)}
-              className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700 transition hover:bg-orange-100 dark:border-orange-400/20 dark:bg-orange-500/10 dark:text-orange-300 dark:hover:bg-orange-500/15"
+              className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-2.5 py-2 text-xs text-orange-700 transition hover:bg-orange-100 dark:border-orange-400/20 dark:bg-orange-500/10 dark:text-orange-300 dark:hover:bg-orange-500/15"
             >
               <Star className="h-4 w-4" fill="currentColor" />
               <span className="font-medium">
@@ -178,50 +173,38 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="mb-5">
+        <div className="mb-4">
           {loadingStats || !stats ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-4 gap-2">
               {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} className="h-[120px] w-full rounded-[22px]" />
+                <Skeleton key={index} className="h-[76px] w-full rounded-xl" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-4 gap-2">
               {statCards.map((card, index) => (
                 <button
                   key={card.label}
                   type="button"
                   onClick={card.onClick}
-                  className="rounded-[22px] border border-white/70 bg-white/75 p-5 text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/5"
+                  className="rounded-xl border border-white/70 bg-white/75 p-2.5 text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/5"
                   style={{ animation: `fade-in-up 520ms ease-out ${index * 70}ms both` }}
                 >
-                  <div className={`mb-3 ${card.iconClassName}`}>{card.icon}</div>
-                  <div className="text-[26px] font-semibold leading-none text-gray-900 dark:text-textPrimary">
+                  <div className={`mb-1.5 ${card.iconClassName}`}>{card.icon}</div>
+                  <div className="text-base font-semibold leading-none text-gray-900 dark:text-textPrimary">
                     <AnimatedCount value={card.value} />
                   </div>
-                  <div className="mt-2 text-sm text-gray-700 dark:text-textSecondary">{card.label}</div>
-                  <div className="mt-1 text-xs text-gray-500 dark:text-textTertiary">{card.hint}</div>
+                  <div className="mt-1 text-[11px] text-gray-700 dark:text-textSecondary">{card.label}</div>
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {stats ? (
-          <div className="mb-5">
-            <StatsOverviewChart
-              totalItems={stats.totalItems}
-              totalFavorites={stats.totalFavorites}
-              totalSubscriptions={stats.totalSubscriptions || 0}
-              dueSubscriptions={stats.dueSubscriptions || 0}
-            />
-          </div>
-        ) : null}
-
         <div className="space-y-4">
           <button
             onClick={() => router.push("/settings/phones")}
-            className="flex w-full items-center justify-between rounded-[18px] border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary dark:hover:bg-white/10"
+            className="flex w-full items-center justify-between rounded-xl border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary dark:hover:bg-white/10"
           >
             <span className="inline-flex items-center">
               <Smartphone className="mr-2 h-5 w-5 text-brandIndigo" />
@@ -232,7 +215,7 @@ export default function SettingsPage() {
 
           <button
             onClick={() => router.push("/settings/platforms")}
-            className="flex w-full items-center justify-between rounded-[18px] border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary dark:hover:bg-white/10"
+            className="flex w-full items-center justify-between rounded-xl border border-white/70 bg-white/75 px-4 py-4 text-gray-800 shadow-sm backdrop-blur transition hover:bg-white/90 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary dark:hover:bg-white/10"
           >
             <span className="inline-flex items-center">
               <Tags className="mr-2 h-5 w-5 text-brandIndigo" />
@@ -243,7 +226,7 @@ export default function SettingsPage() {
 
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex w-full items-center justify-center rounded-[18px] bg-red-50 px-4 py-4 font-medium text-red-600 transition hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+            className="flex w-full items-center justify-center rounded-xl bg-red-50 px-4 py-4 font-medium text-red-600 transition hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
           >
             <LogOut className="mr-2 h-5 w-5" />
             安全退出当前账号

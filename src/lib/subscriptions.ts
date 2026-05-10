@@ -252,17 +252,25 @@ export function buildSubscriptionMessage(
 }
 
 async function sendTelegramMessage(payload: NotificationChannelConfig, text: string) {
-  const response = await fetch(
-    `https://api.telegram.org/bot${payload.botToken}/sendMessage`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: payload.chatId,
-        text,
-      }),
-    }
-  )
+  const botToken = payload.botToken?.trim()
+  const chatId = payload.chatId?.trim()
+  const endpoint = `https://api.telegram.org/bot${encodeURIComponent(botToken || "")}/sendMessage`
+  const body = new URLSearchParams({
+    chat_id: chatId || "",
+    text,
+  })
+
+  let response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  })
+
+  if (!response.ok) {
+    response = await fetch(`${endpoint}?${body.toString()}`, {
+      method: "GET",
+    })
+  }
 
   const rawText = await response.text()
   let data: { ok?: boolean; description?: string } | null = null
@@ -273,11 +281,33 @@ async function sendTelegramMessage(payload: NotificationChannelConfig, text: str
   }
 
   if (!response.ok) {
-    throw new Error(data?.description || rawText || "Telegram 推送失败")
+    let reason = data?.description || rawText || "Telegram 推送失败"
+    try {
+      const verify = await fetch(`https://api.telegram.org/bot${encodeURIComponent(botToken || "")}/getMe`)
+      const verifyText = await verify.text()
+      let verifyData: { ok?: boolean; description?: string } | null = null
+      try {
+        verifyData = verifyText ? JSON.parse(verifyText) : null
+      } catch {
+        verifyData = null
+      }
+
+      if (!verify.ok || verifyData?.ok === false) {
+        reason = verifyData?.description || reason
+      } else {
+        reason = `${reason}。Bot Token 可用，请确认机器人已加入目标会话，并且 chatId 正确。`
+      }
+    } catch {
+      // ignore secondary verification failures
+    }
+
+    throw new Error(reason)
   }
 
   if (data && data.ok === false) {
-    throw new Error(data.description || "Telegram 推送失败")
+    throw new Error(
+      `${data.description || "Telegram 推送失败"}。如果 Token 无误，请确认机器人已加入目标会话，并使用正确的 chatId。`
+    )
   }
 }
 

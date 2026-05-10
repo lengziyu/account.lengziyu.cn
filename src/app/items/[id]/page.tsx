@@ -307,7 +307,7 @@ export default function ItemDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-marketingBlack flex items-center justify-center transition-colors">
+      <div className="min-h-screen bg-transparent flex items-center justify-center transition-colors">
         <svg className="animate-spin h-8 w-8 text-brandIndigo" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -317,8 +317,8 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <div className="h-[100dvh] bg-gray-50 dark:bg-marketingBlack flex flex-col overflow-hidden transition-colors">
-      <div className="w-full border-b border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
+    <div className="h-[100dvh] bg-transparent flex flex-col overflow-hidden transition-colors">
+      <div className="w-full border-b border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/90 dark:bg-[rgba(255,255,255,0.04)] backdrop-blur">
         <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -348,7 +348,7 @@ export default function ItemDetailPage() {
 
           <form id="edit-item-form" onSubmit={handleSubmit} className="space-y-5 pb-6">
           <section className="space-y-3">
-            <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-violet-50/80 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:from-[rgba(255,255,255,0.04)] dark:to-[rgba(168,85,247,0.12)] dark:shadow-none">
+            <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-white to-violet-50/80 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:from-[rgba(255,255,255,0.04)] dark:to-[rgba(168,85,247,0.12)] dark:shadow-none">
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -516,12 +516,12 @@ export default function ItemDetailPage() {
         </div>
       </div>
 
-      <div className="w-full border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
-        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-2.5 flex justify-between items-center gap-2">
+      <div className="sticky bottom-0 z-20 w-full border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/92 dark:bg-[rgba(255,255,255,0.05)] backdrop-blur">
+        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-3 flex justify-between items-center gap-2">
           <button
             type="button"
             onClick={() => setConfirmingDelete(true)}
-            className="flex items-center rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"
+            className="flex items-center rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"
             disabled={saving}
           >
             <Trash2 className="w-4 h-4 mr-2" />
@@ -529,7 +529,7 @@ export default function ItemDetailPage() {
           </button>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => router.back()} disabled={saving}>取消</Button>
-            <Button form="edit-item-form" type="submit" disabled={saving} variant="brand">{saving ? "保存中..." : "保存修改"}</Button>
+            <Button form="edit-item-form" type="submit" disabled={saving} loading={saving} variant="brand">保存修改</Button>
           </div>
         </div>
       </div>

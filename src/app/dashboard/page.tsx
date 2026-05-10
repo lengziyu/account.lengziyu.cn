@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
+import { Skeleton } from "@/components/ui/Skeleton"
 import { User, KeyRound, CheckCircle2, Fingerprint, BellRing } from "lucide-react"
 
 type ItemTag = {
@@ -54,6 +55,8 @@ export default function DashboardPage() {
   const [dueSubscriptions, setDueSubscriptions] = useState<DueSubscription[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [activeTag, setActiveTag] = useState(ALL_TAG_FILTER)
+  const [loadingItems, setLoadingItems] = useState(true)
+  const [loadingDueSubscriptions, setLoadingDueSubscriptions] = useState(true)
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -73,16 +76,26 @@ export default function DashboardPage() {
   }, [status, search])
 
   const fetchItems = async () => {
+    setLoadingItems(true)
     const res = await fetch(`/api/items?search=${encodeURIComponent(search)}`)
-    if (!res.ok) return
+    if (!res.ok) {
+      setLoadingItems(false)
+      return
+    }
     setItems(await res.json())
+    setLoadingItems(false)
   }
 
   const fetchDueSubscriptions = async () => {
+    setLoadingDueSubscriptions(true)
     const res = await fetch("/api/subscriptions?dueWithin=7&limit=4")
-    if (!res.ok) return
+    if (!res.ok) {
+      setLoadingDueSubscriptions(false)
+      return
+    }
     const data = (await res.json()) as { items?: DueSubscription[] }
     setDueSubscriptions(data.items || [])
+    setLoadingDueSubscriptions(false)
   }
 
   useEffect(() => {
@@ -198,7 +211,7 @@ export default function DashboardPage() {
     return (
       <div
         key={item.id}
-        className="group bg-white dark:bg-[rgba(255,255,255,0.03)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] hover:border-gray-200 dark:hover:bg-[rgba(255,255,255,0.05)] shadow-sm dark:shadow-none transition-all rounded-[12px] p-3.5 cursor-pointer relative overflow-hidden"
+        className="group bg-white dark:bg-[rgba(255,255,255,0.03)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] hover:border-gray-200 dark:hover:bg-[rgba(255,255,255,0.05)] shadow-sm dark:shadow-none transition-all rounded-xl p-3.5 cursor-pointer relative overflow-hidden"
         onClick={() => router.push(`/items/${item.id}`)}
       >
         <div className="flex items-start gap-3">
@@ -266,7 +279,7 @@ export default function DashboardPage() {
     return (
       <div
         key={group.main.id}
-        className="flex h-full flex-col rounded-[20px] border border-gray-200 bg-white/90 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none"
+        className="flex h-full flex-col rounded-xl border border-gray-200 bg-white/90 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.03)] dark:shadow-none"
       >
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -285,7 +298,7 @@ export default function DashboardPage() {
         </div>
 
         {group.children.length === 0 ? (
-          <div className="mt-3 rounded-2xl border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-[rgba(255,255,255,0.08)] dark:text-textTertiary">
+          <div className="mt-3 rounded-xl border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-[rgba(255,255,255,0.08)] dark:text-textTertiary">
             这个主账号下面暂时还没有挂子账号。
           </div>
         ) : null}
@@ -316,11 +329,43 @@ export default function DashboardPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-transparent flex items-center justify-center transition-colors">
-        <svg className="animate-spin h-8 w-8 text-brandIndigo" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+      <div className="w-full px-4 pt-5 md:pt-6 transition-colors">
+        <div className="mx-auto w-full max-w-[900px]">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 rounded-lg" />
+                <Skeleton className="h-3 w-44 rounded-lg" />
+              </div>
+            </div>
+            <Skeleton className="h-9 w-9 rounded-xl" />
+          </div>
+          <Skeleton className="mb-5 h-12 w-full rounded-xl" />
+          <div className="mb-6 rounded-xl border border-white/70 bg-white/75 p-3 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className="h-8 w-20 rounded-full" />
+              ))}
+            </div>
+          </div>
+          <div className="mb-8 rounded-xl border border-orange-200/60 bg-white/60 p-5 shadow-sm backdrop-blur dark:border-orange-400/15 dark:bg-white/5">
+            <Skeleton className="h-5 w-40 rounded-lg" />
+            <Skeleton className="mt-3 h-4 w-64 rounded-lg" />
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-[150px] w-full rounded-xl" />
+            <Skeleton className="h-[150px] w-full rounded-xl" />
+            <div className="grid gap-4 xl:grid-cols-2">
+              <Skeleton className="h-[112px] w-full rounded-xl" />
+              <Skeleton className="h-[112px] w-full rounded-xl" />
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -328,7 +373,7 @@ export default function DashboardPage() {
   return (
     <div className="w-full flex flex-col items-center pt-5 md:pt-6 px-4 transition-colors">
       <div className="w-full max-w-[900px]">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-5">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brandIndigo to-accentHover flex items-center justify-center shadow-md shadow-brandIndigo/20">
               <Fingerprint className="w-5 h-5 text-white" />
@@ -355,7 +400,8 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="mb-6 flex flex-wrap gap-2">
+        <div className="sticky top-2 z-20 mb-5 rounded-xl border border-white/70 bg-[rgba(248,250,252,0.9)] px-3 py-3 shadow-sm backdrop-blur dark:border-white/10 dark:bg-[rgba(19,24,36,0.84)]">
+          <div className="flex flex-wrap gap-2">
           {[ALL_TAG_FILTER, ...topTags, FAVORITES_TAG_FILTER].map((tag) => (
             <button
               key={tag}
@@ -370,10 +416,20 @@ export default function DashboardPage() {
               {tag}
             </button>
           ))}
+          </div>
         </div>
 
-        {dueSubscriptions.length > 0 ? (
-          <div className="mb-8 rounded-[18px] border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-5 shadow-sm dark:border-orange-400/20 dark:from-orange-500/10 dark:to-[rgba(255,255,255,0.03)] dark:shadow-none">
+        {loadingDueSubscriptions ? (
+          <div className="mb-8 rounded-xl border border-orange-200/60 bg-white/60 p-5 shadow-sm backdrop-blur dark:border-orange-400/15 dark:bg-white/5">
+            <Skeleton className="h-5 w-40 rounded-lg" />
+            <Skeleton className="mt-3 h-4 w-64 rounded-lg" />
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+            </div>
+          </div>
+        ) : dueSubscriptions.length > 0 ? (
+          <div className="mb-8 rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-5 shadow-sm dark:border-orange-400/20 dark:from-orange-500/10 dark:to-[rgba(255,255,255,0.03)] dark:shadow-none">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-1 text-[11px] text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
@@ -399,7 +455,7 @@ export default function DashboardPage() {
                   key={subscription.id}
                   type="button"
                   onClick={() => router.push(`/subscriptions/${subscription.id}`)}
-                  className="rounded-2xl border border-orange-100 bg-white/90 px-4 py-3 text-left transition hover:border-orange-300 dark:border-orange-400/10 dark:bg-[rgba(255,255,255,0.04)]"
+                  className="rounded-xl border border-orange-100 bg-white/90 px-4 py-3 text-left transition hover:border-orange-300 dark:border-orange-400/10 dark:bg-[rgba(255,255,255,0.04)]"
                 >
                   <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">
                     {subscription.platformName} / {subscription.planName}
@@ -419,7 +475,7 @@ export default function DashboardPage() {
           </div>
         ) : null}
 
-        {favorites.length > 0 && !search ? (
+        {!loadingItems && favorites.length > 0 && !search ? (
           <div className="mb-10">
             <h2 className="text-[14px] font-[510] text-gray-400 dark:text-textSecondary mb-4">收藏账号</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -428,7 +484,22 @@ export default function DashboardPage() {
           </div>
         ) : null}
 
-        {filteredItems.length > 0 ? (
+        {loadingItems ? (
+          <section>
+            <div className="mb-8">
+              <Skeleton className="h-5 w-28 rounded-lg" />
+              <div className="mt-4 space-y-4">
+                <Skeleton className="h-[220px] w-full rounded-xl" />
+                <Skeleton className="h-[220px] w-full rounded-xl" />
+              </div>
+            </div>
+            <Skeleton className="h-5 w-24 rounded-lg" />
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+              <Skeleton className="h-[120px] w-full rounded-xl" />
+              <Skeleton className="h-[120px] w-full rounded-xl" />
+            </div>
+          </section>
+        ) : filteredItems.length > 0 ? (
           <section>
             {mainGroups.length > 0 ? (
               <div className="mb-8">
@@ -444,7 +515,7 @@ export default function DashboardPage() {
             {renderStandaloneSection()}
           </section>
         ) : (
-          <div className="text-[13px] text-gray-500 dark:text-textTertiary py-10 text-center bg-[rgba(255,255,255,0.5)] dark:bg-[rgba(255,255,255,0.01)] rounded-2xl border border-dashed border-gray-200 dark:border-[rgba(255,255,255,0.1)] mt-6">
+          <div className="mt-6 rounded-xl border border-dashed border-gray-200 bg-[rgba(255,255,255,0.5)] py-10 text-center text-[13px] text-gray-500 dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.01)] dark:text-textTertiary">
             没有找到匹配记录。
           </div>
         )}

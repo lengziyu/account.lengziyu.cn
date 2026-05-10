@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Bell, RefreshCcw, Send, Trash2 } from "lucide-react"
+import { Bell, Plus, RefreshCcw, Send, Trash2, X } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { Button } from "@/components/ui/Button"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
@@ -64,6 +64,7 @@ export default function NotificationSettingsPage() {
   const [scanPreview, setScanPreview] = useState<ScanPreview | null>(null)
   const [deletingChannel, setDeletingChannel] = useState<NotificationChannel | null>(null)
   const [confirmingClear, setConfirmingClear] = useState(false)
+  const [editorOpen, setEditorOpen] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
   const [activeAction, setActiveAction] = useState<"" | "rules" | "scan" | "test-form" | "test-channel" | "save-channel" | "delete-channel">("")
 
@@ -101,6 +102,12 @@ export default function NotificationSettingsPage() {
     setForm(emptyForm)
   }
 
+  const openCreateEditor = () => {
+    resetForm()
+    setMessage("")
+    setEditorOpen(true)
+  }
+
   const applyChannelToForm = (channel: NotificationChannel) => {
     setForm({
       id: channel.id,
@@ -113,6 +120,7 @@ export default function NotificationSettingsPage() {
       secret: channel.config.secret || "",
     })
     setMessage("")
+    setEditorOpen(true)
   }
 
   const hasFormValue =
@@ -179,6 +187,7 @@ export default function NotificationSettingsPage() {
 
     setMessage(form.id ? "通知渠道已更新" : "通知渠道已新增")
     resetForm()
+    setEditorOpen(false)
     await Promise.all([fetchChannels(), fetchScanPreview()])
   }
 
@@ -253,16 +262,16 @@ export default function NotificationSettingsPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-24">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-[24px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">提醒与推送</h1>
+            <h1 className="text-[20px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">提醒与推送</h1>
             <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
-              渠道、提醒规则和扫描预览都在这里处理。
+              渠道、规则和扫描预览。
             </p>
           </div>
           <ThemeToggle />
         </div>
 
         {message ? (
-          <div className="mb-4 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.03)] dark:text-textSecondary dark:shadow-none">
+          <div className="mb-4 rounded-xl border border-gray-200/80 bg-white/85 px-4 py-3 text-sm text-gray-700 shadow-sm backdrop-blur dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.03)] dark:text-textSecondary dark:shadow-none">
             {message}
           </div>
         ) : null}
@@ -270,19 +279,27 @@ export default function NotificationSettingsPage() {
         {pageLoading ? (
           <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
             <div className="space-y-5">
-              <Skeleton className="h-28 w-full rounded-[26px]" />
-              <Skeleton className="h-24 w-full rounded-[26px]" />
-              <Skeleton className="h-40 w-full rounded-[26px]" />
-              <Skeleton className="h-36 w-full rounded-[26px]" />
+              <Skeleton className="h-28 w-full rounded-xl" />
+              <Skeleton className="h-24 w-full rounded-xl" />
+              <Skeleton className="h-40 w-full rounded-xl" />
+              <Skeleton className="h-36 w-full rounded-xl" />
             </div>
             <div className="space-y-5">
-              <Skeleton className="h-[340px] w-full rounded-[26px]" />
-              <Skeleton className="h-[240px] w-full rounded-[26px]" />
+              <Skeleton className="h-[220px] w-full rounded-xl" />
+              <div className="space-y-3 rounded-xl border border-white/70 bg-white/70 p-4 backdrop-blur dark:border-white/10 dark:bg-white/5">
+                <Skeleton className="h-5 w-32 rounded-lg" />
+                <Skeleton className="h-11 w-full rounded-xl" />
+                <Skeleton className="h-11 w-full rounded-xl" />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                </div>
+              </div>
             </div>
           </div>
         ) : (
         <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-          <section className="rounded-[24px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+          <section className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">默认提醒规则</h2>
@@ -313,7 +330,7 @@ export default function NotificationSettingsPage() {
               })}
             </div>
 
-            <div className="mt-6 flex items-center justify-between rounded-2xl border border-white/70 bg-white/45 px-4 py-4 dark:border-white/10 dark:bg-white/5">
+            <div className="mt-6 flex items-center justify-between rounded-xl border border-white/70 bg-white/45 px-4 py-4 dark:border-white/10 dark:bg-white/5">
               <div>
                 <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">手动执行一次扫描</div>
                 <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
@@ -326,7 +343,7 @@ export default function NotificationSettingsPage() {
               </Button>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-white/70 bg-white/45 px-4 py-4 dark:border-white/10 dark:bg-white/5">
+            <div className="mt-4 rounded-xl border border-white/70 bg-white/45 px-4 py-4 dark:border-white/10 dark:bg-white/5">
               <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">当前扫描预览</div>
               <div className="mt-2 text-xs text-gray-500 dark:text-textSecondary">
                 待触发订阅：{scanPreview?.totalCandidates ?? 0}
@@ -335,7 +352,7 @@ export default function NotificationSettingsPage() {
                 {scanPreview?.results.flatMap((result) => result.items).slice(0, 5).map((item) => (
                   <div key={item.id} className="rounded-xl bg-white/70 px-3 py-3 text-sm backdrop-blur dark:bg-white/5">
                     <div className="font-medium text-gray-900 dark:text-textPrimary">
-                      {item.platformName} / {item.planName}
+                      {item.planName ? `${item.platformName} / ${item.planName}` : item.platformName}
                     </div>
                     <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
                       还有 {item.daysUntilExpiry} 天到期，目标渠道 {item.channels.length} 个
@@ -352,122 +369,7 @@ export default function NotificationSettingsPage() {
           </section>
 
           <div className="space-y-5">
-            <section className="rounded-[24px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">通知渠道</h2>
-                  <p className="mt-2 text-xs text-gray-500 dark:text-textSecondary">支持 Telegram 和飞书群机器人。</p>
-                </div>
-                <Button type="button" variant="outline" onClick={() => testChannel()} disabled={saving} loading={activeAction === "test-form"}>
-                  <Send className="w-4 h-4 mr-2" />
-                  测试表单配置
-                </Button>
-              </div>
-
-              <div className="mt-4 space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">渠道类型</span>
-                    <select
-                      value={form.type}
-                      onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))}
-                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
-                    >
-                      {NOTIFICATION_CHANNEL_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="block">
-                    <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">显示名称</span>
-                    <input
-                      value={form.name}
-                      onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                      placeholder="例如 主 Telegram 群"
-                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
-                    />
-                  </label>
-                </div>
-
-                {form.type === "telegram" ? (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="block">
-                      <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">Bot Token</span>
-                      <input
-                        value={form.botToken}
-                        onChange={(event) => setForm((prev) => ({ ...prev, botToken: event.target.value }))}
-                        placeholder="123456:AA..."
-                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">Chat ID</span>
-                      <input
-                        value={form.chatId}
-                        onChange={(event) => setForm((prev) => ({ ...prev, chatId: event.target.value }))}
-                        placeholder="-100xxxxxxxx"
-                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
-                      />
-                    </label>
-                  </div>
-                ) : (
-                  <div className="grid gap-4">
-                    <label className="block">
-                      <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">Webhook URL</span>
-                      <input
-                        value={form.webhookUrl}
-                        onChange={(event) => setForm((prev) => ({ ...prev, webhookUrl: event.target.value }))}
-                        placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/..."
-                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">签名 Secret（可选）</span>
-                      <input
-                        value={form.secret}
-                        onChange={(event) => setForm((prev) => ({ ...prev, secret: event.target.value }))}
-                        placeholder="如开启签名校验，则填写"
-                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
-                      />
-                    </label>
-                  </div>
-                )}
-
-                <label className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 dark:border-[rgba(255,255,255,0.08)]">
-                  <div className="text-sm text-gray-900 dark:text-textPrimary">启用这个渠道</div>
-                  <input
-                    type="checkbox"
-                    checked={form.enabled}
-                    onChange={(event) => setForm((prev) => ({ ...prev, enabled: event.target.checked }))}
-                    className="h-4 w-4 accent-brandIndigo"
-                  />
-                </label>
-
-                <div className="flex flex-wrap gap-3">
-                  <Button type="button" variant="brand" onClick={saveChannel} disabled={saving} loading={activeAction === "save-channel"}>
-                    {form.id ? "更新渠道" : "新增渠道"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="warning"
-                    onClick={() => {
-                      if (!hasFormValue) {
-                        resetForm()
-                        return
-                      }
-                      setConfirmingClear(true)
-                    }}
-                    disabled={saving}
-                  >
-                    清空表单
-                  </Button>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-[24px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+            <section className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-brandIndigo" />
                 <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">已配置渠道</h2>
@@ -484,7 +386,7 @@ export default function NotificationSettingsPage() {
                       key={channel.id}
                       type="button"
                       onClick={() => applyChannelToForm(channel)}
-                      className="w-full rounded-2xl border border-gray-200 px-4 py-4 text-left transition hover:border-brandIndigo/40 hover:bg-gray-50/60 dark:border-[rgba(255,255,255,0.08)] dark:hover:bg-white/5"
+                      className="w-full rounded-xl border border-gray-200 bg-white/60 px-4 py-4 text-left transition hover:border-brandIndigo/40 hover:bg-gray-50/60 dark:border-[rgba(255,255,255,0.08)] dark:bg-white/5 dark:hover:bg-white/10"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
@@ -513,6 +415,9 @@ export default function NotificationSettingsPage() {
                           >
                             测试
                           </Button>
+                          <span className="hidden rounded-lg border border-white/80 bg-white/70 px-2 py-1 text-[11px] text-gray-500 backdrop-blur sm:inline dark:border-white/10 dark:bg-white/5 dark:text-textSecondary">
+                            点击编辑
+                          </span>
                           <button
                             type="button"
                             aria-label={`删除 ${channel.name}`}
@@ -533,10 +438,171 @@ export default function NotificationSettingsPage() {
                 )}
               </div>
             </section>
+
+            <section className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">通知渠道</h2>
+                  <p className="mt-2 text-xs text-gray-500 dark:text-textSecondary">支持 Telegram 和飞书群机器人。</p>
+                </div>
+                <Button type="button" variant="brand" onClick={openCreateEditor}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  新增渠道
+                </Button>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-dashed border-white/70 bg-white/45 px-4 py-4 text-sm text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-textSecondary">
+                点击上方新增，或直接点“已配置渠道”卡片进入编辑弹框。测试失败时，页面顶部会展示接口返回的具体原因。
+              </div>
+            </section>
           </div>
         </div>
         )}
       </div>
+
+      {editorOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/35 backdrop-blur-[2px]"
+            aria-label="关闭渠道编辑弹窗"
+            onClick={saving ? undefined : () => setEditorOpen(false)}
+          />
+          <div className="relative w-full max-w-2xl rounded-xl border border-white/80 bg-white/92 p-5 shadow-2xl backdrop-blur dark:border-white/10 dark:bg-[#171b28]/95">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-textPrimary">
+                  {form.id ? "编辑渠道" : "新增渠道"}
+                </h2>
+                <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
+                  {form.id ? "调整当前通知渠道配置。" : "填写一个新的通知渠道配置。"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditorOpen(false)}
+                disabled={saving}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:bg-gray-50 dark:border-white/10 dark:text-textSecondary dark:hover:bg-white/5"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">渠道类型</span>
+                  <select
+                    value={form.type}
+                    onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
+                  >
+                    {NOTIFICATION_CHANNEL_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">显示名称</span>
+                  <input
+                    value={form.name}
+                    onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                    placeholder="例如 主 Telegram 群"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
+                  />
+                </label>
+              </div>
+
+              {form.type === "telegram" ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">Bot Token</span>
+                    <input
+                      value={form.botToken}
+                      onChange={(event) => setForm((prev) => ({ ...prev, botToken: event.target.value }))}
+                      placeholder="123456:AA..."
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">Chat ID</span>
+                    <input
+                      value={form.chatId}
+                      onChange={(event) => setForm((prev) => ({ ...prev, chatId: event.target.value }))}
+                      placeholder="-100xxxxxxxx 或 @channel"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">Webhook URL</span>
+                    <input
+                      value={form.webhookUrl}
+                      onChange={(event) => setForm((prev) => ({ ...prev, webhookUrl: event.target.value }))}
+                      placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/..."
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">签名 Secret（可选）</span>
+                    <input
+                      value={form.secret}
+                      onChange={(event) => setForm((prev) => ({ ...prev, secret: event.target.value }))}
+                      placeholder="如开启签名校验，则填写"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
+                    />
+                  </label>
+                </div>
+              )}
+
+              <label className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 dark:border-[rgba(255,255,255,0.08)]">
+                <div className="text-sm text-gray-900 dark:text-textPrimary">启用这个渠道</div>
+                <input
+                  type="checkbox"
+                  checked={form.enabled}
+                  onChange={(event) => setForm((prev) => ({ ...prev, enabled: event.target.checked }))}
+                  className="h-4 w-4 accent-brandIndigo"
+                />
+              </label>
+
+              <div className="flex flex-wrap justify-between gap-3 border-t border-gray-200/80 pt-4 dark:border-white/10">
+                <div className="flex flex-wrap gap-3">
+                  <Button type="button" variant="brand" onClick={saveChannel} disabled={saving} loading={activeAction === "save-channel"}>
+                    {form.id ? "保存修改" : "创建渠道"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => testChannel()} disabled={saving} loading={activeAction === "test-form"}>
+                    <Send className="mr-2 h-4 w-4" />
+                    测试当前配置
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="button"
+                    variant="warning"
+                    onClick={() => {
+                      if (!hasFormValue) {
+                        resetForm()
+                        return
+                      }
+                      setConfirmingClear(true)
+                    }}
+                    disabled={saving}
+                  >
+                    清空表单
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setEditorOpen(false)} disabled={saving}>
+                    关闭
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <ConfirmDialog
         open={confirmingClear}
