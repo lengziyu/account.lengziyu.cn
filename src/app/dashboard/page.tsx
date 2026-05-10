@@ -371,7 +371,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="w-full flex flex-col items-center pt-5 md:pt-6 px-4 transition-colors">
+    <div className="w-full flex flex-col items-center px-4 pb-24 pt-5 transition-colors md:pt-6">
       <div className="w-full max-w-[900px]">
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center space-x-3">

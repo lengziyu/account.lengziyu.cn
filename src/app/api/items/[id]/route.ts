@@ -220,27 +220,47 @@ export async function PATCH(
 
     await prisma.tag.deleteMany({ where: { itemId: params.id } })
 
-    const item = await prisma.vaultItem.update({
-      where: { id: params.id },
-      data: {
-        title,
-        displayTitle,
-        password: payload.password?.trim() || null,
-        category: payload.category?.trim() || null,
-        notes: payload.notes?.trim() || null,
-        favorite: !!payload.favorite,
-        identityId,
-        phoneIdentityId,
-        tags: {
-          create: buildTagRecords({ ...payload, title, identityId }),
+    const updateData = {
+      title,
+      displayTitle,
+      password: payload.password?.trim() || null,
+      category: payload.category?.trim() || null,
+      notes: payload.notes?.trim() || null,
+      favorite: !!payload.favorite,
+      identityId,
+      tags: {
+        create: buildTagRecords({ ...payload, title, identityId }),
+      },
+    }
+
+    let item
+    try {
+      item = await prisma.vaultItem.update({
+        where: { id: params.id },
+        data: {
+          ...updateData,
+          phoneIdentityId,
         },
-      },
-      include: {
-        identity: true,
-        phoneIdentity: true,
-        tags: true,
-      },
-    })
+        include: {
+          identity: true,
+          phoneIdentity: true,
+          tags: true,
+        },
+      })
+    } catch (error) {
+      if (!isPhoneIdentitySchemaMismatch(error)) {
+        throw error
+      }
+      console.error("[api/items/:id] PATCH phone identity fallback triggered", error)
+      item = await prisma.vaultItem.update({
+        where: { id: params.id },
+        data: updateData,
+        include: {
+          identity: true,
+          tags: true,
+        },
+      })
+    }
 
     await syncMainIdentity(
       user.id,

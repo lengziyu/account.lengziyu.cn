@@ -331,9 +331,11 @@ export default function ItemDetailPage() {
               <button type="button" onClick={() => copyToClipboard(formData.title, "account")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
                 {copyStatus === "account" ? <CheckCircle2 className="w-4 h-4" /> : "复制账号"}
               </button>
-              <button type="button" onClick={() => copyToClipboard(formData.password, "password")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
-                {copyStatus === "password" ? <CheckCircle2 className="w-4 h-4" /> : "复制密码"}
-              </button>
+              {formData.password ? (
+                <button type="button" onClick={() => copyToClipboard(formData.password, "password")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
+                  {copyStatus === "password" ? <CheckCircle2 className="w-4 h-4" /> : "复制密码"}
+                </button>
+              ) : null}
               <button type="button" onClick={() => copyToClipboard(`主账号: ${selectedIdentity?.name || "未绑定"}\n账号: ${formData.title}\n密码: ${formData.password}`, "all")} className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700">
                 {copyStatus === "all" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
@@ -469,7 +471,7 @@ export default function ItemDetailPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">密码</label>
-              <input value={formData.password} onChange={(e) => handleChange("password", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+              <input type="password" value={formData.password} onChange={(e) => handleChange("password", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-textSecondary">标题</label>

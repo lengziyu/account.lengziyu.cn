@@ -268,26 +268,45 @@ export async function POST(req: Request) {
       ["phone"]
     )
 
-    const item = await prisma.vaultItem.create({
-      data: {
-        userId: user.id,
-        identityId,
-        phoneIdentityId,
-        title,
-        displayTitle,
-        password: payload.password?.trim() || null,
-        category: payload.category?.trim() || null,
-        notes: payload.notes?.trim() || null,
-        favorite: !!payload.favorite,
-        tags: {
-          create: buildTagRecords({ ...payload, title, identityId }),
+    const createData = {
+      userId: user.id,
+      identityId,
+      title,
+      displayTitle,
+      password: payload.password?.trim() || null,
+      category: payload.category?.trim() || null,
+      notes: payload.notes?.trim() || null,
+      favorite: !!payload.favorite,
+      tags: {
+        create: buildTagRecords({ ...payload, title, identityId }),
+      },
+    }
+
+    let item
+    try {
+      item = await prisma.vaultItem.create({
+        data: {
+          ...createData,
+          phoneIdentityId,
         },
-      },
-      include: {
-        identity: true,
-        tags: true,
-      },
-    })
+        include: {
+          identity: true,
+          tags: true,
+        },
+      })
+    } catch (error) {
+      if (!isPhoneIdentitySchemaMismatch(error)) {
+        throw error
+      }
+      console.error("[api/items] POST phone identity fallback triggered", error)
+      item = await prisma.vaultItem.create({
+        data: createData,
+        include: {
+          identity: true,
+          tags: true,
+        },
+      })
+    }
 
     await syncMainIdentity(user.id, item.id, displayTitle || title, title, setAsMain)
 

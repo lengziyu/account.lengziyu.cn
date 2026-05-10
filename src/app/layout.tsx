@@ -33,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className="dark" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans bg-gray-50 text-gray-900 dark:bg-marketingBlack dark:text-textPrimary antialiased min-h-screen relative pb-20`}>
+      <body className={`${inter.variable} font-sans bg-gray-50 text-gray-900 dark:bg-marketingBlack dark:text-textPrimary antialiased min-h-screen relative`}>
         <div className="bg-animated-glow"></div>
         <Providers>
           {children}

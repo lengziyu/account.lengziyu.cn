@@ -315,8 +315,8 @@ export default function NewItemPage() {
   })()
 
   return (
-    <div className="h-[100dvh] bg-gray-50 dark:bg-marketingBlack flex flex-col overflow-hidden transition-colors">
-      <div className="w-full border-b border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
+    <div className="h-[100dvh] bg-transparent flex flex-col overflow-hidden transition-colors">
+      <div className="w-full border-b border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[rgba(255,255,255,0.04)] backdrop-blur">
         <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center gap-3">
             <button onClick={() => router.back()} className="p-1.5 -ml-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors">
@@ -346,10 +346,10 @@ export default function NewItemPage() {
           <form
             id="new-item-form"
             onSubmit={handleSubmit}
-            className="space-y-5 pb-6 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.02)] dark:shadow-none"
+            className="space-y-5 rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5 dark:border-[rgba(255,255,255,0.08)] dark:bg-[rgba(255,255,255,0.02)] dark:shadow-none"
           >
           <section className="space-y-3">
-            <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-violet-50/80 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:from-[rgba(255,255,255,0.04)] dark:to-[rgba(168,85,247,0.12)] dark:shadow-none">
+            <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-white to-violet-50/80 p-4 shadow-sm dark:border-[rgba(255,255,255,0.08)] dark:from-[rgba(255,255,255,0.04)] dark:to-[rgba(168,85,247,0.12)] dark:shadow-none">
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -472,7 +472,7 @@ export default function NewItemPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">密码</label>
-                <input type="text" value={formData.password} onChange={(e) => handleChange("password", e.target.value)} placeholder="请输入密码" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+                <input type="password" value={formData.password} onChange={(e) => handleChange("password", e.target.value)} placeholder="请输入密码" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">标题</label>
@@ -489,7 +489,7 @@ export default function NewItemPage() {
                   {parsedItems.map((item) => (
                     <div key={item.id} className="flex gap-2">
                       <input value={item.title} onChange={(e) => updateParsedItem(item.id, "title", e.target.value)} placeholder="请输入账号" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
-                      <input value={item.password} onChange={(e) => updateParsedItem(item.id, "password", e.target.value)} placeholder="请输入密码" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
+                      <input type="password" value={item.password} onChange={(e) => updateParsedItem(item.id, "password", e.target.value)} placeholder="请输入密码" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
                       <button type="button" onClick={() => removeParsedItem(item.id)} className="px-3 text-red-500"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}
@@ -541,11 +541,11 @@ export default function NewItemPage() {
         </div>
       </div>
 
-      <div className="w-full border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[#101113]/95 backdrop-blur">
-        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-2.5 flex justify-end gap-2">
+      <div className="sticky bottom-0 z-20 w-full border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[rgba(255,255,255,0.04)] backdrop-blur">
+        <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-3 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>取消</Button>
-          <Button form="new-item-form" type="submit" disabled={loading || (mode === "batch" && parsedItems.length === 0)} variant="brand">
-            {loading ? "保存中..." : mode === "batch" ? `批量保存 ${parsedItems.length} 条` : "保存"}
+          <Button form="new-item-form" type="submit" disabled={loading || (mode === "batch" && parsedItems.length === 0)} loading={loading} variant="brand">
+            {mode === "batch" ? `批量保存 ${parsedItems.length} 条` : "保存"}
           </Button>
         </div>
       </div>
