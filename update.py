@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 import shlex
 import subprocess
 import sys
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from pathlib import Path
 
 
@@ -36,6 +38,52 @@ def resolve_upstream_ref() -> str:
         capture=True,
     )
     return upstream or "origin/main"
+
+
+def build_supabase_session_pooler_url(db_url: str) -> str:
+    parsed = urlparse(db_url)
+    if (
+        parsed.hostname
+        and parsed.hostname.endswith(".pooler.supabase.com")
+        and parsed.port == 6543
+    ):
+        query_items = [
+            (key, value)
+            for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+            if key.lower() not in {"pgbouncer", "connection_limit"}
+        ]
+        query_keys = {key.lower() for key, _ in query_items}
+        if "sslmode" not in query_keys:
+            query_items.append(("sslmode", "require"))
+        return urlunparse(
+            (
+                parsed.scheme,
+                f"{parsed.username}:{parsed.password}@{parsed.hostname}:5432"
+                if parsed.username is not None
+                else f"{parsed.hostname}:5432",
+                parsed.path,
+                parsed.params,
+                urlencode(query_items),
+                parsed.fragment,
+            )
+        )
+    return db_url
+
+
+def resolve_db_push_url() -> str:
+    direct_url = os.getenv("DIRECT_URL", "").strip()
+    if direct_url:
+        return direct_url
+
+    db_push_url = os.getenv("DB_PUSH_DATABASE_URL", "").strip()
+    if db_push_url:
+        return db_push_url
+
+    database_url = os.getenv("DATABASE_URL", "").strip()
+    if database_url:
+        return build_supabase_session_pooler_url(database_url)
+
+    return ""
 
 
 def ensure_repo_clean(auto_stash: bool, hard_reset: bool) -> None:
@@ -119,7 +167,19 @@ def main() -> None:
     run(f"docker compose -f {COMPOSE_FILE} build app")
 
     if args.force_db_push or schema_changed:
-        run(f"docker compose -f {COMPOSE_FILE} run --rm --no-deps app pnpm prisma db push")
+        db_push_url = resolve_db_push_url()
+        if not db_push_url:
+            print("缺少 DATABASE_URL（或 DIRECT_URL），无法执行 Prisma db push。", file=sys.stderr)
+            raise SystemExit(1)
+        run(
+            " ".join(
+                [
+                    f"docker compose -f {COMPOSE_FILE} run --rm --no-deps",
+                    f"-e DATABASE_URL={shlex.quote(db_push_url)}",
+                    "app pnpm prisma db push",
+                ]
+            )
+        )
 
     run(f"docker compose -f {COMPOSE_FILE} up -d app")
     run(f"docker compose -f {COMPOSE_FILE} ps")
