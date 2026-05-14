@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
 import { SelectMenu } from "@/components/ui/SelectMenu"
-import { ArrowLeft, Plus, CopyMinus, Trash2, Check } from "lucide-react"
+import { ArrowLeft, Plus, CopyMinus, Trash2, Check, Eye, EyeOff } from "lucide-react"
 
 type Category = { id: string; name: string }
 type Identity = { id: string; name: string; identifier: string; notes?: string | null }
@@ -44,6 +44,8 @@ export default function NewItemPage() {
 
   const [batchText, setBatchText] = useState("")
   const [parsedItems, setParsedItems] = useState<{ id: string; title: string; password: string }[]>([])
+  const [showSinglePassword, setShowSinglePassword] = useState(false)
+  const [visibleBatchPasswords, setVisibleBatchPasswords] = useState<Record<string, boolean>>({})
 
   const [formData, setFormData] = useState({
     identityId: "",
@@ -201,6 +203,15 @@ export default function NewItemPage() {
 
   const removeParsedItem = (id: string) => {
     setParsedItems((prev) => prev.filter((item) => item.id !== id))
+    setVisibleBatchPasswords((prev) => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }
+
+  const toggleBatchPasswordVisibility = (id: string) => {
+    setVisibleBatchPasswords((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -472,7 +483,23 @@ export default function NewItemPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">密码</label>
-                <input type="password" value={formData.password} onChange={(e) => handleChange("password", e.target.value)} placeholder="请输入密码" className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]" />
+                <div className="relative">
+                  <input
+                    type={showSinglePassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) => handleChange("password", e.target.value)}
+                    placeholder="请输入密码"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 pr-10 dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSinglePassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center text-gray-500 transition-colors hover:text-brandIndigo"
+                    aria-label={showSinglePassword ? "隐藏密码" : "显示密码"}
+                  >
+                    {showSinglePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-textSecondary mb-1">标题</label>
@@ -489,7 +516,27 @@ export default function NewItemPage() {
                   {parsedItems.map((item) => (
                     <div key={item.id} className="flex gap-2">
                       <input value={item.title} onChange={(e) => updateParsedItem(item.id, "title", e.target.value)} placeholder="请输入账号" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
-                      <input type="password" value={item.password} onChange={(e) => updateParsedItem(item.id, "password", e.target.value)} placeholder="请输入密码" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[rgba(255,255,255,0.02)]" />
+                      <div className="relative flex-1">
+                        <input
+                          type={visibleBatchPasswords[item.id] ? "text" : "password"}
+                          value={item.password}
+                          onChange={(e) => updateParsedItem(item.id, "password", e.target.value)}
+                          placeholder="请输入密码"
+                          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-10 dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toggleBatchPasswordVisibility(item.id)}
+                          className="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center text-gray-500 transition-colors hover:text-brandIndigo"
+                          aria-label={visibleBatchPasswords[item.id] ? "隐藏密码" : "显示密码"}
+                        >
+                          {visibleBatchPasswords[item.id] ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                       <button type="button" onClick={() => removeParsedItem(item.id)} className="px-3 text-red-500"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}

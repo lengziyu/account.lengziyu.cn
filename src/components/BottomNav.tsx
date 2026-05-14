@@ -8,9 +8,12 @@ export function BottomNav() {
   const pathname = usePathname()
 
   const hideOnPaths = [
+    /^\/items\/new$/,
     /^\/items\/[^/]+$/,
     /^\/subscriptions\/new$/,
     /^\/subscriptions\/[^/]+$/,
+    /^\/settings\/phones$/,
+    /^\/settings\/platforms$/,
     /^\/login$/,
     /^\/register$/,
     /^\/$/,

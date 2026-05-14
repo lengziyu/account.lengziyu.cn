@@ -179,7 +179,7 @@ export default function PlatformSettingsPage() {
   }
 
   return (
-    <div className="w-full flex flex-col items-center pt-8 md:pt-12 px-4 transition-colors">
+    <div className="w-full flex flex-col items-center px-4 pb-28 pt-8 transition-colors md:pt-12">
       <div className="w-full max-w-[560px]">
         <div className="flex items-center justify-between mb-6">
           <button
