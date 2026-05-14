@@ -60,6 +60,26 @@ function isPhoneIdentitySchemaMismatch(error: unknown) {
   )
 }
 
+function mapKnownItemError(error: any) {
+  if (error?.message === "Identity not found") {
+    return new NextResponse("主账号或手机号不存在", { status: 400 })
+  }
+
+  if (error?.code === "P2002") {
+    return new NextResponse("记录已存在或发生唯一约束冲突", { status: 400 })
+  }
+
+  if (error?.code === "P2003") {
+    return new NextResponse("关联主账号或手机号不存在（外键校验失败）", { status: 400 })
+  }
+
+  if (error?.code === "P2022" || error?.code === "P2021") {
+    return new NextResponse("数据库结构未同步，请执行 Prisma db push 后重试", { status: 500 })
+  }
+
+  return null
+}
+
 function buildBaseItemSelect() {
   return {
     id: true,
@@ -308,13 +328,19 @@ export async function POST(req: Request) {
       })
     }
 
-    await syncMainIdentity(user.id, item.id, displayTitle || title, title, setAsMain)
+    try {
+      await syncMainIdentity(user.id, item.id, displayTitle || title, title, setAsMain)
+    } catch (error) {
+      console.error("[api/items] syncMainIdentity failed", error)
+      if (setAsMain) {
+        throw error
+      }
+    }
 
     return NextResponse.json({ ...item, setAsMain })
   } catch (error: any) {
-    if (error?.message === "Identity not found") {
-      return new NextResponse("主账号或手机号不存在", { status: 400 })
-    }
+    const knownErrorResponse = mapKnownItemError(error)
+    if (knownErrorResponse) return knownErrorResponse
     console.error("[api/items] POST failed", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
