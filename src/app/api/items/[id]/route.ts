@@ -81,6 +81,7 @@ function buildItemDetailSelect() {
     id: true,
     userId: true,
     identityId: true,
+    phoneIdentityId: true,
     title: true,
     displayTitle: true,
     platform: true,
@@ -271,12 +272,16 @@ export async function PATCH(
       if (!isPhoneIdentitySchemaMismatch(error)) {
         throw error
       }
+      if (phoneIdentityId) {
+        throw error
+      }
       console.error("[api/items/:id] PATCH phone identity fallback triggered", error)
       item = await prisma.vaultItem.update({
         where: { id: params.id },
         data: updateData,
         include: {
           identity: true,
+          phoneIdentity: true,
           tags: true,
         },
       })

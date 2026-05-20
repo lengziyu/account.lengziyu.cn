@@ -31,6 +31,8 @@ export function SelectMenu({
 }: SelectMenuProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const [openDirection, setOpenDirection] = useState<"down" | "up">("down")
+  const [dropdownMaxHeight, setDropdownMaxHeight] = useState(288)
 
   const selectedOption = useMemo(
     () => options.find((option) => option.value === value),
@@ -39,6 +41,21 @@ export function SelectMenu({
 
   useEffect(() => {
     if (!open) return
+
+    const updateDropdownLayout = () => {
+      const rect = containerRef.current?.getBoundingClientRect()
+      if (!rect) return
+
+      const viewportPadding = 16
+      const preferredHeight = 288
+      const spaceBelow = window.innerHeight - rect.bottom - viewportPadding
+      const spaceAbove = rect.top - viewportPadding
+      const shouldOpenUp = spaceBelow < 220 && spaceAbove > spaceBelow
+      const availableSpace = shouldOpenUp ? spaceAbove : spaceBelow
+
+      setOpenDirection(shouldOpenUp ? "up" : "down")
+      setDropdownMaxHeight(Math.max(Math.min(availableSpace, preferredHeight), 160))
+    }
 
     const handlePointerDown = (event: PointerEvent) => {
       if (!containerRef.current?.contains(event.target as Node)) {
@@ -52,10 +69,16 @@ export function SelectMenu({
       }
     }
 
+    updateDropdownLayout()
+    window.addEventListener("resize", updateDropdownLayout)
+    window.addEventListener("scroll", updateDropdownLayout, true)
+
     window.addEventListener("pointerdown", handlePointerDown)
     window.addEventListener("keydown", handleEscape)
 
     return () => {
+      window.removeEventListener("resize", updateDropdownLayout)
+      window.removeEventListener("scroll", updateDropdownLayout, true)
       window.removeEventListener("pointerdown", handlePointerDown)
       window.removeEventListener("keydown", handleEscape)
     }
@@ -110,11 +133,12 @@ export function SelectMenu({
       {open ? (
         <div
           className={cn(
-            "absolute left-0 right-0 z-30 mt-2 overflow-hidden rounded-2xl border border-gray-200 bg-white/98 shadow-2xl backdrop-blur",
+            "absolute left-0 right-0 z-30 overflow-hidden rounded-2xl border border-gray-200 bg-white/98 shadow-2xl backdrop-blur",
+            openDirection === "up" ? "bottom-full mb-2" : "top-full mt-2",
             "dark:border-[rgba(255,255,255,0.1)] dark:bg-[#0d1017]/98 dark:shadow-[0_20px_40px_rgba(0,0,0,0.35)]"
           )}
         >
-          <div className="max-h-72 overflow-y-auto p-2">
+          <div className="overflow-y-auto overscroll-contain p-2" style={{ maxHeight: dropdownMaxHeight }}>
             <button
               type="button"
               onClick={() => {

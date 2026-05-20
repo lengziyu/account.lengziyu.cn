@@ -14,6 +14,12 @@ type ItemDetail = {
   id: string
   identityId?: string | null
   phoneIdentityId?: string | null
+  phoneIdentity?: {
+    id: string
+    name: string
+    identifier: string
+    notes?: string | null
+  } | null
   setAsMain?: boolean
   title: string
   displayTitle?: string | null
@@ -117,7 +123,7 @@ export default function ItemDetailPage() {
     const data = (await res.json()) as ItemDetail
     setFormData({
       identityId: data.identityId || "",
-      phoneIdentityId: data.phoneIdentityId || "",
+      phoneIdentityId: data.phoneIdentityId || data.phoneIdentity?.id || "",
       title: data.title || "",
       displayTitle: data.displayTitle || "",
       password: data.password || "",

@@ -6,8 +6,6 @@ export const SUBSCRIPTION_STATUS_OPTIONS = [
   { value: "active", label: "正常" },
   { value: "expiring", label: "即将到期" },
   { value: "expired", label: "已过期" },
-  { value: "renewed", label: "已续费" },
-  { value: "cancelled", label: "已取消" },
 ]
 
 export const SUBSCRIPTION_DECISION_OPTIONS = [

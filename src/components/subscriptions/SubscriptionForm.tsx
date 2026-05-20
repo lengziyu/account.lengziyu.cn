@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Bell, Trash2 } from "lucide-react"
+import { ArrowLeft, Bell, ChevronDown, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { SelectMenu } from "@/components/ui/SelectMenu"
@@ -117,10 +117,22 @@ export function SubscriptionForm({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [confirmingDelete, setConfirmingDelete] = useState(false)
-  const [showCustomCurrency, setShowCustomCurrency] = useState(false)
+  const [showCustomCurrency, setShowCustomCurrency] = useState(
+    !!value?.currency && !COMMON_CURRENCY_OPTIONS.some((option) => option.value === value.currency)
+  )
   const [items, setItems] = useState<VaultItemOption[]>([])
   const [resolvedDefaultReminderDays, setResolvedDefaultReminderDays] = useState<number[]>(
     defaultReminderDays && defaultReminderDays.length > 0 ? defaultReminderDays : DEFAULT_REMINDER_DAYS
+  )
+  const [showAdvancedFields, setShowAdvancedFields] = useState(
+    !!(
+      value?.startedAt ||
+      value?.renewalCycle ||
+      value?.price != null ||
+      (value?.currency && value.currency !== "CNY") ||
+      value?.autoRenew ||
+      value?.notes?.trim()
+    )
   )
 
   const [formData, setFormData] = useState({
@@ -295,7 +307,7 @@ export function SubscriptionForm({
   return (
     <div className="min-h-screen bg-transparent transition-colors">
       <div className="sticky top-0 z-30 border-b border-white/70 bg-white/65 backdrop-blur dark:border-white/10 dark:bg-[#151927]/65">
-        <div className="mx-auto flex max-w-[900px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-[900px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="min-w-0">
             <button
               type="button"
@@ -310,14 +322,20 @@ export function SubscriptionForm({
           </div>
 
           {mode === "edit" ? (
-            <Button type="button" variant="danger" onClick={() => setConfirmingDelete(true)} disabled={saving}>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => setConfirmingDelete(true)}
+              disabled={saving}
+              className="w-full sm:w-auto"
+            >
               <Trash2 className="mr-2 h-4 w-4" />
               删除
             </Button>
           ) : null}
         </div>
 
-        <div className="mx-auto grid max-w-[900px] grid-cols-[0.9fr_1.4fr] gap-3 px-4 pb-3 sm:px-6">
+        <div className="mx-auto grid max-w-[900px] grid-cols-1 gap-3 px-4 pb-3 sm:grid-cols-[0.9fr_1.4fr] sm:px-6">
           <Button type="button" variant="outline" onClick={() => router.push("/subscriptions")} disabled={saving} className="w-full">
             取消
           </Button>
@@ -336,7 +354,7 @@ export function SubscriptionForm({
 
         <form id="subscription-form" onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-[1.45fr_1fr]">
           <section className="rounded-[28px] border border-white/70 bg-white/72 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">订阅信息</h2>
                 <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">先关联账号，再补充平台和到期时间，保存会自动计算状态。</p>
@@ -377,16 +395,7 @@ export function SubscriptionForm({
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">开通时间</span>
-                  <input
-                    type="date"
-                    value={formData.startedAt}
-                    onChange={(event) => handleChange("startedAt", event.target.value)}
-                    className="w-full rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
-                  />
-                </label>
-                <label className="block">
+                <label className="block sm:col-span-2">
                   <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">到期时间 <span className="text-red-500">*</span></span>
                   <input
                     type="date"
@@ -401,16 +410,7 @@ export function SubscriptionForm({
                 {statusMeta.helper}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">续费周期</span>
-                  <SelectMenu
-                    value={formData.renewalCycle}
-                    options={RENEWAL_CYCLE_OPTIONS}
-                    placeholder="不设置"
-                    onChange={(nextValue) => handleChange("renewalCycle", nextValue)}
-                  />
-                </div>
+              <div>
                 <div>
                   <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">续费决策</span>
                   <SelectMenu
@@ -422,68 +422,114 @@ export function SubscriptionForm({
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-[1fr_220px]">
-                <label className="block">
-                  <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">金额</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(event) => handleChange("price", event.target.value)}
-                    placeholder="例如 688"
-                    className="w-full rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
+              <div className="rounded-[24px] border border-dashed border-gray-200 bg-white/35 p-4 dark:border-white/10 dark:bg-white/5">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedFields((prev) => !prev)}
+                  className="flex w-full items-center justify-between gap-3 text-left"
+                  aria-expanded={showAdvancedFields}
+                >
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">更多信息（可选）</div>
+                    <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
+                      开通时间、续费周期、金额、自动续费和备注都收在这里，手机上会更清爽。
+                    </div>
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 shrink-0 text-gray-400 transition-transform dark:text-textTertiary ${
+                      showAdvancedFields ? "rotate-180" : ""
+                    }`}
                   />
-                </label>
+                </button>
 
-                <div>
-                  <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">币种</span>
-                  <SelectMenu
-                    value={currencySelectValue}
-                    options={currencyOptions}
-                    placeholder="选择币种"
-                    onChange={(nextValue) => {
-                      if (nextValue === "__custom__") {
-                        setShowCustomCurrency(true)
-                        return
-                      }
-                      setShowCustomCurrency(false)
-                      handleChange("currency", nextValue)
-                    }}
-                  />
-                  {showCustomCurrency || currencySelectValue === "__custom__" ? (
-                    <input
-                      value={formData.currency}
-                      onChange={(event) => handleChange("currency", event.target.value.toUpperCase())}
-                      placeholder="输入自定义币种代码"
-                      className="mt-3 w-full rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
-                    />
-                  ) : null}
-                </div>
+                {showAdvancedFields ? (
+                  <div className="mt-4 space-y-4 border-t border-gray-200/70 pt-4 dark:border-white/10">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">开通时间</span>
+                        <input
+                          type="date"
+                          value={formData.startedAt}
+                          onChange={(event) => handleChange("startedAt", event.target.value)}
+                          className="w-full rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
+                        />
+                      </label>
+                      <div>
+                        <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">续费周期</span>
+                        <SelectMenu
+                          value={formData.renewalCycle}
+                          options={RENEWAL_CYCLE_OPTIONS}
+                          placeholder="不设置"
+                          onChange={(nextValue) => handleChange("renewalCycle", nextValue)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-[1fr_220px]">
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">金额</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.price}
+                          onChange={(event) => handleChange("price", event.target.value)}
+                          placeholder="例如 688"
+                          className="w-full rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
+                        />
+                      </label>
+
+                      <div className="min-w-0">
+                        <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">币种</span>
+                        <SelectMenu
+                          value={currencySelectValue}
+                          options={currencyOptions}
+                          placeholder="选择币种"
+                          onChange={(nextValue) => {
+                            if (nextValue === "__custom__") {
+                              setShowCustomCurrency(true)
+                              return
+                            }
+                            setShowCustomCurrency(false)
+                            handleChange("currency", nextValue)
+                          }}
+                        />
+                        {showCustomCurrency || currencySelectValue === "__custom__" ? (
+                          <input
+                            value={formData.currency}
+                            onChange={(event) => handleChange("currency", event.target.value.toUpperCase())}
+                            placeholder="输入自定义币种代码"
+                            className="mt-3 w-full rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <label className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white/45 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">自动续费</div>
+                        <div className="text-xs text-gray-500 dark:text-textSecondary">仅作为记录展示，不影响提醒规则。</div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={formData.autoRenew}
+                        onChange={(event) => handleChange("autoRenew", event.target.checked)}
+                        className="h-4 w-4 accent-brandIndigo"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">备注</span>
+                      <textarea
+                        value={formData.notes}
+                        onChange={(event) => handleChange("notes", event.target.value)}
+                        placeholder="记录购买渠道、发票、优惠活动或续费建议"
+                        rows={4}
+                        className="w-full rounded-[22px] border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
+                      />
+                    </label>
+                  </div>
+                ) : null}
               </div>
-
-              <label className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white/45 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">自动续费</div>
-                  <div className="text-xs text-gray-500 dark:text-textSecondary">仅作为记录展示，不影响提醒规则。</div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={formData.autoRenew}
-                  onChange={(event) => handleChange("autoRenew", event.target.checked)}
-                  className="h-4 w-4 accent-brandIndigo"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">备注</span>
-                <textarea
-                  value={formData.notes}
-                  onChange={(event) => handleChange("notes", event.target.value)}
-                  placeholder="记录购买渠道、发票、优惠活动或续费建议"
-                  rows={5}
-                  className="w-full rounded-[22px] border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
-                />
-              </label>
             </div>
           </section>
 

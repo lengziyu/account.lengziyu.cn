@@ -85,6 +85,7 @@ function buildBaseItemSelect() {
     id: true,
     userId: true,
     identityId: true,
+    phoneIdentityId: true,
     title: true,
     displayTitle: true,
     platform: true,
@@ -311,6 +312,7 @@ export async function POST(req: Request) {
         },
         include: {
           identity: true,
+          phoneIdentity: true,
           tags: true,
         },
       })
@@ -318,11 +320,15 @@ export async function POST(req: Request) {
       if (!isPhoneIdentitySchemaMismatch(error)) {
         throw error
       }
+      if (phoneIdentityId) {
+        throw error
+      }
       console.error("[api/items] POST phone identity fallback triggered", error)
       item = await prisma.vaultItem.create({
         data: createData,
         include: {
           identity: true,
+          phoneIdentity: true,
           tags: true,
         },
       })

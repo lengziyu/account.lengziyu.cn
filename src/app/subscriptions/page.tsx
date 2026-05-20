@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useDeferredValue, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowRight, Bell, CalendarClock, Plus } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { Button } from "@/components/ui/Button"
 import { Skeleton } from "@/components/ui/Skeleton"
+import { SUBSCRIPTION_STATUS_OPTIONS } from "@/lib/subscription-options"
 
 type SubscriptionItem = {
   id: string
@@ -42,35 +43,61 @@ function formatCountdown(days: number) {
   return `还有 ${days} 天到期`
 }
 
+function deriveDaysUntilExpiry(expiresAt: string, fallback?: number) {
+  if (typeof fallback === "number" && Number.isFinite(fallback)) return fallback
+
+  const target = new Date(expiresAt)
+  if (Number.isNaN(target.getTime())) return 0
+
+  const today = new Date()
+  const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime()
+  const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+
+  return Math.floor((targetDay - todayDay) / (24 * 60 * 60 * 1000))
+}
+
 export default function SubscriptionsPage() {
   const router = useRouter()
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<SubscriptionResponse | null>(null)
+  const [error, setError] = useState("")
+  const deferredSearch = useDeferredValue(search)
 
   useEffect(() => {
     void fetchSubscriptions()
-  }, [search, status])
+  }, [deferredSearch, status])
 
   const fetchSubscriptions = async () => {
     setLoading(true)
+    setError("")
     const params = new URLSearchParams()
-    if (search.trim()) params.set("search", search.trim())
+    if (deferredSearch.trim()) params.set("search", deferredSearch.trim())
     if (status !== "all") params.set("status", status)
 
-    const res = await fetch(`/api/subscriptions?${params.toString()}`)
-    if (!res.ok) {
-      setLoading(false)
-      return
-    }
+    try {
+      const res = await fetch(`/api/subscriptions?${params.toString()}`, { cache: "no-store" })
+      if (!res.ok) {
+        setError((await res.text()) || "订阅列表加载失败")
+        setData(null)
+        return
+      }
 
-    setData(await res.json())
-    setLoading(false)
+      setData(await res.json())
+    } catch {
+      setError("订阅列表加载失败，请稍后重试")
+      setData(null)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const groups = useMemo(() => {
-    const items = data?.items || []
+    const items = (data?.items || []).map((item) => ({
+      ...item,
+      daysUntilExpiry: deriveDaysUntilExpiry(item.expiresAt, item.daysUntilExpiry),
+    }))
     return {
       dueSoon: items.filter((item) => item.daysUntilExpiry >= 0 && item.daysUntilExpiry <= 7),
       expired: items.filter((item) => item.daysUntilExpiry < 0),
@@ -81,23 +108,34 @@ export default function SubscriptionsPage() {
   return (
     <div className="min-h-screen bg-transparent transition-colors">
       <div className="mx-auto max-w-[900px] px-4 py-8 pb-28 sm:px-6">
-        <div className="flex items-center justify-between gap-3 mb-6">
-          <div>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-[24px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">订阅中心</h1>
             <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">
               统一看订阅、到期和提醒状态。
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto sm:justify-end">
             <ThemeToggle />
-            <Button type="button" variant="brand" onClick={() => router.push("/subscriptions/new")}>
+            <Button
+              type="button"
+              variant="brand"
+              onClick={() => router.push("/subscriptions/new")}
+              className="min-h-10 flex-1 sm:flex-none"
+            >
               <Plus className="w-4 h-4 mr-2" />
               新增订阅
             </Button>
           </div>
         </div>
 
-        <div className="mb-6 grid w-full grid-cols-2 gap-4">
+        {error ? (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="mb-6 grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
             <div className="text-xs text-gray-500 dark:text-textSecondary">总订阅数</div>
             <div className="mt-2 text-3xl font-semibold text-gray-900 dark:text-textPrimary">{data?.summary.total ?? "-"}</div>
@@ -125,13 +163,7 @@ export default function SubscriptionsPage() {
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 md:max-w-sm dark:border-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.02)] dark:text-textPrimary"
             />
             <div className="flex flex-wrap gap-2">
-              {[
-                { value: "all", label: "全部" },
-                { value: "active", label: "正常" },
-                { value: "expired", label: "已过期" },
-                { value: "renewed", label: "已续费" },
-                { value: "cancelled", label: "已取消" },
-              ].map((option) => (
+              {[{ value: "all", label: "全部" }, ...SUBSCRIPTION_STATUS_OPTIONS].map((option) => (
                 <button
                   key={option.value}
                   type="button"
@@ -182,9 +214,11 @@ export default function SubscriptionsPage() {
                             <div className="text-base font-semibold text-gray-900 dark:text-textPrimary">
                               {item.platformName}
                             </div>
-                            <span className="rounded-full bg-brandIndigo/10 px-2.5 py-1 text-[11px] text-brandIndigo dark:bg-brandIndigo/20 dark:text-white">
-                              {item.planName}
-                            </span>
+                            {item.planName ? (
+                              <span className="rounded-full bg-brandIndigo/10 px-2.5 py-1 text-[11px] text-brandIndigo dark:bg-brandIndigo/20 dark:text-white">
+                                {item.planName}
+                              </span>
+                            ) : null}
                             {item.autoRenew ? (
                               <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                                 自动续费

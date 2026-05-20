@@ -35,10 +35,16 @@ function normalizePrice(value: number | string | null | undefined) {
   return parsed
 }
 
-function buildWhere(userId: string, search: string, status: string, decision: string) {
+function parseOptionalNumber(value: string | null) {
+  if (value == null || value.trim() === "") return null
+
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function buildWhere(userId: string, search: string, decision: string) {
   return {
     userId,
-    ...(status ? { status } : {}),
     ...(decision ? { decision } : {}),
     ...(search
       ? {
@@ -65,8 +71,8 @@ export async function GET(req: Request) {
     const search = searchParams.get("search")?.trim() || ""
     const status = searchParams.get("status")?.trim() || ""
     const decision = searchParams.get("decision")?.trim() || ""
-    const dueWithin = Number(searchParams.get("dueWithin") || "")
-    const limit = Number(searchParams.get("limit") || "")
+    const dueWithin = parseOptionalNumber(searchParams.get("dueWithin"))
+    const limit = parseOptionalNumber(searchParams.get("limit"))
 
     const [defaultRules, subscriptions] = await Promise.all([
       prisma.reminderRule.findMany({
@@ -75,7 +81,7 @@ export async function GET(req: Request) {
         select: { daysBefore: true, enabled: true },
       }),
       prisma.subscription.findMany({
-        where: buildWhere(user.id, search, status, decision),
+        where: buildWhere(user.id, search, decision),
         include: {
           vaultItem: {
             select: {
@@ -124,20 +130,25 @@ export async function GET(req: Request) {
       }
     })
 
-    const filtered = mapped.filter((subscription) => {
-      if (!Number.isFinite(dueWithin)) return true
+    const statusFiltered = mapped.filter((subscription) => {
+      if (!status) return true
+      return subscription.status === status
+    })
+
+    const filtered = statusFiltered.filter((subscription) => {
+      if (dueWithin == null) return true
       return subscription.daysUntilExpiry >= 0 && subscription.daysUntilExpiry <= dueWithin
     })
 
-    const finalItems = Number.isFinite(limit) && limit > 0 ? filtered.slice(0, limit) : filtered
+    const finalItems = limit != null && limit > 0 ? filtered.slice(0, limit) : filtered
 
     return NextResponse.json({
       items: finalItems,
       summary: {
-        total: mapped.length,
-        dueSoon: mapped.filter((item) => item.daysUntilExpiry >= 0 && item.daysUntilExpiry <= 7).length,
-        expired: mapped.filter((item) => item.daysUntilExpiry < 0).length,
-        autoRenew: mapped.filter((item) => item.autoRenew).length,
+        total: statusFiltered.length,
+        dueSoon: statusFiltered.filter((item) => item.daysUntilExpiry >= 0 && item.daysUntilExpiry <= 7).length,
+        expired: statusFiltered.filter((item) => item.daysUntilExpiry < 0).length,
+        autoRenew: statusFiltered.filter((item) => item.autoRenew).length,
       },
       defaults: defaultRules.map((rule) => rule.daysBefore),
     })
