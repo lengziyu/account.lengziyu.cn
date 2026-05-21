@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Bell, ChevronDown, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
+import { DatePicker } from "@/components/ui/DatePicker"
 import { SelectMenu } from "@/components/ui/SelectMenu"
 import { Skeleton } from "@/components/ui/Skeleton"
 import {
@@ -373,11 +374,10 @@ export function SubscriptionForm({
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block sm:col-span-2">
                   <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">到期时间 <span className="text-red-500">*</span></span>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={formData.expiresAt}
-                    onChange={(event) => handleChange("expiresAt", event.target.value)}
-                    className="w-full rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
+                    onChange={(nextValue) => handleChange("expiresAt", nextValue)}
+                    placeholder="选择到期日期"
                   />
                 </label>
               </div>
@@ -423,11 +423,10 @@ export function SubscriptionForm({
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block">
                         <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">开通时间</span>
-                        <input
-                          type="date"
+                        <DatePicker
                           value={formData.startedAt}
-                          onChange={(event) => handleChange("startedAt", event.target.value)}
-                          className="w-full rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
+                          onChange={(nextValue) => handleChange("startedAt", nextValue)}
+                          placeholder="选择开通日期"
                         />
                       </label>
                       <div>

@@ -91,9 +91,9 @@ export function SelectMenu({
         disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "w-full rounded-xl border border-gray-200 bg-white/95 px-4 py-3 text-left shadow-sm transition-all",
+          "w-full rounded-xl border border-gray-200 bg-white/98 px-4 py-3 text-left shadow-sm transition-all",
           "hover:border-brandIndigo/40 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brandIndigo/25",
-          "dark:border-[rgba(255,255,255,0.08)] dark:bg-[#11131a]/95 dark:hover:border-brandIndigo/60 dark:shadow-none",
+          "dark:border-[rgba(255,255,255,0.08)] dark:bg-[#11131a]/98 dark:hover:border-brandIndigo/60 dark:shadow-none",
           disabled && "cursor-not-allowed opacity-60"
         )}
         aria-haspopup="listbox"
@@ -133,9 +133,9 @@ export function SelectMenu({
       {open ? (
         <div
           className={cn(
-            "absolute left-0 right-0 z-30 overflow-hidden rounded-2xl border border-gray-200 bg-white/98 shadow-2xl backdrop-blur",
+            "absolute left-0 right-0 z-40 overflow-hidden rounded-2xl border border-white/80 bg-white/97 shadow-2xl backdrop-blur-xl",
             openDirection === "up" ? "bottom-full mb-2" : "top-full mt-2",
-            "dark:border-[rgba(255,255,255,0.1)] dark:bg-[#0d1017]/98 dark:shadow-[0_20px_40px_rgba(0,0,0,0.35)]"
+            "dark:border-[rgba(255,255,255,0.15)] dark:bg-[#0b0f16]/97 dark:shadow-[0_24px_44px_rgba(0,0,0,0.45)]"
           )}
         >
           <div className="overflow-y-auto overscroll-contain p-2" style={{ maxHeight: dropdownMaxHeight }}>
@@ -148,8 +148,8 @@ export function SelectMenu({
               className={cn(
                 "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
                 value === ""
-                  ? "bg-brandIndigo/10 text-brandIndigo dark:bg-brandIndigo/20 dark:text-white"
-                  : "text-gray-500 hover:bg-gray-100 dark:text-textSecondary dark:hover:bg-[rgba(255,255,255,0.05)]"
+                  ? "bg-brandIndigo/12 text-brandIndigo dark:bg-brandIndigo/25 dark:text-white"
+                  : "text-gray-600 hover:bg-white dark:text-textSecondary dark:hover:bg-white/10"
               )}
             >
               <div className="min-w-0">
@@ -178,7 +178,7 @@ export function SelectMenu({
                       "mt-1 flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
                       active
                         ? "bg-brandIndigo text-white shadow-sm"
-                        : "text-gray-800 hover:bg-gray-100 dark:text-textPrimary dark:hover:bg-[rgba(255,255,255,0.05)]"
+                        : "text-gray-800 hover:bg-white dark:text-textPrimary dark:hover:bg-white/10"
                     )}
                   >
                     <div className="min-w-0">
