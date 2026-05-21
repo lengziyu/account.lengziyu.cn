@@ -154,9 +154,9 @@ export function DatePicker({
         disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "w-full rounded-2xl border border-gray-200 bg-white/95 px-4 py-3 text-left shadow-sm transition-all",
+          "w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-left shadow-sm transition-all",
           "hover:border-brandIndigo/40 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brandIndigo/25",
-          "dark:border-[rgba(255,255,255,0.1)] dark:bg-[#11131a]/96 dark:hover:border-brandIndigo/60",
+          "dark:border-[rgba(255,255,255,0.12)] dark:bg-[#171b2b] dark:hover:border-brandIndigo/60",
           disabled && "cursor-not-allowed opacity-60"
         )}
         aria-haspopup="dialog"
@@ -186,9 +186,9 @@ export function DatePicker({
       {open ? (
         <div
           className={cn(
-            "absolute left-0 right-0 z-40 overflow-hidden rounded-2xl border border-white/80 bg-white/97 shadow-2xl backdrop-blur-xl",
+            "absolute left-0 right-0 z-[95] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl",
             openDirection === "up" ? "bottom-full mb-2" : "top-full mt-2",
-            "dark:border-[rgba(255,255,255,0.15)] dark:bg-[#0b0f16]/97 dark:shadow-[0_24px_44px_rgba(0,0,0,0.45)]"
+            "dark:border-[rgba(255,255,255,0.14)] dark:bg-[#1b2031] dark:shadow-[0_24px_44px_rgba(0,0,0,0.5)]"
           )}
         >
           <div className="p-3">
@@ -198,7 +198,7 @@ export function DatePicker({
                 onClick={() => {
                   setViewMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
                 }}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white/90 text-gray-600 transition hover:border-brandIndigo/50 hover:text-brandIndigo dark:border-[rgba(255,255,255,0.15)] dark:bg-white/5 dark:text-textSecondary"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition hover:border-brandIndigo/50 hover:text-brandIndigo dark:border-[rgba(255,255,255,0.15)] dark:bg-[#232940] dark:text-textSecondary"
                 aria-label="上个月"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -211,7 +211,7 @@ export function DatePicker({
                 onClick={() => {
                   setViewMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
                 }}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white/90 text-gray-600 transition hover:border-brandIndigo/50 hover:text-brandIndigo dark:border-[rgba(255,255,255,0.15)] dark:bg-white/5 dark:text-textSecondary"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition hover:border-brandIndigo/50 hover:text-brandIndigo dark:border-[rgba(255,255,255,0.15)] dark:bg-[#232940] dark:text-textSecondary"
                 aria-label="下个月"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -244,8 +244,8 @@ export function DatePicker({
                       active
                         ? "bg-brandIndigo text-white shadow-sm"
                         : inCurrentMonth
-                          ? "text-gray-800 hover:bg-gray-100 dark:text-textPrimary dark:hover:bg-white/10"
-                          : "text-gray-400 hover:bg-gray-100/80 dark:text-textTertiary dark:hover:bg-white/5",
+                          ? "text-gray-800 hover:bg-gray-100 dark:text-textPrimary dark:hover:bg-[#272d45]"
+                          : "text-gray-400 hover:bg-gray-100/80 dark:text-textTertiary dark:hover:bg-[#21263b]",
                       isToday && !active && "border border-brandIndigo/40"
                     )}
                   >
@@ -267,7 +267,7 @@ export function DatePicker({
                   setOpen(false)
                   setManualError("")
                 }}
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white/90 px-3 py-1.5 text-xs text-gray-600 transition hover:border-brandIndigo/50 hover:text-brandIndigo dark:border-[rgba(255,255,255,0.15)] dark:bg-white/5 dark:text-textSecondary"
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 transition hover:border-brandIndigo/50 hover:text-brandIndigo dark:border-[rgba(255,255,255,0.15)] dark:bg-[#232940] dark:text-textSecondary"
               >
                 今天
               </button>
@@ -279,7 +279,7 @@ export function DatePicker({
                   setManualError("")
                   setOpen(false)
                 }}
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white/90 px-3 py-1.5 text-xs text-gray-600 transition hover:border-brandIndigo/50 hover:text-brandIndigo dark:border-[rgba(255,255,255,0.15)] dark:bg-white/5 dark:text-textSecondary"
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 transition hover:border-brandIndigo/50 hover:text-brandIndigo dark:border-[rgba(255,255,255,0.15)] dark:bg-[#232940] dark:text-textSecondary"
               >
                 清空
               </button>
@@ -301,7 +301,7 @@ export function DatePicker({
                     }
                   }}
                   placeholder="2026-12-31"
-                  className="w-full rounded-lg border border-gray-200 bg-white/95 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-white/5 dark:text-textPrimary"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-brandIndigo/60 dark:border-white/10 dark:bg-[#232940] dark:text-textPrimary"
                 />
                 <button
                   type="button"
