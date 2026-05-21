@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -65,11 +66,17 @@ export function DatePicker({
   className,
 }: DatePickerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
-  const [openDirection, setOpenDirection] = useState<"down" | "up">("down")
   const [manualInput, setManualInput] = useState(value)
   const [manualError, setManualError] = useState("")
   const [viewMonth, setViewMonth] = useState(() => parseYmd(value) || new Date())
+  const [dropdownStyle, setDropdownStyle] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    translateY: "0%",
+  })
 
   const selectedDate = useMemo(() => parseYmd(value), [value])
   const today = useMemo(() => new Date(), [])
@@ -91,11 +98,17 @@ export function DatePicker({
       const spaceBelow = window.innerHeight - rect.bottom - viewportPadding
       const spaceAbove = rect.top - viewportPadding
       const shouldOpenUp = spaceBelow < 360 && spaceAbove > spaceBelow
-      setOpenDirection(shouldOpenUp ? "up" : "down")
+      setDropdownStyle({
+        left: rect.left,
+        top: shouldOpenUp ? rect.top - 8 : rect.bottom + 8,
+        width: rect.width,
+        translateY: shouldOpenUp ? "-100%" : "0%",
+      })
     }
 
     const onPointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (!containerRef.current?.contains(target) && !dropdownRef.current?.contains(target)) {
         setOpen(false)
         setManualError("")
       }
@@ -148,7 +161,8 @@ export function DatePicker({
   }
 
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
+    <>
+      <div ref={containerRef} className={cn("relative", className)}>
       <button
         type="button"
         disabled={disabled}
@@ -182,13 +196,22 @@ export function DatePicker({
           />
         </div>
       </button>
+      </div>
 
-      {open ? (
+      {open && typeof document !== "undefined"
+        ? createPortal(
         <div
+          ref={dropdownRef}
+          style={{
+            position: "fixed",
+            left: dropdownStyle.left,
+            top: dropdownStyle.top,
+            width: dropdownStyle.width,
+            transform: `translateY(${dropdownStyle.translateY})`,
+          }}
           className={cn(
-            "absolute left-0 right-0 z-[95] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl",
-            openDirection === "up" ? "bottom-full mb-2" : "top-full mt-2",
-            "dark:border-[rgba(255,255,255,0.14)] dark:bg-[#1b2031] dark:shadow-[0_24px_44px_rgba(0,0,0,0.5)]"
+            "z-[95] overflow-hidden rounded-2xl border border-gray-200 bg-white/90 shadow-2xl backdrop-blur-xl",
+            "dark:border-[rgba(255,255,255,0.14)] dark:bg-[#1b2031]/90 dark:shadow-[0_24px_44px_rgba(0,0,0,0.5)]"
           )}
         >
           <div className="p-3">
@@ -317,8 +340,10 @@ export function DatePicker({
               ) : null}
             </div>
           </div>
-        </div>
-      ) : null}
-    </div>
+        </div>,
+        document.body
+      )
+        : null}
+    </>
   )
 }

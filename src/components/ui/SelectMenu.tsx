@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { Check, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -31,8 +32,14 @@ export function SelectMenu({
 }: SelectMenuProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const [openDirection, setOpenDirection] = useState<"down" | "up">("down")
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
   const [dropdownMaxHeight, setDropdownMaxHeight] = useState(288)
+  const [dropdownStyle, setDropdownStyle] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    translateY: "0%",
+  })
 
   const selectedOption = useMemo(
     () => options.find((option) => option.value === value),
@@ -53,12 +60,18 @@ export function SelectMenu({
       const shouldOpenUp = spaceBelow < 220 && spaceAbove > spaceBelow
       const availableSpace = shouldOpenUp ? spaceAbove : spaceBelow
 
-      setOpenDirection(shouldOpenUp ? "up" : "down")
       setDropdownMaxHeight(Math.max(Math.min(availableSpace, preferredHeight), 160))
+      setDropdownStyle({
+        left: rect.left,
+        top: shouldOpenUp ? rect.top - 8 : rect.bottom + 8,
+        width: rect.width,
+        translateY: shouldOpenUp ? "-100%" : "0%",
+      })
     }
 
     const handlePointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (!containerRef.current?.contains(target) && !dropdownRef.current?.contains(target)) {
         setOpen(false)
       }
     }
@@ -85,7 +98,8 @@ export function SelectMenu({
   }, [open])
 
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
+    <>
+      <div ref={containerRef} className={cn("relative", className)}>
       <button
         type="button"
         disabled={disabled}
@@ -129,13 +143,22 @@ export function SelectMenu({
           />
         </div>
       </button>
+      </div>
 
-      {open ? (
+      {open && typeof document !== "undefined"
+        ? createPortal(
         <div
+          ref={dropdownRef}
+          style={{
+            position: "fixed",
+            left: dropdownStyle.left,
+            top: dropdownStyle.top,
+            width: dropdownStyle.width,
+            transform: `translateY(${dropdownStyle.translateY})`,
+          }}
           className={cn(
-            "absolute left-0 right-0 z-[90] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl",
-            openDirection === "up" ? "bottom-full mb-2" : "top-full mt-2",
-            "dark:border-[rgba(255,255,255,0.14)] dark:bg-[#1b2031] dark:shadow-[0_24px_44px_rgba(0,0,0,0.5)]"
+            "z-[90] overflow-hidden rounded-2xl border border-gray-200 bg-white/92 shadow-2xl backdrop-blur-xl",
+            "dark:border-[rgba(255,255,255,0.14)] dark:bg-[#1b2031]/92 dark:shadow-[0_24px_44px_rgba(0,0,0,0.5)]"
           )}
         >
           <div className="overflow-y-auto overscroll-contain p-2" style={{ maxHeight: dropdownMaxHeight }}>
@@ -202,8 +225,10 @@ export function SelectMenu({
               })
             )}
           </div>
-        </div>
-      ) : null}
-    </div>
+        </div>,
+        document.body
+      )
+        : null}
+    </>
   )
 }
