@@ -305,64 +305,40 @@ export function SubscriptionForm({
   }
 
   return (
-    <div className="min-h-screen bg-transparent transition-colors">
-      <div className="sticky top-0 z-30 border-b border-white/70 bg-white/65 backdrop-blur dark:border-white/10 dark:bg-[#151927]/65">
-        <div className="mx-auto flex max-w-[900px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div className="min-w-0">
-            <button
-              type="button"
-              onClick={() => router.push("/subscriptions")}
-              className="inline-flex items-center text-xs text-gray-600 transition-colors hover:text-brandIndigo dark:text-textSecondary"
-            >
-              <ArrowLeft className="mr-1 h-4 w-4" />
-              返回订阅中心
-            </button>
-            <h1 className="mt-1 text-[22px] font-semibold tracking-tight text-gray-900 dark:text-textPrimary">{title}</h1>
-            {description ? <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">{description}</p> : null}
-          </div>
-
-          {mode === "edit" ? (
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => setConfirmingDelete(true)}
-              disabled={saving}
-              className="w-full sm:w-auto"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              删除
-            </Button>
-          ) : null}
-        </div>
-
-        <div className="mx-auto grid max-w-[900px] grid-cols-1 gap-3 px-4 pb-3 sm:grid-cols-[0.9fr_1.4fr] sm:px-6">
-          <Button type="button" variant="outline" onClick={() => router.push("/subscriptions")} disabled={saving} className="w-full">
-            取消
-          </Button>
-          <Button type="submit" form="subscription-form" variant="brand" loading={saving} className="w-full">
-            {mode === "create" ? "创建订阅" : "保存修改"}
-          </Button>
+    <div className="h-[100dvh] bg-transparent flex flex-col overflow-hidden transition-colors">
+      <div className="w-full border-b border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[rgba(255,255,255,0.04)] backdrop-blur">
+        <div className="mx-auto flex max-w-[900px] items-center gap-3 px-4 py-3 sm:px-6">
+          <button
+            type="button"
+            onClick={() => router.push("/subscriptions")}
+            className="rounded-full p-1.5 -ml-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-brandIndigo dark:text-textSecondary dark:hover:bg-[rgba(255,255,255,0.05)]"
+            aria-label="返回订阅中心"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-textPrimary">{title}</h1>
         </div>
       </div>
 
-      <div className="mx-auto max-w-[900px] px-4 py-5 sm:px-6">
-        {error ? (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
-            {error}
-          </div>
-        ) : null}
-
-        <form id="subscription-form" onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-[1.45fr_1fr]">
-          <section className="rounded-[28px] border border-white/70 bg-white/72 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">订阅信息</h2>
-                <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">先关联账号，再补充平台和到期时间，保存会自动计算状态。</p>
-              </div>
-              <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.chipClassName}`}>{statusMeta.label}</span>
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="mx-auto max-w-[900px] px-4 py-5 pb-24 sm:px-6">
+          {error ? (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+              {error}
             </div>
+          ) : null}
 
-            <div className="space-y-4">
+          <form id="subscription-form" onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-[1.45fr_1fr]">
+            <section className="rounded-[28px] border border-white/70 bg-white/72 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">订阅信息</h2>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-textSecondary">先关联账号，再补充平台和到期时间，保存会自动计算状态。</p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${statusMeta.chipClassName}`}>{statusMeta.label}</span>
+              </div>
+
+              <div className="space-y-4">
               <div>
                 <span className="mb-1.5 block text-sm text-gray-600 dark:text-textSecondary">关联账号</span>
                 <SelectMenu
@@ -530,18 +506,18 @@ export function SubscriptionForm({
                   </div>
                 ) : null}
               </div>
-            </div>
-          </section>
-
-          <div className="space-y-5">
-            <section className="rounded-[28px] border border-white/70 bg-white/72 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-              <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-brandIndigo" />
-                <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">提醒规则</h2>
               </div>
-              <p className="mt-2 text-xs text-gray-500 dark:text-textSecondary">
-                默认规则：{resolvedDefaultReminderDays.map((day) => formatReminderLabel(day)).join(" / ")}
-              </p>
+            </section>
+
+            <div className="space-y-5">
+              <section className="rounded-[28px] border border-white/70 bg-white/72 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-brandIndigo" />
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">提醒规则</h2>
+                </div>
+                <p className="mt-2 text-xs text-gray-500 dark:text-textSecondary">
+                  默认规则：{resolvedDefaultReminderDays.map((day) => formatReminderLabel(day)).join(" / ")}
+                </p>
 
               <label className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white/45 px-4 py-3 dark:border-white/10 dark:bg-white/5">
                 <div>
@@ -576,39 +552,66 @@ export function SubscriptionForm({
                   )
                 })}
               </div>
-            </section>
-
-            {logs.length > 0 ? (
-              <section className="rounded-[28px] border border-white/70 bg-white/72 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">最近提醒记录</h2>
-                <div className="mt-4 space-y-3">
-                  {logs.map((log) => (
-                    <div key={log.id} className="rounded-2xl border border-gray-100 bg-white/60 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">
-                          {log.channelType} / {formatReminderLabel(log.daysBefore)}
-                        </div>
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-[11px] ${
-                            log.status === "sent"
-                              ? "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300"
-                              : log.status === "failed"
-                                ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
-                                : "bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-textSecondary"
-                          }`}
-                        >
-                          {log.status}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">触发日：{log.triggerDateKey}</div>
-                      {log.errorMessage ? <div className="mt-2 text-xs text-red-500">{log.errorMessage}</div> : null}
-                    </div>
-                  ))}
-                </div>
               </section>
-            ) : null}
+
+              {logs.length > 0 ? (
+                <section className="rounded-[28px] border border-white/70 bg-white/72 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-textPrimary">最近提醒记录</h2>
+                  <div className="mt-4 space-y-3">
+                    {logs.map((log) => (
+                      <div key={log.id} className="rounded-2xl border border-gray-100 bg-white/60 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-sm font-medium text-gray-900 dark:text-textPrimary">
+                            {log.channelType} / {formatReminderLabel(log.daysBefore)}
+                          </div>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[11px] ${
+                              log.status === "sent"
+                                ? "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300"
+                                : log.status === "failed"
+                                  ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
+                                  : "bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-textSecondary"
+                            }`}
+                          >
+                            {log.status}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500 dark:text-textSecondary">触发日：{log.triggerDateKey}</div>
+                        {log.errorMessage ? <div className="mt-2 text-xs text-red-500">{log.errorMessage}</div> : null}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className="sticky bottom-0 z-20 w-full border-t border-gray-200 dark:border-[rgba(255,255,255,0.08)] bg-white/95 dark:bg-[rgba(255,255,255,0.04)] backdrop-blur">
+        <div className="mx-auto flex max-w-[900px] items-center justify-between gap-2 px-4 py-3 sm:px-6">
+          {mode === "edit" ? (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => setConfirmingDelete(true)}
+              disabled={saving}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              删除
+            </Button>
+          ) : (
+            <div />
+          )}
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => router.push("/subscriptions")} disabled={saving}>
+              取消
+            </Button>
+            <Button type="submit" form="subscription-form" variant="brand" loading={saving}>
+              保存
+            </Button>
           </div>
-        </form>
+        </div>
       </div>
 
       <ConfirmDialog

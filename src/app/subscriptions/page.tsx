@@ -135,22 +135,22 @@ export default function SubscriptionsPage() {
           </div>
         ) : null}
 
-        <div className="mb-6 grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mb-6 grid w-full grid-cols-2 gap-3">
           <div className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="text-xs text-gray-500 dark:text-textSecondary">总订阅数</div>
-            <div className="mt-2 text-3xl font-semibold text-gray-900 dark:text-textPrimary">{data?.summary.total ?? "-"}</div>
+            <div className="text-[11px] text-gray-500 dark:text-textSecondary">总订阅数</div>
+            <div className="mt-2 text-2xl font-semibold text-gray-900 dark:text-textPrimary sm:text-3xl">{data?.summary.total ?? "-"}</div>
           </div>
           <div className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="text-xs text-gray-500 dark:text-textSecondary">7 天内到期</div>
-            <div className="mt-2 text-3xl font-semibold text-orange-600 dark:text-orange-300">{data?.summary.dueSoon ?? "-"}</div>
+            <div className="text-[11px] text-gray-500 dark:text-textSecondary">7 天内到期</div>
+            <div className="mt-2 text-2xl font-semibold text-orange-600 dark:text-orange-300 sm:text-3xl">{data?.summary.dueSoon ?? "-"}</div>
           </div>
           <div className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="text-xs text-gray-500 dark:text-textSecondary">已过期</div>
-            <div className="mt-2 text-3xl font-semibold text-red-600 dark:text-red-300">{data?.summary.expired ?? "-"}</div>
+            <div className="text-[11px] text-gray-500 dark:text-textSecondary">已过期</div>
+            <div className="mt-2 text-2xl font-semibold text-red-600 dark:text-red-300 sm:text-3xl">{data?.summary.expired ?? "-"}</div>
           </div>
           <div className="rounded-xl border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="text-xs text-gray-500 dark:text-textSecondary">自动续费</div>
-            <div className="mt-2 text-3xl font-semibold text-brandIndigo">{data?.summary.autoRenew ?? "-"}</div>
+            <div className="text-[11px] text-gray-500 dark:text-textSecondary">自动续费</div>
+            <div className="mt-2 text-2xl font-semibold text-brandIndigo sm:text-3xl">{data?.summary.autoRenew ?? "-"}</div>
           </div>
         </div>
 

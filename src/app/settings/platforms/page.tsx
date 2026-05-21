@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CircleAlert, Tags, X } from "lucide-react";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 
 type TagPreset = { id: string; name: string; builtin: boolean };
@@ -181,23 +180,23 @@ export default function PlatformSettingsPage() {
   return (
     <div className="w-full flex flex-col items-center px-4 pb-28 pt-8 transition-colors md:pt-12">
       <div className="w-full max-w-[560px]">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center gap-3">
           <button
             type="button"
             onClick={() => router.push("/settings")}
-            className="inline-flex items-center text-sm text-gray-600 dark:text-textSecondary hover:text-brandIndigo transition-colors"
+            className="rounded-full p-1.5 -ml-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-brandIndigo dark:text-textSecondary dark:hover:bg-[rgba(255,255,255,0.05)]"
+            aria-label="返回个人中心"
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            返回个人中心
+            <ArrowLeft className="h-5 w-5" />
           </button>
-          <ThemeToggle />
+          <h1 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-textPrimary">常用平台管理</h1>
         </div>
 
         <div className="bg-white dark:bg-[rgba(255,255,255,0.03)] border border-gray-100 dark:border-[rgba(255,255,255,0.05)] rounded-[16px] p-6 shadow-sm">
-          <h1 className="text-[24px] font-semibold text-gray-900 dark:text-textPrimary tracking-tight flex items-center">
+          <h2 className="text-[24px] font-semibold text-gray-900 dark:text-textPrimary tracking-tight flex items-center">
             <Tags className="w-5 h-5 mr-2 text-brandIndigo" />
             常用平台管理
-          </h1>
+          </h2>
           <p className="text-xs text-gray-500 dark:text-textTertiary mt-2 mb-4">支持新增、修改、删除。</p>
 
           <div className="flex flex-wrap gap-2 mb-4">
